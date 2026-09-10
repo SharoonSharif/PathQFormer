@@ -26,10 +26,13 @@ if [ -f "$dest/.complete" ]; then
   echo "[fetch] $COHORT already complete ($(find "$dest" -name '*.h5' | wc -l) slides)"; exit 0
 fi
 mkdir -p "$dest"
+hdr=$(mktemp); printf 'Authorization: Bearer %s\n' "$HF_TOKEN" > "$hdr"   # keep the token out of `ps`
+trap 'rm -f "$hdr"' EXIT
 status=0
 for a in "${ARCHIVES[@]}"; do
   echo "[fetch] $(date '+%T') $COHORT <- $a"
-  if ! curl -sfL --retry 5 --retry-delay 10 -H "Authorization: Bearer $HF_TOKEN" "$REPO/$a" | tar -xz -C "$dest"; then
+  # --no-same-owner: as root, tar would try to chown to the archive's uid, which network volumes reject
+  if ! curl -sfL --retry 5 --retry-delay 10 -H "@$hdr" "$REPO/$a" | tar -xz --no-same-owner --no-same-permissions -C "$dest"; then
     echo "[fetch] FAILED: $a (missing archive or interrupted stream)"; status=1
   fi
 done
