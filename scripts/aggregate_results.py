@@ -20,6 +20,11 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.training.evaluate import paired_test  # noqa: E402
 
+try:  # Windows consoles default to cp1252; never let a symbol in a table crash the run
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except (AttributeError, ValueError):  # pragma: no cover
+    pass
+
 
 def fmt(x, nd=4):
     return "nan" if x is None or not np.isfinite(x) else f"{x:.{nd}f}"
@@ -95,7 +100,7 @@ def comparisons(runs: list[dict], reference: str) -> list[str]:
     ref = {r["cancer_type"]: r for r in runs if r["_run"] == reference}
     if not ref:
         return []
-    lines = ["", f"### Paired tests vs `{reference}` (same folds)", "", "| Run | Cancer | Δ C-index | paired t p | Wilcoxon p | n folds |", "|---|---|---|---|---|---|"]
+    lines = ["", f"### Paired tests vs `{reference}` (same folds)", "", "| Run | Cancer | delta C-index | paired t p | Wilcoxon p | n folds |", "|---|---|---|---|---|---|"]
     for r in runs:
         if r["_run"] == reference or r["cancer_type"] not in ref:
             continue
