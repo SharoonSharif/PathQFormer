@@ -70,17 +70,34 @@ def _bin_of(times, edges) -> np.ndarray:
     return np.clip(idx, 0, len(edges) - 2)
 
 
+def interior_edges(edges) -> np.ndarray:
+    return np.array([e for e in np.asarray(edges, float)[1:-1] if np.isfinite(e)], dtype=float)
+
+
 def eval_times(train_time, val_time, edges) -> np.ndarray:
-    """SurvPath's evaluation grid, [val_min, edge_1, ..., edge_{T-1}, val_max], restricted to the
-    range where both the test follow-up and the training censoring distribution are defined."""
+    """Grid for Brier / IBS / td-AUC: the interior bin edges, i.e. the quartiles of the uncensored
+    training event times, restricted to where both the test follow-up and the training censoring
+    distribution are defined.
+
+    SurvPath additionally evaluates at val_min and val_max. At val_max typically one patient is still
+    at risk (BLCA fold 0: AUC 0.13 there vs 0.62-0.76 at the quartiles), which made the mean td-AUC
+    and the IBS degenerate, so those two points are deliberately not used.
+    """
     train_time = np.asarray(train_time, float)
     val_time = np.asarray(val_time, float)
-    interior = [e for e in np.asarray(edges, float)[1:-1] if np.isfinite(e)]
     lo = max(val_time.min(), train_time.min()) + 1e-4
     hi = min(val_time.max(), train_time.max()) - 1e-4
-    grid = np.array([lo, *interior, hi], dtype=float)
-    grid = np.unique(grid[(grid >= lo) & (grid <= hi)])
-    return grid
+    grid = interior_edges(edges)
+    return np.unique(grid[(grid >= lo) & (grid <= hi)])
+
+
+def ipcw_horizon(train_time, edges) -> float:
+    """Truncation time for Uno's IPCW C-index: the last interior edge (75th percentile of training
+    event times). With ~70 % censoring the censoring survival G(t) falls to ~0.03 by 120 months and the
+    1/G^2 weights explode; truncating keeps them bounded (G ~ 0.5 at the 75th percentile)."""
+    inner = interior_edges(edges)
+    tau = float(inner[-1]) if len(inner) else float(np.asarray(train_time, float).max())
+    return min(tau, float(np.asarray(train_time, float).max()))
 
 
 def survival_metrics(train_event, train_time, event, time, risk, survival_by_bin, edges) -> dict:
@@ -107,38 +124,37 @@ def survival_metrics(train_event, train_time, event, time, risk, survival_by_bin
     surv_train = Surv.from_arrays(event=train_event, time=train_time)
     surv_test = Surv.from_arrays(event=event, time=time)
 
+    tau = ipcw_horizon(train_time, edges)
+    out["ipcw_tau"] = tau
     try:
-        tau = float(train_time.max())
         out["c_index_ipcw"] = float(concordance_index_ipcw(surv_train, surv_test, risk, tau=tau)[0])
     except Exception as exc:  # noqa: BLE001
         warnings.warn(f"IPCW C-index failed: {exc}")
         out["c_index_ipcw"] = float("nan")
 
     times = eval_times(train_time, time, edges)
-    if len(times) < 2:
-        out.update(brier=[], ibs=float("nan"), iauc=float("nan"), eval_times=times.tolist())
+    out["eval_times"] = [float(t) for t in times]
+    out.update(brier=[], auc=[], ibs=float("nan"), iauc=float("nan"))
+    if len(times) == 0:
         return out
     S_at = S[:, _bin_of(times, edges)]  # step-function evaluation of the discrete model
 
     try:
         _, bs = brier_score(surv_train, surv_test, S_at, times)
         out["brier"] = [float(b) for b in bs]
-        out["ibs"] = float(integrated_brier_score(surv_train, surv_test, S_at, times))
+        if len(times) >= 2:
+            out["ibs"] = float(integrated_brier_score(surv_train, surv_test, S_at, times))
     except Exception as exc:  # noqa: BLE001
         warnings.warn(f"Brier/IBS failed: {exc}")
-        out["brier"], out["ibs"] = [], float("nan")
 
     try:
-        # SurvPath drops the first grid point (no events can have occurred by val_min yet)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)
-            _, iauc = cumulative_dynamic_auc(surv_train, surv_test, 1.0 - S_at[:, 1:], times[1:])
+            aucs, iauc = cumulative_dynamic_auc(surv_train, surv_test, 1.0 - S_at, times)
+        out["auc"] = [float(a) for a in np.atleast_1d(aucs)]
         out["iauc"] = float(iauc)
     except Exception as exc:  # noqa: BLE001
         warnings.warn(f"time-dependent AUC failed: {exc}")
-        out["iauc"] = float("nan")
-
-    out["eval_times"] = [float(t) for t in times]
     return out
 
 

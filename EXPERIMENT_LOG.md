@@ -174,6 +174,23 @@ official SurvPath, ABMIL (WSI only), SNN and MLP (genomics only) with the SurvPa
 Epoch time on this CPU: ~140 s for PathQ-Former (compute-bound, 11.4/12 cores busy).
 
 Results land in `outputs_v2/<run>/blca/summary.md`; consolidated table: `results/summary_all.md`.
+
+**Fold 0 (finished 13:12, 26.7 min, early stop at epoch 11, selected epoch 6 by val loss):**
+C-index **0.600** [bootstrap 95% CI 0.448, 0.720]; WSI-only 0.627; genomics-only 0.541;
+10/20/30/50 % of patients missing one modality -> 0.605 / 0.595 / 0.582 / 0.609 (graceful).
+Optimistic best-any-epoch 0.638, last epoch 0.619. Train loss 0.83 -> 0.33 after epoch 6 while val loss
+rose: strong overfitting, which val-loss selection handles.
+
+**Metric-grid decision (evidence from fold 0).** SurvPath's Brier/AUC grid includes val_min and val_max;
+at val_max exactly one validation patient was still at risk, giving AUC 0.13 there versus 0.76 / 0.75 / 0.62
+at the quartile edges and dragging the mean td-AUC to 0.37. Likewise the untruncated IPCW C-index was 0.46
+because the training censoring survival G(t) is 0.03 at 120 months (weights 1/G^2 explode with 68 % censoring);
+truncated at the 75th percentile of training event times (21 months) it is stable. v2 therefore evaluates
+Brier/IBS/td-AUC on the interior quartile edges and Uno's C truncated at that 75th percentile
+(`ipcw_tau` stored per fold). `scripts/recompute_metrics.py` re-derives all metric blocks from the saved
+per-patient predictions, so runs finished before this change are made consistent; `scripts/finalize_after.sh`
+does that automatically once both queues end. Harrell's C is unaffected.
+
 Fill in here once the queue finishes:
 
 | Run | C-index (mean +- std) | 95% CI | IPCW | IBS | td-AUC | WSI-only | Genomics-only |
