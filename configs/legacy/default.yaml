@@ -1,0 +1,46 @@
+# PathQ-Former default configuration
+# Usage: python -m src.training.train --config configs/default.yaml --cancer_type blca
+
+# === Data paths ===
+survpath_dir: data/survpath_repo          # cloned SurvPath repository
+embeddings_dir: data/embeddings/uni2h     # pre-extracted UNI2-h features (.h5)
+output_dir: outputs
+
+# Cancer type (override via --cancer_type CLI arg)
+cancer_type: blca
+pathway_type: combine  # 'combine' (Reactome+Hallmarks), 'hallmarks', or 'xena'
+
+# === WSI encoder ===
+wsi_input_dim: 1536    # UNI2-h (ViT-H/14) = 1536, UNI v1 (ViT-L) = 1024, CONCH = 768
+
+# === Model architecture ===
+hidden_dim: 256
+num_queries: 32        # K — key hyperparameter, ablate {16, 32, 64, 128}
+num_heads: 8
+query_layers: 2        # L — layers in each modality query block
+fusion_layers: 2       # M — layers in cross-modal fusion block
+num_bins: 4            # discrete survival time bins
+
+# === Regularization ===
+dropout: 0.1
+modality_dropout: 0.15 # probability of dropping each modality during training
+
+# === Training ===
+lr: 0.0002             # 2e-4
+weight_decay: 0.00001  # 1e-5
+batch_size: 1          # 1 WSI per batch (variable bag sizes are large)
+epochs: 20
+patience: 5            # early stopping on val C-Index
+num_folds: 5
+num_workers: 4
+
+# === Loss ===
+nll_alpha: 0.0         # mixing parameter for NLL regularization
+
+# === Pathway tokenizer ===
+pathway_hidden_dim: 128
+min_genes: 3           # minimum gene overlap to keep a pathway
+max_genes: 300         # cap on genes per pathway
+
+# === Optional ===
+max_patches: null      # null = use all patches (enabled by query bottleneck)

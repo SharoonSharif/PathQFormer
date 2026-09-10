@@ -1,0 +1,181 @@
+# PathQ-Former Experiment Log
+
+## Project Summary
+**PathQ-Former**: Q-Former-based multimodal fusion for WSI + genomics cancer survival prediction.
+- **Architecture**: Modality-specific query blocks (K=32 learnable queries) → cross-modal fusion Transformer → NLL-Survival head
+- **WSI Encoder**: UNI2-h (ViT-H/14, 1536-d, frozen pre-extracted embeddings)
+- **Genomic Input**: 4,999 genes → 275 pathways (Reactome + MSigDB Hallmarks via SurvPath compositions)
+- **Total trainable params**: ~16.7M (10.4M pathway tokenizer + 6.3M PathQ-Former)
+- **Evaluation**: 5-fold stratified CV using SurvPath's exact splits, C-Index metric
+
+---
+
+## Experiment 1: BLCA Baseline
+**Date**: 2026-05-19
+**Cancer type**: BLCA (Bladder Urothelial Carcinoma)
+**Slides**: 423 | **Train/Val**: ~346/77 per fold
+
+### Config
+| Parameter | Value |
+|-----------|-------|
+| LR | 2e-4 |
+| Weight decay | 1e-5 |
+| Dropout | 0.1 |
+| Modality dropout | 0.15 |
+| Batch size | 1 |
+| Grad accumulation | 1 (none) |
+| Warmup | None |
+| Patience | 5 |
+| Max epochs | 20 |
+| Num queries (K) | 32 |
+| Hidden dim | 256 |
+| Query layers | 2 |
+| Fusion layers | 2 |
+
+### Results
+| Fold | C-Index | Peak Epoch | Stopped At |
+|------|---------|------------|------------|
+| 0 | 0.5756 | 3 | 8 |
+| 1 | 0.6340 | 2 | 7 |
+| 2 | 0.5931 | 2 | 7 |
+| 3 | 0.6062 | 8 | 13 |
+| 4 | 0.6173 | 1 | 6 |
+| **Mean** | **0.6052 ± 0.0200** | | |
+
+### Observations
+- Consistent overfitting pattern: C-Index peaks at epoch 2-3 then declines rapidly
+- Train loss drops while val loss rises — classic overfitting
+- LR too high (2e-4) with batch_size=1 causes noisy, overshooting updates
+- Baseline is competitive with MCAT (~0.58-0.61) but below SurvPath/MMP
+
+---
+
+## Experiment 2: BLCA Tuned
+**Date**: 2026-05-19
+**Cancer type**: BLCA
+
+### Config Changes (vs Baseline)
+| Parameter | Baseline | Tuned | Rationale |
+|-----------|----------|-------|-----------|
+| LR | 2e-4 | **5e-5** | Reduce overshooting |
+| Weight decay | 1e-5 | **1e-4** | Stronger L2 regularization |
+| Dropout | 0.1 | **0.25** | Reduce overfitting |
+| Grad accumulation | 1 | **8** | Effective batch_size=8, smoother gradients |
+| Warmup | None | **2 epochs** | Linear LR warmup prevents early instability |
+| Patience | 5 | **3** | Stop sooner since improvements are gradual |
+
+### Results
+| Fold | C-Index | Peak Epoch | Stopped At | vs Baseline |
+|------|---------|------------|------------|-------------|
+| 0 | 0.7068 | 8 | 11 | +0.1312 |
+| 1 | 0.6606 | 4 | 7 | +0.0266 |
+| 2 | 0.6083 | 1 | 4 | +0.0152 |
+| 3 | 0.3977 | 2 | 5 | -0.2085 |
+| 4 | 0.7025 | 5 | 8 | +0.0852 |
+| **Mean** | **0.6152 ± 0.1144** | | | **+0.0100** |
+
+### Observations
+- 4 of 5 folds improved substantially (mean of folds 0,1,2,4: **0.6696**)
+- Fold 3 catastrophically failed: 0.3977 (below random chance), -0.21 vs baseline
+- Fold 3 peaked at epoch 2 (still in warmup), never recovered — only 3 "real" epochs before early stop
+- High variance (std 0.114 vs 0.020 baseline) makes the mean misleading
+- Folds 0 and 4 exceeded 0.70 — strongest individual results in this project
+- **Diagnosis**: Tuned config is too conservative for some splits. Warmup (2 epochs) + patience (3) = only 3 post-warmup chances. When a fold starts cold, it gets killed too early.
+- **Next step**: Hybrid config — keep grad accumulation and dropout, but increase patience to 5 and reduce warmup to 1 epoch
+
+---
+
+---
+
+## Experiment 3: BLCA Hybrid (never completed; superseded by the v2 protocol below)
+**Date**: 2026-05-19
+**Cancer type**: BLCA
+
+### Config Changes (vs Tuned)
+| Parameter | Tuned | Hybrid | Rationale |
+|-----------|-------|--------|-----------|
+| Warmup | 2 epochs | **1 epoch** | Less warmup = more real training before patience |
+| Patience | 3 | **5** | Give slow folds room to recover (fold 3 collapsed in tuned) |
+| All other params | same | same | LR=5e-5, dropout=0.25, grad_accum=8, weight_decay=1e-4 |
+
+### Results
+| Fold | C-Index | Peak Epoch | Stopped At | vs Baseline | vs Tuned |
+|------|---------|------------|------------|-------------|----------|
+| 0 | *running* | | | | |
+| 1 | pending | | | | |
+| 2 | pending | | | | |
+| 3 | pending | | | | |
+| 4 | pending | | | | |
+
+### Key question
+Does fold 3 recover with more patience and less warmup?
+
+---
+
+## Published Baselines (BLCA, DSS)
+| Method | Venue | C-Index (approx) |
+|--------|-------|-------------------|
+| ABMIL (WSI only) | — | ~0.52-0.55 |
+| MCAT | ICCV 2021 | ~0.58-0.61 |
+| MOTCat | AAAI 2023 | ~0.59-0.62 |
+| SurvPath | CVPR 2024 | ~0.60-0.63 |
+| MMP | ICML 2024 | ~0.61-0.64 |
+
+---
+
+## Next Steps
+- [ ] Complete tuned BLCA 5-fold CV
+- [ ] Download embeddings for other 4 cancer types (BRCA, STAD, COADREAD, HNSC)
+- [ ] Run tuned config on all 5 cancer types
+- [ ] Ablation studies (vary K, modality dropout, etc.)
+- [ ] Missing-modality experiments (Table 3 from research plan)
+- [ ] Consider Karpathy's autoresearch for automating ablation sweeps
+- [ ] Baseline reproduction (MCAT, SurvPath) for fair comparison
+
+---
+
+## Environment
+- **GPU**: Google Colab Free (T4, 15GB VRAM)
+- **WSI embeddings**: MahmoodLab/UNI2-h-features (HuggingFace, gated)
+- **Data**: SurvPath repo splits, RNA-seq, pathway compositions
+- **Framework**: PyTorch, lifelines (C-Index)
+
+---
+
+## 2026-09-10 - Protocol audit: every number above is superseded
+
+A code review of the May pipeline found six defects that make Experiments 1-3 non-comparable
+to each other and to published MCAT/SurvPath/MMP numbers:
+
+| # | Defect | Effect | Fix (v2) |
+|---|--------|--------|----------|
+| 1 | C-index computed on the 4 **discrete bins**, not continuous time | ~75% of patient pairs tied and dropped; high variance; not the literature's metric | `sksurv.concordance_index_censored` on survival months |
+| 2 | Bin edges fit **separately** on train and val (val quartiles) | val labels on a different scale than the model learned; leaks val label distribution | bins from uncensored **training** patients, outer edges +-inf, re-used for val |
+| 3 | **Slide-level** samples (423) | multi-slide patients counted up to 9x; SurvPath is patient-level (359) | one sample per `case_id`, patches concatenated |
+| 4 | Gene expression fed **unscaled** (log values -10..15) | pathway MLPs see arbitrary scales | MinMax to [-1,1] fit on train (SurvPath) |
+| 5 | Selection **and** reporting on val C-index; no seeds | optimistic bias; fold-3 collapse unreproducible | selection on val loss (both logged); `seed + fold` |
+| 6 | Risk = 1 - S_last; modality dropout per batch | non-standard risk; batch>1 semantics wrong | risk = -sum_t S_t; per-sample dropout, never both |
+
+Architecture change made at the same time (configurable, `norm_first: true`): pre-norm query
+blocks with a LayerNorm on the projected inputs. Old checkpoints cannot be loaded.
+
+New evaluation for every run: IPCW C-index, Brier/IBS, td-AUC, 1000x bootstrap CI, KM log-rank,
+and the missing-modality suite (WSI-only, genomics-only, 10-50% randomly missing) on the same
+checkpoint. Everything is in `results.json` / `summary.md` per run; cross-run tables with paired
+t / Wilcoxon tests via `scripts/aggregate_results.py`.
+
+---
+
+## Experiment 4: BLCA hybrid, v2 protocol
+**Date**: 2026-09-10 | **Hardware**: local CPU (Ryzen AI MAX PRO 390, 12 cores) | **Config**: `configs/blca_hybrid_v2.yaml`
+**Queue** (`scripts/run_experiments.sh`): hybrid -> WSI-only -> genomics-only -> baseline hyper-parameters.
+
+Results land in `outputs_v2/<run>/blca/summary.md`; consolidated table: `results/summary_all.md`.
+Fill in here once the queue finishes:
+
+| Run | C-index (mean +- std) | 95% CI | IPCW | IBS | td-AUC | WSI-only | Genomics-only |
+|-----|----------------------|--------|------|-----|--------|----------|---------------|
+| hybrid_v2 | | | | | | | |
+| baseline_v2 | | | | | | | |
+| wsi_only | | | | | | n/a | n/a |
+| genomic_only | | | | | | n/a | n/a |

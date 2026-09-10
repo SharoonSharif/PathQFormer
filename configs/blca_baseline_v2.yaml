@@ -1,0 +1,46 @@
+# Phase-1 'baseline' hyper-parameters (lr 2e-4, dropout 0.1, no accumulation/warmup) under the corrected v2 protocol.
+# Paired with blca_hybrid_v2.yaml to measure the effect of tuning alone.
+survpath_dir: data/survpath_repo
+embeddings_dir: data/embeddings/uni2h
+output_dir: outputs_v2/baseline
+cancer_type: blca
+pathway_type: combine
+endpoint: dss
+scaler: minmax
+seed: 0
+wsi_input_dim: 1536
+hidden_dim: 256
+num_queries: 32
+num_heads: 8
+query_layers: 2
+fusion_layers: 2
+num_bins: 4
+norm_first: true
+dropout: 0.1
+modality_dropout: 0.15
+lr: 0.0002
+weight_decay: 1.0e-05
+warmup_epochs: 0
+epochs: 20
+patience: 5
+min_epochs: 0
+selection_metric: val_loss
+batch_size: 1
+grad_accum_steps: 1
+clip_grad_norm: 1.0
+nll_alpha: 0.0
+pathway_hidden_dim: 128
+min_genes: 3
+max_genes: 300
+max_patches: null
+num_folds: 5
+num_workers: 4
+cache_in_ram: false
+eval_missing: true
+missing_rates:
+- 0.1
+- 0.2
+- 0.3
+- 0.5
+missing_repeats: 5
+bootstrap: 1000

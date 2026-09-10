@@ -1,0 +1,36 @@
+# Data (large or third-party; see README "Data setup")
+data/embeddings/
+data/survpath_repo/
+data/tcga_transcriptomics/
+data/tcga_clinical/
+data/pathways/
+
+# Experiment outputs and packaged source
+outputs*/
+*.pt
+*.pth
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+*.env

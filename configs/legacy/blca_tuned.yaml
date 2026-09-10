@@ -1,0 +1,41 @@
+# BLCA tuned config — addresses overfitting observed in baseline run
+# Changes from default: lower LR, higher dropout, shorter patience, grad accumulation
+
+survpath_dir: data/survpath_repo
+embeddings_dir: data/embeddings/uni2h
+output_dir: outputs_tuned
+cancer_type: blca
+pathway_type: combine
+
+wsi_input_dim: 1536
+hidden_dim: 256
+num_queries: 32
+num_heads: 8
+query_layers: 2
+fusion_layers: 2
+num_bins: 4
+
+# Stronger regularization
+dropout: 0.25              # was 0.1
+modality_dropout: 0.15
+
+# Slower learning
+lr: 0.00005                # was 2e-4, now 5e-5
+weight_decay: 0.0001       # was 1e-5, now 1e-4
+warmup_epochs: 2           # linear warmup for first 2 epochs
+
+# Gradient accumulation to simulate larger batch
+batch_size: 1
+grad_accum_steps: 8        # effective batch size = 8
+
+# Earlier stopping
+epochs: 20
+patience: 3                # was 5
+
+num_folds: 5
+num_workers: 2
+nll_alpha: 0.0
+pathway_hidden_dim: 128
+min_genes: 3
+max_genes: 300
+max_patches: null

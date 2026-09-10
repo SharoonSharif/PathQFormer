@@ -1,0 +1,30 @@
+# BLCA (Bladder Urothelial Carcinoma) — inherits from default.yaml
+# Usage: python -m src.training.train --config configs/blca.yaml
+
+survpath_dir: data/survpath_repo
+embeddings_dir: data/embeddings/uni2h/TCGA-BLCA
+output_dir: outputs
+cancer_type: blca
+pathway_type: combine
+
+wsi_input_dim: 1536
+hidden_dim: 256
+num_queries: 32
+num_heads: 8
+query_layers: 2
+fusion_layers: 2
+num_bins: 4
+dropout: 0.1
+modality_dropout: 0.15
+lr: 0.0002
+weight_decay: 0.00001
+batch_size: 1
+epochs: 20
+patience: 5
+num_folds: 5
+num_workers: 4
+nll_alpha: 0.0
+pathway_hidden_dim: 128
+min_genes: 3
+max_genes: 300
+max_patches: null

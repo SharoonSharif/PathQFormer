@@ -1,0 +1,60 @@
+# BLCA - corrected protocol (v2) with the "hybrid" hyper-parameters from Phase 2.
+#
+# Protocol fixes vs. the May 2026 runs (see EXPERIMENT_LOG.md, 2026-09-10):
+#   * one sample per PATIENT (all slides concatenated), as in MCAT/SurvPath
+#   * survival bins = quantiles of uncensored TRAINING patients, re-used for validation
+#   * gene expression MinMax-scaled to [-1, 1] with train statistics (SurvPath)
+#   * C-index on continuous time, risk = -sum_t S_t (MCAT/SurvPath)
+#   * model selection on validation loss; folds seeded; pre-norm query blocks
+survpath_dir: data/survpath_repo
+embeddings_dir: data/embeddings/uni2h
+output_dir: outputs_v2/hybrid
+cancer_type: blca
+pathway_type: combine
+endpoint: dss
+scaler: minmax
+seed: 0
+
+# architecture
+wsi_input_dim: 1536
+hidden_dim: 256
+num_queries: 32
+num_heads: 8
+query_layers: 2
+fusion_layers: 2
+num_bins: 4
+norm_first: true
+
+# regularisation
+dropout: 0.25
+modality_dropout: 0.15
+
+# optimisation
+lr: 0.00005
+weight_decay: 0.0001
+warmup_epochs: 1
+epochs: 20
+patience: 5
+min_epochs: 6
+selection_metric: val_loss
+batch_size: 1
+grad_accum_steps: 8
+clip_grad_norm: 1.0
+nll_alpha: 0.0
+
+# pathway tokenizer
+pathway_hidden_dim: 128
+min_genes: 3
+max_genes: 300
+max_patches: null
+
+# run
+num_folds: 5
+num_workers: 4
+cache_in_ram: false
+
+# evaluation
+eval_missing: true
+missing_rates: [0.1, 0.2, 0.3, 0.5]
+missing_repeats: 5
+bootstrap: 1000

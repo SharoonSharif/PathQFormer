@@ -1,0 +1,41 @@
+# BLCA hybrid config — fixes fold-3 collapse from tuned config
+# Changes from tuned: shorter warmup (1 epoch), longer patience (5)
+
+survpath_dir: data/survpath_repo
+embeddings_dir: data/embeddings/uni2h
+output_dir: outputs_hybrid
+cancer_type: blca
+pathway_type: combine
+
+wsi_input_dim: 1536
+hidden_dim: 256
+num_queries: 32
+num_heads: 8
+query_layers: 2
+fusion_layers: 2
+num_bins: 4
+
+# Regularization (same as tuned)
+dropout: 0.25
+modality_dropout: 0.15
+
+# Learning (same as tuned)
+lr: 0.00005
+weight_decay: 0.0001
+
+# Fixes
+warmup_epochs: 1           # was 2 — less warmup = more real training
+patience: 5                # was 3 — give slow folds room to recover
+
+# Gradient accumulation (same as tuned)
+batch_size: 1
+grad_accum_steps: 8
+
+epochs: 20
+num_folds: 5
+num_workers: 2
+nll_alpha: 0.0
+pathway_hidden_dim: 128
+min_genes: 3
+max_genes: 300
+max_patches: null
