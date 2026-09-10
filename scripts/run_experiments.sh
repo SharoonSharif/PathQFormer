@@ -9,7 +9,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-PY=".venv/Scripts/python.exe"; [ -x "$PY" ] || PY=".venv/bin/python"; [ -x "$PY" ] || PY="python"
+PY=".venv/Scripts/python.exe"; [ -x "$PY" ] || PY=".venv/bin/python"; [ -x "$PY" ] || PY="$(command -v python3 || command -v python)"
 export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
 mkdir -p logs
 
