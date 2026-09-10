@@ -510,3 +510,4 @@ After Phase 2 finishes, this is the recommended sequence based on impact-per-hou
 | 2026-05-19 | Created plan. Phase 1 complete, Phase 2 in progress. |
 | 2026-05-19 | Expanded plan: added Phase 5B (statistical rigor), Phase 8 (extensions), ablations 4F-4G, priority order, additional tables/figures, risk mitigations. |
 | 2026-09-10 | Protocol audit (6 defects), v2 pipeline with patient-level data, train-fit bins/scaler, continuous-time C-index, val-loss selection, seeds; Phase 5 + 5B metrics and Phase 4E ablations automated; pytest suite; first git commit; BLCA v2 queue launched on local CPU. |
+| 2026-09-10 | Phase 6 started: official SurvPath + ABMIL + SNN + MLP baselines run through the same trainer (`model_type`), SurvPath-repo hyper-parameters, chained after the PathQ-Former queue. Analysis script (KM, curves, missing-modality plot, pathway attention) and generic v2 Colab notebook added. MCAT deferred (6-family gene groups not in the cloned data). |
