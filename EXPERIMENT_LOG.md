@@ -178,7 +178,7 @@ with network volume `pathq-embeddings` (250 GB). `scripts/pod/run_queue_pod.sh` 
 into the volume and runs, under the identical protocol, PathQ-Former hybrid + SurvPath + ABMIL + SNN + MLP for
 STAD, HNSC, COADREAD (COAD+READ archives) and BRCA (IDC+OTHERS archives), then BLCA seeds 1 and 2 for the two
 multimodal methods. Results: `/workspace/outputs_v2/<run>/<cancer>/summary.md` and `/workspace/outputs_v2/summary_all.md`;
-the pod removes itself when finished. Local folds so far (hybrid v2, BLCA seed 0): 0.600, 0.635, 0.701, 0.534.
+the pod removes itself when finished. Local hybrid v2 folds (BLCA seed 0): 0.600, 0.635, 0.701, 0.534, 0.754 -> 0.645 +- 0.086; 10/20/30/50 % randomly missing one modality: 0.647 / 0.639 / 0.621 / 0.623; optimistic best-epoch 0.669. Fold 3 selected epoch 2 (val loss) and is the weak fold again; fold 4 selected at 0.754 with only 16 events.
 
 Results land in `outputs_v2/<run>/blca/summary.md`; consolidated table: `results/summary_all.md`.
 
@@ -202,7 +202,7 @@ Fill in here once the queue finishes:
 
 | Run | C-index (mean +- std) | 95% CI | IPCW | IBS | td-AUC | WSI-only | Genomics-only |
 |-----|----------------------|--------|------|-----|--------|----------|---------------|
-| hybrid_v2 | | | | | | | |
+| hybrid_v2 (seed 0, done 15:09) | **0.645 +- 0.086** | [0.538, 0.751] | 0.624 (tau ~21 mo) | 0.155 | 0.708 | 0.591 | 0.628 |
 | baseline_v2 | | | | | | | |
 | wsi_only | | | | | | n/a | n/a |
 | genomic_only | | | | | | n/a | n/a |
