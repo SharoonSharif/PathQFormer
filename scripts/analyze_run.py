@@ -106,7 +106,7 @@ def plot_missing(results: dict, out: Path) -> None:
     rates = [0.0] + [pm["rate"] for pm in s["partial_missing"]]
     means = [conds["both"]["c_index"]["mean"]] + [pm["mean"] for pm in s["partial_missing"]]
     stds = [conds["both"]["c_index"]["std"]] + [pm["std"] for pm in s["partial_missing"]]
-    fig, ax = plt.subplots(figsize=(4.6, 3.6))
+    fig, ax = plt.subplots(figsize=(5.4, 3.8))
     ax.errorbar([r * 100 for r in rates], means, yerr=stds, marker="o", capsize=3, label="random missing (one modality)")
     for key, label, color in (("wsi_only", "WSI only (all patients)", "tab:green"), ("genomic_only", "genomics only (all patients)", "tab:purple")):
         if key in conds:
