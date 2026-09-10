@@ -33,6 +33,7 @@ from torch.utils.data import DataLoader
 
 from src.data import PathwayTokenizer, TCGAMultimodalDataset, collate_multimodal, load_survpath_compositions
 from src.models import NLLSurvivalLoss, PathQFormer, hazards_to_survival, risk_from_logits
+from src.models.baselines import BASELINES, GenePassthrough
 from src.training.evaluate import (
     HAS_SKSURV,
     bootstrap_cindex_ci,
@@ -46,6 +47,10 @@ from src.utils.repro import git_commit, physical_cores, set_seed
 MODALITIES = ("both", "wsi", "genomic")
 
 DEFAULTS: dict = {
+    "model_type": "pathqformer",  # pathqformer | survpath | abmil | snn | mlp_omics
+    "optimizer": "adamw",  # adamw | radam | adam
+    "weighted_sample": False,  # SurvPath-style class-balanced sampling over (bin, censorship)
+    "cache_dtype": "float32",
     "endpoint": "dss",
     "pathway_type": "combine",
     "scaler": "minmax",
@@ -82,6 +87,12 @@ def with_defaults(cfg: dict) -> dict:
         raise ValueError(f"train_modalities must be one of {MODALITIES}")
     if out["selection_metric"] not in ("val_loss", "val_cindex"):
         raise ValueError("selection_metric must be 'val_loss' or 'val_cindex'")
+    if out["model_type"] != "pathqformer":
+        forced = {"survpath": "both", "abmil": "wsi", "snn": "genomic", "mlp_omics": "genomic"}
+        if out["model_type"] not in forced:
+            raise ValueError(f"unknown model_type {out['model_type']!r}; choose pathqformer or {sorted(forced)}")
+        out["train_modalities"] = forced[out["model_type"]]
+        out["eval_missing"] = False
     return out
 
 
@@ -122,14 +133,30 @@ def build_datasets(cfg: dict, fold: int) -> tuple[TCGAMultimodalDataset, TCGAMul
         num_bins=cfg["num_bins"],
         endpoint=cfg["endpoint"],
         cache_in_ram=cfg["cache_in_ram"],
+        cache_dtype=getattr(torch, str(cfg["cache_dtype"])),
     )
     train = TCGAMultimodalDataset(split="train", scaler_kind=cfg["scaler"], max_patches=cfg.get("max_patches"), **common)
     val = TCGAMultimodalDataset(split="val", bins=train.bins, scaler=train.scaler, **common)
     return train, val
 
 
-def build_model(cfg: dict, gene_columns: list[str], composition_csv: Path, device) -> tuple[PathQFormer, PathwayTokenizer]:
+def build_model(cfg: dict, gene_columns: list[str], composition_csv: Path, device):
+    """Returns (model, tokenizer). Baselines get a pass-through tokenizer and see the scaled gene vector."""
     comp = load_survpath_compositions(composition_csv, gene_columns)
+    kind = cfg["model_type"]
+    if kind != "pathqformer":
+        if kind == "survpath":
+            model = BASELINES[kind](
+                pathway_composition=comp, wsi_input_dim=cfg["wsi_input_dim"], num_bins=cfg["num_bins"],
+                dropout=cfg["dropout"], min_genes=cfg["min_genes"], max_genes=cfg["max_genes"],
+                survpath_dir=cfg["survpath_dir"],
+            )
+        elif kind == "abmil":
+            model = BASELINES[kind](wsi_input_dim=cfg["wsi_input_dim"], dropout=cfg["dropout"], num_bins=cfg["num_bins"])
+        else:  # snn / mlp_omics
+            model = BASELINES[kind](num_genes=len(gene_columns), dropout=cfg["dropout"], num_bins=cfg["num_bins"])
+        return model.to(device), GenePassthrough().to(device)
+
     tokenizer = PathwayTokenizer(
         pathway_composition=comp,
         embedding_dim=cfg["hidden_dim"],
@@ -157,16 +184,36 @@ def make_loader(ds, cfg: dict, shuffle: bool, seed: int, device) -> DataLoader:
     workers = 0 if cfg["cache_in_ram"] else int(cfg["num_workers"])
     gen = torch.Generator()
     gen.manual_seed(seed)
+    sampler = None
+    if shuffle and cfg["weighted_sample"]:
+        # SurvPath / MCAT: balance the (time bin, censorship) classes, sampling with replacement
+        cls = ds.patients["survival_time_bin"].to_numpy() * 2 + (ds.patients["censorship"].to_numpy() > 0).astype(int)
+        counts = np.bincount(cls, minlength=int(cls.max()) + 1).astype(float)
+        weights = torch.as_tensor(1.0 / counts[cls], dtype=torch.double)
+        sampler = torch.utils.data.WeightedRandomSampler(weights, num_samples=len(ds), replacement=True, generator=gen)
     return DataLoader(
         ds,
         batch_size=cfg["batch_size"],
-        shuffle=shuffle,
+        shuffle=shuffle and sampler is None,
+        sampler=sampler,
         num_workers=workers,
         collate_fn=collate_multimodal,
         pin_memory=(device.type == "cuda"),
-        generator=gen if shuffle else None,
+        generator=gen if (shuffle and sampler is None) else None,
         persistent_workers=workers > 0,
     )
+
+
+def build_optimizer(params, cfg: dict):
+    name = str(cfg["optimizer"]).lower()
+    lr, wd = float(cfg["lr"]), float(cfg["weight_decay"])
+    if name == "adamw":
+        return torch.optim.AdamW(params, lr=lr, weight_decay=wd)
+    if name == "radam":
+        return torch.optim.RAdam(params, lr=lr, weight_decay=wd)
+    if name == "adam":
+        return torch.optim.Adam(params, lr=lr, weight_decay=wd)
+    raise ValueError(f"unknown optimizer {name!r}")
 
 
 def build_scheduler(optimizer, cfg: dict):
@@ -262,7 +309,8 @@ def metrics_from_prediction(pred: dict, train_ds, val_ds, cfg: dict, seed: int) 
 def final_evaluation(model, tokenizer, val_loader, train_ds, val_ds, criterion, device, cfg, seed):
     """Full metrics for the selected checkpoint under every test-time modality condition."""
     trained = cfg["train_modalities"]
-    modes = list(MODALITIES) if trained == "both" else [trained]
+    can_miss = bool(getattr(model, "supports_missing", True))
+    modes = list(MODALITIES) if (trained == "both" and can_miss) else [trained]
     results, preds = {}, {}
     for mode in modes:
         p = predict(model, tokenizer, val_loader, criterion, device, modality=mode)
@@ -271,7 +319,7 @@ def final_evaluation(model, tokenizer, val_loader, train_ds, val_ds, criterion, 
         results[key] = metrics_from_prediction(p, train_ds, val_ds, cfg, seed)
 
     partial = []
-    if trained == "both" and cfg["eval_missing"] and cfg["missing_rates"]:
+    if trained == "both" and can_miss and cfg["eval_missing"] and cfg["missing_rates"]:
         case_ids = val_ds.patients["case_id"].tolist()
         rng = np.random.default_rng(seed + 1000)
         for rate in cfg["missing_rates"]:
@@ -317,14 +365,16 @@ def train_fold(cfg: dict, fold: int, device, run_dir: Path) -> dict:
     paths = data_paths(cfg, fold)
     model, tokenizer = build_model(cfg, train_ds.gene_columns, paths["composition"], device)
     n_tok = sum(p.numel() for p in tokenizer.parameters())
-    print(f"  Pathways: {tokenizer.num_pathways} | PathQ-Former params: {model.num_parameters():,} | tokenizer params: {n_tok:,}", flush=True)
+    n_model = sum(p.numel() for p in model.parameters())
+    n_paths = getattr(tokenizer, "num_pathways", 0) or getattr(model, "num_pathways", 0)
+    print(f"  Model: {cfg['model_type']} | pathways: {n_paths} | model params: {n_model:,} | tokenizer params: {n_tok:,}", flush=True)
 
     train_loader = make_loader(train_ds, cfg, shuffle=True, seed=seed, device=device)
     val_loader = make_loader(val_ds, cfg, shuffle=False, seed=seed, device=device)
 
     criterion = NLLSurvivalLoss(alpha=float(cfg["nll_alpha"]))
     params = list(model.parameters()) + list(tokenizer.parameters())
-    optimizer = torch.optim.AdamW(params, lr=float(cfg["lr"]), weight_decay=float(cfg["weight_decay"]))
+    optimizer = build_optimizer(params, cfg)
     scheduler = build_scheduler(optimizer, cfg)
 
     fold_dir = run_dir / f"fold_{fold}"
@@ -436,7 +486,7 @@ def train_fold(cfg: dict, fold: int, device, run_dir: Path) -> dict:
         f"| log-rank p {r.get('logrank_p', float('nan')):.3g}",
         flush=True,
     )
-    if "wsi_only" in results:
+    if "wsi_only" in results and "genomic_only" in results:
         print(f"  Missing-modality: WSI-only {results['wsi_only']['c_index']:.4f} | genomics-only {results['genomic_only']['c_index']:.4f}", flush=True)
     print(f"  Fold time: {fold_result['seconds'] / 60:.1f} min", flush=True)
     return fold_result
@@ -592,14 +642,9 @@ def main(argv=None):
 
     with open(args.config) as f:
         cfg = yaml.safe_load(f)
-    cfg.update(parse_overrides(args.set))
-    if args.cancer_type:
-        cfg["cancer_type"] = args.cancer_type
-    if args.device:
-        cfg["device"] = args.device
     folds = [int(x) for x in args.folds.split(",")] if args.folds else None
 
-    if args.smoke:
+    if args.smoke:  # tiny run on dummy embeddings; explicit --set overrides still win
         cfg.update({
             "embeddings_dir": "data/embeddings/uni2h_dummy",
             "output_dir": "outputs_smoke",
@@ -610,6 +655,12 @@ def main(argv=None):
             "num_workers": 0,
         })
         folds = folds or [0]
+
+    cfg.update(parse_overrides(args.set))
+    if args.cancer_type:
+        cfg["cancer_type"] = args.cancer_type
+    if args.device:
+        cfg["device"] = args.device
 
     run_dir = Path(cfg["output_dir"]) / cfg["cancer_type"]
     if args.reset and _progress_path(run_dir).exists():

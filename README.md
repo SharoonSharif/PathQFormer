@@ -100,7 +100,15 @@ contains random 230×1536 tensors for every BLCA slide so tests and `--smoke` ru
 | `configs/blca_baseline_v2.yaml` | Phase-1 hyper-parameters under the v2 protocol (paired comparison) |
 | `configs/ablation/blca_wsi_only.yaml`, `blca_genomic_only.yaml` | component ablation: one modality at train and test |
 | `configs/ablation/blca_k16.yaml`, `blca_k64.yaml` | query-count ablation |
+| `configs/baselines/blca_survpath.yaml` | **official SurvPath** model (imported from `data/survpath_repo`) on the same 275 pathways |
+| `configs/baselines/blca_abmil.yaml`, `blca_snn.yaml`, `blca_mlp_omics.yaml` | WSI-only gated-attention MIL, genomics-only SNN / MLP |
 | `configs/legacy/` | the May-2026 configs, kept for the record |
+
+Baselines run through the *same* trainer (`model_type: survpath | abmil | snn | mlp_omics`) on the same
+patients, splits, bins, gene scaling, selection rule and metrics; their hyper-parameters follow the
+SurvPath repository run scripts (RAdam, lr 5e-4 / 1e-3, wd 1e-4, `nll_alpha: 0.5`, class-balanced
+`weighted_sample: true`, 4096 training patches). `scripts/aggregate_results.py --compare hybrid` adds
+paired t / Wilcoxon tests against PathQ-Former over the five folds.
 
 Other cancers: `--cancer_type brca|stad|coadread|hnsc` after downloading their embeddings.
 Other endpoints: `--set endpoint=os` or `pfi`.

@@ -20,6 +20,8 @@ class PathQFormer(nn.Module):
     both), so the fusion block learns to read null codes as "no information".
     """
 
+    supports_missing = True
+
     def __init__(
         self,
         wsi_input_dim: int = 1024,

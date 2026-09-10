@@ -168,7 +168,10 @@ t / Wilcoxon tests via `scripts/aggregate_results.py`.
 
 ## Experiment 4: BLCA hybrid, v2 protocol
 **Date**: 2026-09-10 | **Hardware**: local CPU (Ryzen AI MAX PRO 390, 12 cores) | **Config**: `configs/blca_hybrid_v2.yaml`
-**Queue** (`scripts/run_experiments.sh`): hybrid -> WSI-only -> genomics-only -> baseline hyper-parameters.
+**Queue** (`scripts/run_experiments.sh`): hybrid -> WSI-only -> genomics-only -> baseline hyper-parameters,
+then (chained by `scripts/chain_after.sh`) the Phase-6 baselines under the identical protocol:
+official SurvPath, ABMIL (WSI only), SNN and MLP (genomics only) with the SurvPath-repo hyper-parameters.
+Epoch time on this CPU: ~140 s for PathQ-Former (compute-bound, 11.4/12 cores busy).
 
 Results land in `outputs_v2/<run>/blca/summary.md`; consolidated table: `results/summary_all.md`.
 Fill in here once the queue finishes:
