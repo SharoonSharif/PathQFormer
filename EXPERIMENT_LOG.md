@@ -173,6 +173,13 @@ then (chained by `scripts/chain_after.sh`) the Phase-6 baselines under the ident
 official SurvPath, ABMIL (WSI only), SNN and MLP (genomics only) with the SurvPath-repo hyper-parameters.
 Epoch time on this CPU: ~140 s for PathQ-Former (compute-bound, 11.4/12 cores busy).
 
+**GPU queue (Runpod, launched 2026-09-10 ~15:00 local):** pod `pathq-gpu` (RTX PRO 4000 Blackwell, EU-RO-1, $0.57/h)
+with network volume `pathq-embeddings` (250 GB). `scripts/pod/run_queue_pod.sh` streams each cohort's UNI2-h archive
+into the volume and runs, under the identical protocol, PathQ-Former hybrid + SurvPath + ABMIL + SNN + MLP for
+STAD, HNSC, COADREAD (COAD+READ archives) and BRCA (IDC+OTHERS archives), then BLCA seeds 1 and 2 for the two
+multimodal methods. Results: `/workspace/outputs_v2/<run>/<cancer>/summary.md` and `/workspace/outputs_v2/summary_all.md`;
+the pod removes itself when finished. Local folds so far (hybrid v2, BLCA seed 0): 0.600, 0.635, 0.701, 0.534.
+
 Results land in `outputs_v2/<run>/blca/summary.md`; consolidated table: `results/summary_all.md`.
 
 **Fold 0 (finished 13:12, 26.7 min, early stop at epoch 11, selected epoch 6 by val loss):**
