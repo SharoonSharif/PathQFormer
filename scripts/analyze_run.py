@@ -150,7 +150,7 @@ def attention_analysis(run_dir: Path, results: dict, out_dir: Path, n_heatmap: i
         n_pat = 0
         for batch in loader:
             case = batch["case_ids"][0]
-            wsi = batch["wsi_features"].to(device)
+            wsi = batch["wsi_features"].to(device).float()
             mask = batch["wsi_mask"].to(device)
             gen = tok(batch["gene_expression"].to(device))
             logits, attn = model(wsi, gen, mask, return_attention=True)

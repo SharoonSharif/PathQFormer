@@ -236,8 +236,10 @@ class TCGAMultimodalDataset(Dataset):
         return found
 
     def _load_slide(self, stem: str) -> torch.Tensor:
+        """(N, D) patch features. Cached slides are returned in the cache dtype (e.g. float16) and
+        converted to float32 on the training device by the trainer, halving host->device traffic."""
         if self._cache is not None and stem in self._cache:
-            return self._cache[stem].float()
+            return self._cache[stem]
         path = self._paths[stem]
         if path.suffix == ".h5":
             with h5py.File(path, "r") as f:
@@ -247,6 +249,7 @@ class TCGAMultimodalDataset(Dataset):
         feats = feats.reshape(-1, feats.shape[-1])
         if self._cache is not None:
             self._cache[stem] = feats.to(self._cache_dtype)
+            return self._cache[stem]
         return feats
 
     def load_coords(self, stem: str) -> np.ndarray | None:
@@ -266,7 +269,8 @@ class TCGAMultimodalDataset(Dataset):
 
     def __getitem__(self, idx: int) -> dict:
         row = self.patients.iloc[idx]
-        feats = torch.cat([self._load_slide(s) for s in row["slide_stems"]], dim=0)
+        parts = [self._load_slide(s) for s in row["slide_stems"]]
+        feats = parts[0] if len(parts) == 1 else torch.cat(parts, dim=0)  # no copy for single-slide patients
         if self.max_patches is not None and feats.shape[0] > self.max_patches:
             keep = torch.randperm(feats.shape[0])[: self.max_patches]
             feats = feats[keep]
@@ -296,17 +300,22 @@ class TCGAMultimodalDataset(Dataset):
 
 
 def collate_multimodal(batch: list[dict]) -> dict:
-    """Pad WSI bags to the longest in the batch and return a validity mask."""
-    max_patches = max(item["wsi_features"].shape[0] for item in batch)
-    wsi_dim = batch[0]["wsi_features"].shape[1]
+    """Pad WSI bags to the longest in the batch and return a validity mask (dtype is preserved; the
+    trainer converts to float32 on the device). A single-patient batch is passed through without a copy."""
     B = len(batch)
-
-    wsi_padded = torch.zeros(B, max_patches, wsi_dim)
-    wsi_mask = torch.zeros(B, max_patches, dtype=torch.bool)
-    for i, item in enumerate(batch):
-        n = item["wsi_features"].shape[0]
-        wsi_padded[i, :n] = item["wsi_features"]
-        wsi_mask[i, :n] = True
+    if B == 1:
+        feats = batch[0]["wsi_features"]
+        wsi_padded = feats.unsqueeze(0)
+        wsi_mask = torch.ones(1, feats.shape[0], dtype=torch.bool)
+    else:
+        max_patches = max(item["wsi_features"].shape[0] for item in batch)
+        wsi_dim = batch[0]["wsi_features"].shape[1]
+        wsi_padded = torch.zeros(B, max_patches, wsi_dim, dtype=batch[0]["wsi_features"].dtype)
+        wsi_mask = torch.zeros(B, max_patches, dtype=torch.bool)
+        for i, item in enumerate(batch):
+            n = item["wsi_features"].shape[0]
+            wsi_padded[i, :n] = item["wsi_features"]
+            wsi_mask[i, :n] = True
 
     return {
         "case_ids": [b["case_id"] for b in batch],

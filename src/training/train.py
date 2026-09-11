@@ -198,7 +198,7 @@ def make_loader(ds, cfg: dict, shuffle: bool, seed: int, device) -> DataLoader:
         sampler=sampler,
         num_workers=workers,
         collate_fn=collate_multimodal,
-        pin_memory=(device.type == "cuda"),
+        pin_memory=(device.type == "cuda" and workers > 0),  # pinning in the main thread is slower than the copy it saves
         generator=gen if (shuffle and sampler is None) else None,
         persistent_workers=workers > 0,
     )
@@ -229,7 +229,7 @@ def build_scheduler(optimizer, cfg: dict):
 # Forward / train / predict
 # ---------------------------------------------------------------------------------------
 def forward_batch(model, tokenizer, batch, device, modality="both", drop_wsi=None, drop_genomic=None):
-    wsi = batch["wsi_features"].to(device, non_blocking=True) if modality in ("both", "wsi") else None
+    wsi = batch["wsi_features"].to(device, non_blocking=True).float() if modality in ("both", "wsi") else None
     mask = batch["wsi_mask"].to(device, non_blocking=True) if wsi is not None else None
     gen = tokenizer(batch["gene_expression"].to(device, non_blocking=True)) if modality in ("both", "genomic") else None
     return model(wsi_features=wsi, genomic_features=gen, wsi_mask=mask, drop_wsi=drop_wsi, drop_genomic=drop_genomic)
