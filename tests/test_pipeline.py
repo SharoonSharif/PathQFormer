@@ -100,6 +100,20 @@ def test_per_sample_drop_equals_batch_missing(model):
     assert torch.allclose(out[1], ref_full[1], atol=1e-5)
 
 
+def test_aux_unimodal_heads_and_checkpoint_compatibility():
+    torch.manual_seed(0)
+    m = PathQFormer(wsi_input_dim=64, genomic_input_dim=32, hidden_dim=32, num_queries=4, num_heads=4,
+                    query_layers=1, fusion_layers=1, dropout=0.0, aux_heads=True).eval()
+    x, g = torch.randn(3, 20, 64), torch.randn(3, 7, 32)
+    logits, aux = m(x, g, drop_wsi=torch.tensor([True, False, False]), return_aux=True)
+    assert logits.shape == (3, 4) and aux["h"].shape == (3, 4) and aux["g"].shape == (3, 4)
+    assert aux["h_present"].tolist() == [False, True, True] and aux["g_present"].tolist() == [True, True, True]
+    assert m(x, g).shape == (3, 4)  # plain forward unchanged
+    plain = PathQFormer(wsi_input_dim=64, genomic_input_dim=32, hidden_dim=32, num_queries=4, num_heads=4,
+                        query_layers=1, fusion_layers=1)
+    plain.load_state_dict({k: v for k, v in m.state_dict().items() if not k.startswith("aux_head")})
+
+
 def test_training_dropout_never_removes_both_modalities(model):
     model.train()
     torch.manual_seed(1)

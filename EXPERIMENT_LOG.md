@@ -253,3 +253,35 @@ Decision rule for the paper protocol: the one under which the published baseline
 numbers. Decision rule for the final PathQ-Former config: fusion must beat both single-modality models AND the
 late-fusion baseline on BLCA; otherwise the fusion block, not the idea, is what needs work.
 
+## Interim results 2026-09-11 15:45 local (seed 0 unless noted; fixed budget = 10 epochs, final checkpoint)
+
+**Protocol decision made:** fixed budget. Under it the official SurvPath reproduces its published range and is
+seed-stable (BLCA 0.588 / 0.585 / 0.593; STAD 0.609 / 0.593 / 0.617; HNSC 0.600), whereas under val-loss selection
+its BLCA seeds scattered 0.552-0.597.
+
+| Cohort | PathQ-Former fast e10 | SurvPath e10 (mean over seeds) | val-loss PathQ hybrid | val-loss SurvPath |
+|--------|----------------------|-------------------------------|-----------------------|-------------------|
+| BLCA | 0.609 +- 0.068 | 0.589 (3 seeds) | 0.645 (s0) / 0.599 / 0.622 | 0.559 / 0.552 / 0.597 |
+| STAD | 0.559 +- 0.086 | 0.607 (3 seeds) | 0.486 | 0.610 |
+| HNSC | 0.550 +- 0.052 | 0.600 (s1; s0 running) | 0.484 | 0.515 |
+| COADREAD | running | running | 0.658 +- 0.161 | 0.568 |
+| BRCA | running | running | 0.548 | 0.532 |
+
+BLCA val-loss protocol, all methods (laptop, complete): PathQ hybrid 0.645, PathQ genomics-only 0.646,
+PathQ WSI-only 0.618, old hyper-parameters 0.574, SurvPath 0.559 (paired t p = 0.024 vs hybrid), ABMIL 0.565,
+MLP 0.571, SNN 0.499.
+
+**BLCA fusion ablations (fixed budget, seed 0):** base 0.609 | md0 0.634 | md30 0.616 | md50 0.635 | K16 0.638 |
+K64 0.634 | fusion1 0.598 | fusion3 running. All within one fold-std of each other. Single-modality test-time
+scores of the same checkpoints are as high as the fused score (e.g. md30: fused 0.616, WSI-only 0.624,
+genomics-only 0.648): **fusion is not adding signal over the stronger branch.** Modality dropout 0.3 gives the
+best missing-modality robustness at no cost to the fused score.
+
+**Per-epoch curves (pooled over folds and cohorts):** PathQ-Former fast schedule still rising at epoch 10
+(0.544 -> 0.573 over epochs 7-10); SurvPath flat from epoch 8 (0.585-0.590). The 10-epoch budget therefore
+favours SurvPath.
+
+**Experiment 8 (pod 4, launched ~16:00):** 20-epoch budget for `pathq_fast_e20`, `pathq_fast_e20_aux`
+(auxiliary unimodal survival heads on each branch, weight 0.5, so neither branch can be ignored) and
+`survpath_e20`, seed 0 then seeds 1-2, five cohorts -> `/workspace/outputs_e20`. Histories give the 10-epoch
+numbers post hoc (`scripts/epoch_curves.py`).

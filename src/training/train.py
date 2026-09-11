@@ -70,6 +70,7 @@ DEFAULTS: dict = {
     "max_genes": 300,
     "max_patches": None,
     "norm_first": True,
+    "aux_unimodal_weight": 0.0,  # >0 adds unimodal survival heads on each branch (loss += w * (L_wsi + L_rna))
     "train_modalities": "both",  # "both" | "wsi" | "genomic"  (component ablations)
     "eval_missing": True,
     "missing_rates": [0.1, 0.2, 0.3, 0.5],
@@ -176,6 +177,7 @@ def build_model(cfg: dict, gene_columns: list[str], composition_csv: Path, devic
         dropout=cfg["dropout"],
         modality_dropout=cfg["modality_dropout"],
         norm_first=cfg["norm_first"],
+        aux_heads=float(cfg["aux_unimodal_weight"]) > 0,
     ).to(device)
     return model, tokenizer
 
@@ -228,11 +230,12 @@ def build_scheduler(optimizer, cfg: dict):
 # ---------------------------------------------------------------------------------------
 # Forward / train / predict
 # ---------------------------------------------------------------------------------------
-def forward_batch(model, tokenizer, batch, device, modality="both", drop_wsi=None, drop_genomic=None):
+def forward_batch(model, tokenizer, batch, device, modality="both", drop_wsi=None, drop_genomic=None, return_aux=False):
     wsi = batch["wsi_features"].to(device, non_blocking=True).float() if modality in ("both", "wsi") else None
     mask = batch["wsi_mask"].to(device, non_blocking=True) if wsi is not None else None
     gen = tokenizer(batch["gene_expression"].to(device, non_blocking=True)) if modality in ("both", "genomic") else None
-    return model(wsi_features=wsi, genomic_features=gen, wsi_mask=mask, drop_wsi=drop_wsi, drop_genomic=drop_genomic)
+    kwargs = {"return_aux": True} if return_aux else {}
+    return model(wsi_features=wsi, genomic_features=gen, wsi_mask=mask, drop_wsi=drop_wsi, drop_genomic=drop_genomic, **kwargs)
 
 
 def train_one_epoch(model, tokenizer, loader, criterion, optimizer, device, cfg) -> float:
@@ -242,9 +245,21 @@ def train_one_epoch(model, tokenizer, loader, criterion, optimizer, device, cfg)
     params = list(model.parameters()) + list(tokenizer.parameters())
     optimizer.zero_grad(set_to_none=True)
     total, n = 0.0, 0
+    aux_w = float(cfg["aux_unimodal_weight"]) if bool(getattr(model, "aux_heads", False)) else 0.0
     for step, batch in enumerate(loader):
-        logits = forward_batch(model, tokenizer, batch, device, cfg["train_modalities"])
-        loss = criterion(logits, batch["survival_time_bin"].to(device), batch["censorship"].to(device))
+        bins = batch["survival_time_bin"].to(device)
+        cens = batch["censorship"].to(device)
+        if aux_w > 0:
+            logits, aux = forward_batch(model, tokenizer, batch, device, cfg["train_modalities"], return_aux=True)
+            loss = criterion(logits, bins, cens)
+            for key in ("h", "g"):  # unimodal heads, only on samples whose modality was really present
+                if key in aux:
+                    present = aux[f"{key}_present"]
+                    if bool(present.any()):
+                        loss = loss + aux_w * criterion(aux[key][present], bins[present], cens[present])
+        else:
+            logits = forward_batch(model, tokenizer, batch, device, cfg["train_modalities"])
+            loss = criterion(logits, bins, cens)
         (loss / accum).backward()
         if (step + 1) % accum == 0 or (step + 1) == len(loader):
             if cfg["clip_grad_norm"]:

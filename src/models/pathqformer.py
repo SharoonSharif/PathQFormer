@@ -35,10 +35,12 @@ class PathQFormer(nn.Module):
         dropout: float = 0.1,
         modality_dropout: float = 0.15,
         norm_first: bool = True,
+        aux_heads: bool = False,
     ):
         super().__init__()
         self.modality_dropout = modality_dropout
         self.num_queries = num_queries
+        self.aux_heads = aux_heads
 
         self.histology_query_block = ModalityQueryBlock(
             num_queries=num_queries, hidden_dim=hidden_dim, input_dim=wsi_input_dim,
@@ -53,6 +55,11 @@ class PathQFormer(nn.Module):
         )
         self.null_tokens = NullTokenModule(num_queries=num_queries, hidden_dim=hidden_dim)
         self.survival_head = SurvivalHead(hidden_dim=hidden_dim, num_bins=num_bins, dropout=dropout)
+        if aux_heads:
+            # auxiliary unimodal heads on the pre-fusion codes: each branch must be prognostic on its
+            # own, which stops the fusion block from collapsing onto the stronger modality
+            self.aux_head_h = SurvivalHead(hidden_dim=hidden_dim, num_bins=num_bins, dropout=dropout)
+            self.aux_head_g = SurvivalHead(hidden_dim=hidden_dim, num_bins=num_bins, dropout=dropout)
 
     # ------------------------------------------------------------------------------------
     def forward(
@@ -64,6 +71,7 @@ class PathQFormer(nn.Module):
         drop_wsi: torch.Tensor | None = None,
         drop_genomic: torch.Tensor | None = None,
         return_attention: bool = False,
+        return_aux: bool = False,
     ):
         """
         Args:
@@ -86,22 +94,36 @@ class PathQFormer(nn.Module):
             drop_wsi, drop_genomic = self._sample_modality_dropout(B, has_wsi, has_gen, device)
 
         attn_h = attn_g = None
+        aux: dict = {}
+        present_h = torch.full((B,), has_wsi, dtype=torch.bool, device=device)
+        present_g = torch.full((B,), has_gen, dtype=torch.bool, device=device)
         if has_wsi:
             z_h, attn_h = self.histology_query_block(wsi_features, mask=wsi_mask, return_attention=return_attention)
+            if return_aux and self.aux_heads:
+                aux["h"] = self.aux_head_h(z_h)
             if drop_wsi is not None and bool(drop_wsi.any()):
+                present_h = present_h & ~drop_wsi
                 z_h = torch.where(drop_wsi.view(B, 1, 1), self.null_tokens.get_null("histology", B), z_h)
         else:
             z_h = self.null_tokens.get_null("histology", B)
 
         if has_gen:
             z_g, attn_g = self.genomic_query_block(genomic_features, mask=genomic_mask, return_attention=return_attention)
+            if return_aux and self.aux_heads:
+                aux["g"] = self.aux_head_g(z_g)
             if drop_genomic is not None and bool(drop_genomic.any()):
+                present_g = present_g & ~drop_genomic
                 z_g = torch.where(drop_genomic.view(B, 1, 1), self.null_tokens.get_null("genomic", B), z_g)
         else:
             z_g = self.null_tokens.get_null("genomic", B)
 
         z_fused = self.fusion_block(z_h, z_g)
         logits = self.survival_head(z_fused)
+        if return_aux:
+            aux.update(h_present=present_h, g_present=present_g)
+            if return_attention:
+                return logits, {"histology": attn_h, "genomic": attn_g}, aux
+            return logits, aux
         if return_attention:
             return logits, {"histology": attn_h, "genomic": attn_g}
         return logits
