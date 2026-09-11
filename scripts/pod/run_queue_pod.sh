@@ -12,6 +12,9 @@
 # Environment knobs (defaults in brackets):
 #   COHORTS  [STAD HNSC COADREAD BRCA]   SEEDS [0]   WORKERS [6]   OUT [/workspace/outputs_v2]
 #   CONFIGS  [PathQ-Former hybrid + SurvPath + ABMIL + SNN + MLP baselines]
+#   CACHE_COHORTS [BLCA STAD HNSC COADREAD]  cohorts whose features are cached in RAM as float16
+#            (epochs after the first become compute-bound; BRCA's 66 GB is left on disk)
+#   EXTRA    []  extra "key=value,key=value" overrides appended to every run
 #   Run names come from the config file name: blca_hybrid_v2 -> hybrid, blca_survpath -> baseline_survpath,
 #   anything else -> its own stem (e.g. pathq_fast_e10); seeds other than 0 add "_seed<N>".
 set -uo pipefail
@@ -22,6 +25,8 @@ OUT="${OUT:-/workspace/outputs_v2}"; EMB="${EMBEDDINGS_ROOT:-/workspace/embeddin
 COHORTS="${COHORTS:-STAD HNSC COADREAD BRCA}"
 SEEDS="${SEEDS:-0}"
 WORKERS="${WORKERS:-6}"
+CACHE_COHORTS="${CACHE_COHORTS:-BLCA STAD HNSC COADREAD}"
+EXTRA="${EXTRA:-}"
 CONFIGS="${CONFIGS:-configs/blca_hybrid_v2.yaml configs/baselines/blca_survpath.yaml configs/baselines/blca_abmil.yaml configs/baselines/blca_snn.yaml configs/baselines/blca_mlp_omics.yaml}"
 PY=python3
 
@@ -35,13 +40,15 @@ run_name() {
 }
 
 run() {  # run <config> <cancer_lower> <seed>
-  local cfg=$1 cancer=$2 seed=$3 name
+  local cfg=$1 cancer=$2 seed=$3 name over
   name="$(run_name "$cfg")"; [ "$seed" != "0" ] && name="${name}_seed${seed}"
-  bash scripts/run_experiments.sh \
-    "${cfg}::cancer_type=${cancer},embeddings_dir=${EMB}/${cancer^^},output_dir=${OUT}/${name},num_workers=${WORKERS},seed=${seed}"
+  over="cancer_type=${cancer},embeddings_dir=${EMB}/${cancer^^},output_dir=${OUT}/${name},num_workers=${WORKERS},seed=${seed}"
+  case " $CACHE_COHORTS " in *" ${cancer^^} "*) over="${over},cache_in_ram=true,cache_dtype=float16" ;; esac
+  [ -n "$EXTRA" ] && over="${over},${EXTRA}"
+  bash scripts/run_experiments.sh "${cfg}::${over}"
 }
 
-echo "[queue] $(date '+%F %T') start | cohorts: $COHORTS | seeds: $SEEDS | configs: $CONFIGS | GPU: $(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)"
+echo "[queue] $(date '+%F %T') start | cohorts: $COHORTS | seeds: $SEEDS | cache: $CACHE_COHORTS | configs: $CONFIGS | GPU: $(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)"
 for C in $COHORTS; do
   if ! bash scripts/pod/fetch_cohort.sh "$C"; then echo "[queue] $C: fetch failed, skipping"; continue; fi
   for s in $SEEDS; do

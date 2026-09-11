@@ -8,6 +8,7 @@
 #   setsid bash scripts/pod/batch2.sh > /workspace/logs/pod_batch2.out 2>&1 < /dev/null &
 set -uo pipefail
 cd /workspace/PathQFormer
+export CACHE_COHORTS="BLCA STAD HNSC COADREAD BRCA"   # 125 GB RAM per pod: cache every cohort as float16
 echo "[batch2] $(date '+%F %T') phase A: COADREAD, val-loss protocol, 5 methods"
 KEEP_POD=1 COHORTS="COADREAD" bash scripts/pod/run_queue_pod.sh
 echo "[batch2] $(date '+%F %T') phase B: fixed-budget protocol, 5 cohorts x {PathQ-Former fast, SurvPath}"
