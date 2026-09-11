@@ -237,3 +237,16 @@ report the final checkpoint, the MCAT/SurvPath convention - for PathQ-Former (lr
 `configs/protocol_fixed/pathq_fast_e10.yaml`) and SurvPath (`survpath_e10.yaml`) on all 5 cohorts, plus COADREAD under the
 val-loss protocol for all 5 methods to complete Table 1 v1. Best-epoch numbers stay logged as an optimistic bound.
 
+## Experiments 6-7: three pods in parallel (launched 2026-09-11 ~09:40 local)
+All pods: RTX PRO 4000, EU-RO-1, shared volume, features cached in RAM as float16 after the first epoch.
+- **Pod 1, batch 2** -> `/workspace/outputs_v2`: COADREAD (val-loss, 5 methods), then fixed-budget
+  `pathq_fast_e10` + `survpath_e10`, seed 0, five cohorts.
+- **Pod 2, batch 3a** -> `/workspace/outputs_ablate`: BLCA fusion ablations under the fixed budget
+  (modality dropout 0 / 0.3 / 0.5, K = 16 / 64, fusion depth 1 / 3, WSI-only and genomics-only PathQ-Former),
+  the late-fusion baseline (`scripts/late_fusion.py`: z-scored risk average of the two single-modality models),
+  then `pathq_fast_e10` seeds 1-2 on five cohorts.
+- **Pod 3, batch 3b** -> `/workspace/outputs_ablate`: `survpath_e10` seeds 1-2 on five cohorts.
+Decision rule for the paper protocol: the one under which the published baselines land near their published
+numbers. Decision rule for the final PathQ-Former config: fusion must beat both single-modality models AND the
+late-fusion baseline on BLCA; otherwise the fusion block, not the idea, is what needs work.
+
