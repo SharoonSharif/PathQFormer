@@ -58,7 +58,7 @@ DEFAULTS: dict = {
     "num_workers": 4,
     "cache_in_ram": False,
     "num_threads": None,
-    "selection_metric": "val_loss",  # or "val_cindex"
+    "selection_metric": "val_loss",  # "val_cindex", or "last" = fixed epoch budget (MCAT/SurvPath style)
     "patience": 5,
     "min_epochs": 0,
     "warmup_epochs": 0,
@@ -85,8 +85,8 @@ def with_defaults(cfg: dict) -> dict:
     out.update(cfg)
     if out["train_modalities"] not in MODALITIES:
         raise ValueError(f"train_modalities must be one of {MODALITIES}")
-    if out["selection_metric"] not in ("val_loss", "val_cindex"):
-        raise ValueError("selection_metric must be 'val_loss' or 'val_cindex'")
+    if out["selection_metric"] not in ("val_loss", "val_cindex", "last"):
+        raise ValueError("selection_metric must be 'val_loss', 'val_cindex' or 'last' (fixed epoch budget, no early stopping)")
     if out["model_type"] != "pathqformer":
         forced = {"survpath": "both", "abmil": "wsi", "snn": "genomic", "mlp_omics": "genomic"}
         if out["model_type"] not in forced:
@@ -405,8 +405,11 @@ def train_fold(cfg: dict, fold: int, device, run_dir: Path) -> dict:
 
         rec = {"epoch": epoch + 1, "train_loss": train_loss, "val_loss": val_loss, "val_cindex": val_ci, "lr": lr, "seconds": time.time() - te}
         state["history"].append(rec)
-        metric = val_loss if sel == "val_loss" else val_ci
-        improved = state["best"] is None or (np.isfinite(metric) and better(metric, state["best"]))
+        if sel == "last":  # fixed budget: every epoch replaces the checkpoint, no early stopping
+            metric, improved = val_loss, True
+        else:
+            metric = val_loss if sel == "val_loss" else val_ci
+            improved = state["best"] is None or (np.isfinite(metric) and better(metric, state["best"]))
         if improved:
             state.update(best=metric, best_epoch=epoch + 1, patience=0)
             torch.save({
@@ -439,7 +442,7 @@ def train_fold(cfg: dict, fold: int, device, run_dir: Path) -> dict:
             "state": state,
         }, latest_path)
 
-        if state["patience"] >= int(cfg["patience"]) and epoch + 1 >= int(cfg["min_epochs"]):
+        if sel != "last" and state["patience"] >= int(cfg["patience"]) and epoch + 1 >= int(cfg["min_epochs"]):
             print(f"  Early stopping at epoch {epoch + 1} (no {sel} improvement for {cfg['patience']} epochs)", flush=True)
             break
 

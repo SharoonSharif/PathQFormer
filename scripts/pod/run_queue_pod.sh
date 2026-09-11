@@ -1,48 +1,53 @@
 #!/usr/bin/env bash
-# Unattended multi-cancer experiment queue for a Runpod GPU pod (network volume at /workspace).
+# Unattended experiment queue for a Runpod GPU pod (network volume at /workspace).
 #
 #   cd /workspace/PathQFormer
 #   setsid bash scripts/pod/run_queue_pod.sh > /workspace/logs/pod_queue.out 2>&1 < /dev/null &
 #
-# Per cohort (small ones first so results arrive early): stream the embeddings into the volume,
-# then PathQ-Former (hybrid v2) -> official SurvPath -> ABMIL -> SNN -> MLP, all under the identical
-# protocol. Then extra seeds on BLCA for the two multimodal methods (seed 0 runs on the laptop).
-# Everything resumes (finished folds are skipped), so re-running this script is always safe.
-# When done: recompute metrics, build the comparison table, render figures, and remove the pod
-# itself unless KEEP_POD=1.
+# For every cohort in COHORTS (embeddings streamed into the volume on first use), every seed in SEEDS
+# and every config in CONFIGS, run the training under the identical protocol. Everything resumes
+# (finished folds are skipped), so re-running is always safe. Afterwards: recompute metrics, build the
+# comparison table, render figures, and remove the pod itself unless KEEP_POD=1.
+#
+# Environment knobs (defaults in brackets):
+#   COHORTS  [STAD HNSC COADREAD BRCA]   SEEDS [0]   WORKERS [6]   OUT [/workspace/outputs_v2]
+#   CONFIGS  [PathQ-Former hybrid + SurvPath + ABMIL + SNN + MLP baselines]
+#   Run names come from the config file name: blca_hybrid_v2 -> hybrid, blca_survpath -> baseline_survpath,
+#   anything else -> its own stem (e.g. pathq_fast_e10); seeds other than 0 add "_seed<N>".
 set -uo pipefail
 cd /workspace/PathQFormer
 set -a; source /workspace/.env; set +a
 export RUNPOD_API_KEY="${RUNPOD_API_KEY:-${RUNPOD_API_KEY_PASTED:-}}" PYTHONUTF8=1 PYTHONIOENCODING=utf-8
 OUT="${OUT:-/workspace/outputs_v2}"; EMB="${EMBEDDINGS_ROOT:-/workspace/embeddings}"
 COHORTS="${COHORTS:-STAD HNSC COADREAD BRCA}"
-SEEDS="${SEEDS:-1 2}"
+SEEDS="${SEEDS:-0}"
 WORKERS="${WORKERS:-6}"
+CONFIGS="${CONFIGS:-configs/blca_hybrid_v2.yaml configs/baselines/blca_survpath.yaml configs/baselines/blca_abmil.yaml configs/baselines/blca_snn.yaml configs/baselines/blca_mlp_omics.yaml}"
 PY=python3
 
-run() {  # run <config> <cancer_lower> <run_name> [extra overrides "k=v,k=v"]
-  local cfg=$1 cancer=$2 name=$3 extra=${4:-}
-  bash scripts/run_experiments.sh \
-    "${cfg}::cancer_type=${cancer},embeddings_dir=${EMB}/${cancer^^},output_dir=${OUT}/${name},num_workers=${WORKERS}${extra:+,$extra}"
+run_name() {
+  local b; b="$(basename "${1%.yaml}")"; b="${b#blca_}"
+  case "$b" in
+    hybrid_v2) echo hybrid ;;
+    survpath|abmil|snn|mlp_omics) echo "baseline_$b" ;;
+    *) echo "$b" ;;
+  esac
 }
 
-echo "[queue] $(date '+%F %T') start | cohorts: $COHORTS | extra BLCA seeds: $SEEDS | GPU: $(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)"
+run() {  # run <config> <cancer_lower> <seed>
+  local cfg=$1 cancer=$2 seed=$3 name
+  name="$(run_name "$cfg")"; [ "$seed" != "0" ] && name="${name}_seed${seed}"
+  bash scripts/run_experiments.sh \
+    "${cfg}::cancer_type=${cancer},embeddings_dir=${EMB}/${cancer^^},output_dir=${OUT}/${name},num_workers=${WORKERS},seed=${seed}"
+}
+
+echo "[queue] $(date '+%F %T') start | cohorts: $COHORTS | seeds: $SEEDS | configs: $CONFIGS | GPU: $(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)"
 for C in $COHORTS; do
   if ! bash scripts/pod/fetch_cohort.sh "$C"; then echo "[queue] $C: fetch failed, skipping"; continue; fi
-  c=${C,,}
-  run configs/blca_hybrid_v2.yaml            "$c" hybrid
-  run configs/baselines/blca_survpath.yaml   "$c" baseline_survpath
-  run configs/baselines/blca_abmil.yaml      "$c" baseline_abmil
-  run configs/baselines/blca_snn.yaml        "$c" baseline_snn
-  run configs/baselines/blca_mlp_omics.yaml  "$c" baseline_mlp_omics
-done
-
-if bash scripts/pod/fetch_cohort.sh BLCA; then
   for s in $SEEDS; do
-    run configs/blca_hybrid_v2.yaml          blca "hybrid_seed$s"            "seed=$s"
-    run configs/baselines/blca_survpath.yaml blca "baseline_survpath_seed$s" "seed=$s"
+    for cfg in $CONFIGS; do run "$cfg" "${C,,}" "$s"; done
   done
-fi
+done
 
 echo "[queue] $(date '+%F %T') training done; finalizing"
 finished=()
@@ -52,7 +57,10 @@ $PY scripts/aggregate_results.py "$OUT" --out "$OUT/summary_all.md" --compare hy
 for r in "${finished[@]}"; do $PY scripts/analyze_run.py "$r" >/dev/null 2>&1 || echo "[queue] analysis failed for $r"; done
 echo "[queue] $(date '+%F %T') all done -> $OUT/summary_all.md"
 
-if [ "${KEEP_POD:-0}" != "1" ] && [ -n "${RUNPOD_POD_ID:-}" ] && command -v runpodctl >/dev/null 2>&1; then
+if [ "${KEEP_POD:-0}" != "1" ] && [ -n "${RUNPOD_POD_ID:-}" ]; then
   echo "[queue] removing this pod ($RUNPOD_POD_ID); the volume keeps everything"
-  runpodctl pod remove "$RUNPOD_POD_ID"
+  # v2 CLI: `pod remove`; the v1 CLI that https://cli.runpod.net installs: `remove pod`; else the REST API
+  runpodctl pod remove "$RUNPOD_POD_ID" 2>/dev/null || runpodctl remove pod "$RUNPOD_POD_ID" 2>/dev/null \
+    || curl -sf -X DELETE "https://rest.runpod.io/v1/pods/$RUNPOD_POD_ID" -H "Authorization: Bearer $RUNPOD_API_KEY" \
+    || echo "[queue] could not remove the pod automatically - from the laptop: runpodctl pod remove $RUNPOD_POD_ID"
 fi

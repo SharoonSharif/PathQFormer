@@ -206,3 +206,34 @@ Fill in here once the queue finishes:
 | baseline_v2 | | | | | | | |
 | wsi_only | | | | | | n/a | n/a |
 | genomic_only | | | | | | n/a | n/a |
+
+---
+
+## Experiment 5: multi-cohort on the GPU pod (val-loss protocol, seed 0) - finished 2026-09-11 05:26 local
+Pod queue ran STAD, HNSC, BRCA (COADREAD crashed - see below) x {PathQ-Former hybrid v2, SurvPath, ABMIL, SNN, MLP}
+plus BLCA seeds 1-2 for PathQ-Former and SurvPath. Full table: `pod_results/summary_all.md`.
+
+| Cohort | PathQ-Former | SurvPath | ABMIL (WSI) | SNN (RNA) | MLP (RNA) |
+|--------|-------------|----------|-------------|-----------|-----------|
+| STAD | 0.486 +- 0.069 | **0.610 +- 0.074** | 0.498 | 0.454 | 0.516 |
+| HNSC | 0.484 +- 0.084 | 0.515 +- 0.057 | **0.547** | 0.472 | 0.543 |
+| BRCA | 0.548 +- 0.138 | 0.532 +- 0.184 | 0.481 | **0.572** | 0.539 |
+| BLCA seed 1 | 0.599 +- 0.132 | 0.552 +- 0.142 | | | |
+| BLCA seed 2 | 0.622 +- 0.105 | 0.597 +- 0.047 | | | |
+| BLCA seed 0 (laptop) | 0.645 +- 0.086 | pending | | | |
+
+**Reading.** Only BLCA carries signal (PathQ-Former 0.622 mean over 3 seeds vs SurvPath 0.575 over 2). On STAD, HNSC and
+BRCA *every* method, including the official SurvPath and the plain RNA baselines, sits near chance, far below the
+published 0.6-0.75 range. Training histories show the cause: with 7-16 events per validation fold the NLL is noise and
+val-loss selection picked epoch 1-3 checkpoints while the validation C-index was still rising (e.g. STAD PathQ-Former
+best-epoch mean 0.587 vs selected 0.486). PathQ-Former is hit hardest because lr 5e-5 with 8-step accumulation gives
+~35 updates per epoch. This is a protocol failure, not an architecture result.
+
+**Bugs found:** (1) COADREAD (37 events) crashed in the bootstrap CI - a resample with no comparable pairs makes sksurv
+raise; `concordance()` now returns NaN there. (2) The pod could not remove itself (old runpodctl syntax); idle ~3 h.
+
+**Decision (Experiment 6, queued 2026-09-11):** fixed-budget protocol `selection_metric: last` - train exactly 10 epochs and
+report the final checkpoint, the MCAT/SurvPath convention - for PathQ-Former (lr 1e-4, accumulation 2:
+`configs/protocol_fixed/pathq_fast_e10.yaml`) and SurvPath (`survpath_e10.yaml`) on all 5 cohorts, plus COADREAD under the
+val-loss protocol for all 5 methods to complete Table 1 v1. Best-epoch numbers stay logged as an optimistic bound.
+

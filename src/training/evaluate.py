@@ -39,9 +39,12 @@ def concordance(event, time, risk) -> float:
     risk = np.asarray(risk, dtype=float)
     if event.sum() == 0 or len(np.unique(risk)) == 1:
         return float("nan")
-    if HAS_SKSURV:
-        return float(concordance_index_censored(event, time, risk, tied_tol=1e-8)[0])
-    return float(_lifelines_cindex(time, -risk, event))
+    try:
+        if HAS_SKSURV:
+            return float(concordance_index_censored(event, time, risk, tied_tol=1e-8)[0])
+        return float(_lifelines_cindex(time, -risk, event))
+    except Exception:  # noqa: BLE001  e.g. sksurv NoComparablePairException in tiny / event-poor (re)samples
+        return float("nan")
 
 
 def bootstrap_cindex_ci(event, time, risk, n_boot: int = 1000, seed: int = 0, alpha: float = 0.05):

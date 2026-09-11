@@ -122,6 +122,15 @@ def test_concordance_extremes_and_bootstrap():
     assert lo == pytest.approx(1.0) and hi == pytest.approx(1.0)
 
 
+def test_concordance_returns_nan_without_comparable_pairs():
+    # a single event at the latest time: no pair is comparable (COADREAD bootstrap crash, 2026-09-11)
+    time = np.array([1.0, 2.0, 3.0, 4.0])
+    event = np.array([False, False, False, True])
+    assert np.isnan(concordance(event, time, np.array([0.1, 0.2, 0.3, 0.4])))
+    lo, hi, _ = bootstrap_cindex_ci(np.array([True, False, True]), np.array([1.0, 2.0, 3.0]), np.array([3.0, 2.0, 1.0]), n_boot=20, seed=0)
+    assert np.isfinite(lo) and np.isfinite(hi)
+
+
 def test_survival_metrics_run_end_to_end():
     rng = np.random.default_rng(0)
     n = 120
