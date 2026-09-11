@@ -27,7 +27,7 @@ for item in "$@"; do
   if [[ "$item" == *"::"* ]]; then overrides="${item##*::}"; overrides="${overrides//,/ }"; fi
   name="$(basename "${cfg%.yaml}")"
   # overrides may contain paths; keep the log name flat and short
-  [ -n "$overrides" ] && name="${name}_$(echo "$overrides" | tr ' =/' '___' | tr -c 'A-Za-z0-9_.-\n' '_' | cut -c1-120)"
+  [ -n "$overrides" ] && name="${name}_$(echo "$overrides" | tr ' =/' '___' | tr -c 'A-Za-z0-9_.\n-' '_' | cut -c1-120)"
   log="logs/${name}_$(date +%Y%m%d_%H%M%S).log"
   echo "[$(date '+%F %T')] START $cfg $overrides -> $log"
   # shellcheck disable=SC2086
