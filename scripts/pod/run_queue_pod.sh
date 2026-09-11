@@ -18,8 +18,9 @@
 #   Run names come from the config file name: blca_hybrid_v2 -> hybrid, blca_survpath -> baseline_survpath,
 #   anything else -> its own stem (e.g. pathq_fast_e10); seeds other than 0 add "_seed<N>".
 set -uo pipefail
-cd /workspace/PathQFormer
-set -a; source /workspace/.env; set +a
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"   # the repo this script lives in
+set -a; source "${ENV_FILE:-/workspace/.env}"; set +a
+[ -f /etc/rp_environment ] && source /etc/rp_environment   # RUNPOD_POD_ID etc. of THIS pod (overrides any id in .env)
 export RUNPOD_API_KEY="${RUNPOD_API_KEY:-${RUNPOD_API_KEY_PASTED:-}}" PYTHONUTF8=1 PYTHONIOENCODING=utf-8
 OUT="${OUT:-/workspace/outputs_v2}"; EMB="${EMBEDDINGS_ROOT:-/workspace/embeddings}"
 COHORTS="${COHORTS:-STAD HNSC COADREAD BRCA}"

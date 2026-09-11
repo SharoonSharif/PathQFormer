@@ -6,7 +6,7 @@
 # Removes its pod at the end. Launch detached:
 #   setsid bash scripts/pod/batch3a.sh > /workspace/logs/pod_batch3a.out 2>&1 < /dev/null &
 set -uo pipefail
-cd /workspace/PathQFormer
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"   # the repo this script lives in
 export CACHE_COHORTS="BLCA STAD HNSC COADREAD BRCA"   # 125 GB RAM per pod: cache every cohort as float16
 export OUT=/workspace/outputs_ablate PYTHONUTF8=1
 ABL="configs/ablation_fixed/pathq_fast_e10_md0.yaml configs/ablation_fixed/pathq_fast_e10_md30.yaml configs/ablation_fixed/pathq_fast_e10_md50.yaml \

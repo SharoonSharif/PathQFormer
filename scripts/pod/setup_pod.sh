@@ -4,7 +4,7 @@
 #
 #   bash /workspace/PathQFormer/scripts/pod/setup_pod.sh
 set -euo pipefail
-cd /workspace/PathQFormer
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"   # the repo this script lives in
 export PIP_BREAK_SYSTEM_PACKAGES=1 PYTHONUTF8=1
 
 echo "[setup] python: $(python3 --version) | torch: $(python3 -c 'import torch;print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else "")')"

@@ -4,7 +4,7 @@
 # Removes its pod at the end. Launch detached:
 #   setsid bash scripts/pod/batch3b.sh > /workspace/logs/pod_batch3b.out 2>&1 < /dev/null &
 set -uo pipefail
-cd /workspace/PathQFormer
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"   # the repo this script lives in
 export CACHE_COHORTS="BLCA STAD HNSC COADREAD BRCA"   # 125 GB RAM per pod: cache every cohort as float16
 export OUT=/workspace/outputs_ablate PYTHONUTF8=1
 echo "[batch3b] $(date '+%F %T') phase B: SurvPath seeds 1-2, five cohorts (fixed budget, RAM cache)"
