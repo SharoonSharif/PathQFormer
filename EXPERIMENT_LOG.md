@@ -238,7 +238,10 @@ report the final checkpoint, the MCAT/SurvPath convention - for PathQ-Former (lr
 val-loss protocol for all 5 methods to complete Table 1 v1. Best-epoch numbers stay logged as an optimistic bound.
 
 ## Experiments 6-7: three pods in parallel (launched 2026-09-11 ~09:40 local)
-All pods: RTX PRO 4000, EU-RO-1, shared volume, features cached in RAM as float16 after the first epoch.
+All pods: RTX PRO 4000, EU-RO-1, shared volume, features cached in RAM as float16 after the first epoch
+(fp16 rounding of the frozen UNI2-h features; the model computes in fp32 on the device). Measured: uncached
+epoch ~146 s at 15-25 % GPU, cached ~65 s at 7 % GPU -> host-side copies dominated, so from commit 0c6e0fc the
+loader keeps fp16 through collate, skips the copy for single-patient batches and pins nothing without workers.
 - **Pod 1, batch 2** -> `/workspace/outputs_v2`: COADREAD (val-loss, 5 methods), then fixed-budget
   `pathq_fast_e10` + `survpath_e10`, seed 0, five cohorts.
 - **Pod 2, batch 3a** -> `/workspace/outputs_ablate`: BLCA fusion ablations under the fixed budget
