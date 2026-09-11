@@ -10,8 +10,7 @@ cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"   # the repo this scrip
 export CACHE_COHORTS="BLCA STAD HNSC COADREAD BRCA"
 export OUT=/workspace/outputs_e20 PYTHONUTF8=1
 CFGS="configs/protocol_fixed/pathq_fast_e20.yaml configs/protocol_fixed/pathq_fast_e20_aux.yaml configs/protocol_fixed/survpath_e20.yaml"
-echo "[batch4] $(date '+%F %T') seed 0: 20-epoch budget, five cohorts"
-KEEP_POD=1 COHORTS="BLCA STAD HNSC COADREAD BRCA" SEEDS="0" CONFIGS="$CFGS" bash scripts/pod/run_queue_pod.sh
-echo "[batch4] $(date '+%F %T') seeds 1-2"
-COHORTS="BLCA STAD HNSC COADREAD BRCA" SEEDS="1 2" CONFIGS="$CFGS" bash scripts/pod/run_queue_pod.sh
+SEEDS_TO_RUN="${1:-0 1 2}"   # e.g. `batch4.sh 0` on one pod and `batch4.sh "1 2"` on another
+echo "[batch4] $(date '+%F %T') 20-epoch budget, five cohorts, seeds: $SEEDS_TO_RUN"
+COHORTS="BLCA STAD HNSC COADREAD BRCA" SEEDS="$SEEDS_TO_RUN" CONFIGS="$CFGS" bash scripts/pod/run_queue_pod.sh
 echo "[batch4] $(date '+%F %T') done"
