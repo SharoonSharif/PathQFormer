@@ -33,7 +33,7 @@ Aligned with MCAT / SurvPath so numbers are comparable to the literature:
 | Risk score | −Σ<sub>t</sub> S<sub>t</sub> (MCAT/SurvPath) |
 | C-index | Harrell's on **continuous** time (`sksurv.concordance_index_censored`) — the primary metric |
 | Also reported | Uno's IPCW C-index truncated at the 75th percentile of training event times; Brier / IBS and time-dependent AUC on the quartile grid of training event times; 1000× bootstrap 95% CI; KM log-rank (median split) |
-| Model selection | validation **loss** (selecting on val C-index and reporting it is optimistic; both are logged) |
+| Model selection | `selection_metric`: `val_loss` (early stopping; the v2 default), `val_cindex` (optimistic), or `last` = fixed epoch budget, final checkpoint (MCAT/SurvPath convention; `configs/protocol_fixed/`). On event-poor cohorts (7-16 events per fold) val-loss selection picked epoch 1-3 checkpoints for every method, so the multi-cohort tables use the fixed budget; best-epoch numbers are always logged as an optimistic bound |
 | Seeds | `seed + fold`, stored with results together with the git commit |
 | Missing modality | same checkpoint evaluated WSI-only, genomics-only and with 10/20/30/50 % of patients randomly missing one modality |
 
