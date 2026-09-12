@@ -10,7 +10,7 @@ export CACHE_COHORTS="BLCA STAD HNSC COADREAD BRCA" PYTHONUTF8=1   # cache is ca
 echo "[batch5a] $(date '+%F %T') fixed-budget seed 0 remainder"
 KEEP_POD=1 OUT=/workspace/outputs_v2 COHORTS="BLCA STAD HNSC COADREAD BRCA" SEEDS="0" \
   CONFIGS="configs/protocol_fixed/pathq_fast_e10.yaml configs/protocol_fixed/survpath_e10.yaml" bash scripts/pod/run_queue_pod.sh
-echo "[batch5a] $(date '+%F %T') 20-epoch budget, seeds 1-2"
-OUT=/workspace/outputs_e20 COHORTS="BLCA STAD HNSC COADREAD BRCA" SEEDS="1 2" \
+echo "[batch5a] $(date '+%F %T') 20-epoch budget, seeds 1-2 (BLCA STAD BRCA; HNSC on pod B, COADREAD on pod C)"
+OUT=/workspace/outputs_e20 COHORTS="BLCA STAD BRCA" SEEDS="1 2" \
   CONFIGS="configs/protocol_fixed/pathq_fast_e20.yaml configs/protocol_fixed/pathq_fast_e20_aux.yaml configs/protocol_fixed/survpath_e20.yaml" bash scripts/pod/run_queue_pod.sh
 echo "[batch5a] $(date '+%F %T') done"

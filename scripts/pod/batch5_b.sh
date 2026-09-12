@@ -17,5 +17,8 @@ KEEP_POD=1 COHORTS="BLCA" CONFIGS="$ABL" bash scripts/pod/run_queue_pod.sh
 python3 scripts/late_fusion.py "$OUT/pathq_fast_e10_wsi_only/blca" "$OUT/pathq_fast_e10_genomic_only/blca" \
   --out "$OUT/late_fusion_fast_e10/blca" || echo "[batch5b] late fusion failed"
 echo "[batch5b] $(date '+%F %T') PathQ-Former e10 seeds 1-2, five cohorts"
-COHORTS="BLCA STAD HNSC COADREAD BRCA" SEEDS="1 2" CONFIGS="configs/protocol_fixed/pathq_fast_e10.yaml" bash scripts/pod/run_queue_pod.sh
+KEEP_POD=1 COHORTS="BLCA STAD HNSC COADREAD BRCA" SEEDS="1 2" CONFIGS="configs/protocol_fixed/pathq_fast_e10.yaml" bash scripts/pod/run_queue_pod.sh
+echo "[batch5b] $(date '+%F %T') 20-epoch budget, seeds 1-2, HNSC"
+OUT=/workspace/outputs_e20 COHORTS="HNSC" SEEDS="1 2" \
+  CONFIGS="configs/protocol_fixed/pathq_fast_e20.yaml configs/protocol_fixed/pathq_fast_e20_aux.yaml configs/protocol_fixed/survpath_e20.yaml" bash scripts/pod/run_queue_pod.sh
 echo "[batch5b] $(date '+%F %T') done"
