@@ -154,6 +154,7 @@ class TCGAMultimodalDataset(Dataset):
         scaler_kind: str = "minmax",
         cache_in_ram: bool = False,
         cache_dtype: torch.dtype = torch.float16,
+        cache_max_bytes: int | None = None,
     ):
         if label_col is None or censor_col is None:
             if endpoint not in ENDPOINTS:
@@ -165,6 +166,8 @@ class TCGAMultimodalDataset(Dataset):
         self.max_patches = max_patches
         self._cache: dict[str, torch.Tensor] | None = {} if cache_in_ram else None
         self._cache_dtype = cache_dtype
+        self._cache_max_bytes = cache_max_bytes  # None = unlimited; once exceeded, further slides stay on disk
+        self._cache_bytes = 0
 
         # ---- slides in this split with usable labels -------------------------------------
         meta = pd.read_csv(metadata_csv)
@@ -248,9 +251,21 @@ class TCGAMultimodalDataset(Dataset):
             feats = torch.load(path, map_location="cpu", weights_only=True).float()
         feats = feats.reshape(-1, feats.shape[-1])
         if self._cache is not None:
-            self._cache[stem] = feats.to(self._cache_dtype)
-            return self._cache[stem]
+            cached = feats.to(self._cache_dtype)
+            if self._cache_max_bytes is None or self._cache_bytes + cached.nbytes <= self._cache_max_bytes:
+                self._cache[stem] = cached
+                self._cache_bytes += cached.nbytes
+            return cached
         return feats
+
+    def cache_stats(self) -> tuple[int, int]:
+        """(slides cached, bytes cached)."""
+        return (len(self._cache) if self._cache is not None else 0), self._cache_bytes
+
+    def clear_cache(self) -> None:
+        if self._cache is not None:
+            self._cache.clear()
+        self._cache_bytes = 0
 
     def load_coords(self, stem: str) -> np.ndarray | None:
         """Patch coordinates for attention heatmaps, if the embedding file stores them."""

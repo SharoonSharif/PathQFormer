@@ -20,6 +20,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import gc
 import json
 import sys
 import time
@@ -51,6 +52,7 @@ DEFAULTS: dict = {
     "optimizer": "adamw",  # adamw | radam | adam
     "weighted_sample": False,  # SurvPath-style class-balanced sampling over (bin, censorship)
     "cache_dtype": "float32",
+    "cache_max_fraction": 0.45,  # of the container's memory limit (cgroup) or total RAM, per dataset (train + val share it)
     "endpoint": "dss",
     "pathway_type": "combine",
     "scaler": "minmax",
@@ -124,8 +126,37 @@ def data_paths(cfg: dict, fold: int) -> dict:
     }
 
 
+def memory_limit_bytes() -> int:
+    """The memory this process may actually use: the cgroup limit inside a container (Runpod pods
+    report the host's RAM in `free`, but the container is killed at a much lower cgroup limit),
+    else total physical RAM."""
+    for path in ("/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory/memory.limit_in_bytes"):
+        try:
+            with open(path) as f:
+                raw = f.read().strip()
+            if raw.isdigit() and int(raw) < 1 << 50:
+                return int(raw)
+        except OSError:
+            pass
+    try:
+        import psutil  # optional
+
+        return int(psutil.virtual_memory().total)
+    except ImportError:
+        try:
+            import os
+
+            return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
+        except (ValueError, OSError, AttributeError):
+            return 32 << 30
+
+
 def build_datasets(cfg: dict, fold: int) -> tuple[TCGAMultimodalDataset, TCGAMultimodalDataset]:
     p = data_paths(cfg, fold)
+    cache_max = None
+    if cfg["cache_in_ram"]:
+        # train and val datasets of one fold share the budget (the whole cohort is cached once per fold)
+        cache_max = int(float(cfg["cache_max_fraction"]) * memory_limit_bytes())
     common = dict(
         metadata_csv=p["metadata"],
         rna_csv=p["rna"],
@@ -136,8 +167,10 @@ def build_datasets(cfg: dict, fold: int) -> tuple[TCGAMultimodalDataset, TCGAMul
         cache_in_ram=cfg["cache_in_ram"],
         cache_dtype=getattr(torch, str(cfg["cache_dtype"])),
     )
-    train = TCGAMultimodalDataset(split="train", scaler_kind=cfg["scaler"], max_patches=cfg.get("max_patches"), **common)
-    val = TCGAMultimodalDataset(split="val", bins=train.bins, scaler=train.scaler, **common)
+    train = TCGAMultimodalDataset(split="train", scaler_kind=cfg["scaler"], max_patches=cfg.get("max_patches"),
+                                  cache_max_bytes=(int(cache_max * 0.8) if cache_max else None), **common)
+    val = TCGAMultimodalDataset(split="val", bins=train.bins, scaler=train.scaler,
+                                cache_max_bytes=(int(cache_max * 0.2) if cache_max else None), **common)
     return train, val
 
 
@@ -506,7 +539,18 @@ def train_fold(cfg: dict, fold: int, device, run_dir: Path) -> dict:
     )
     if "wsi_only" in results and "genomic_only" in results:
         print(f"  Missing-modality: WSI-only {results['wsi_only']['c_index']:.4f} | genomics-only {results['genomic_only']['c_index']:.4f}", flush=True)
+    if cfg["cache_in_ram"]:
+        n_tr, b_tr = train_ds.cache_stats()
+        n_va, b_va = val_ds.cache_stats()
+        print(f"  RAM cache: {n_tr + n_va} slides, {(b_tr + b_va) / 2**30:.1f} GiB (limit {memory_limit_bytes() / 2**30:.0f} GiB)", flush=True)
     print(f"  Fold time: {fold_result['seconds'] / 60:.1f} min", flush=True)
+    # release the fold's feature cache before the next fold builds its own
+    train_ds.clear_cache()
+    val_ds.clear_cache()
+    del train_loader, val_loader, train_ds, val_ds, model, tokenizer, optimizer
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     return fold_result
 
 
