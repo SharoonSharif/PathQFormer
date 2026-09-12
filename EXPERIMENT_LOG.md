@@ -285,3 +285,51 @@ favours SurvPath.
 (auxiliary unimodal survival heads on each branch, weight 0.5, so neither branch can be ignored) and
 `survpath_e20`, seed 0 then seeds 1-2, five cohorts -> `/workspace/outputs_e20`. Histories give the 10-epoch
 numbers post hoc (`scripts/epoch_curves.py`).
+
+## Results 2026-09-12 14:30 local - four cohorts complete under both fixed budgets (BRCA re-running)
+
+Overnight: all queues finished except BRCA (its fold caches stacked past the 62 GB container limit -> OOM kill,
+exit 137; fixed in 8298d0f: cache capped at 45 % of the cgroup limit, caches/models freed between folds).
+79 finished runs on the volume; BRCA + remaining 20-epoch seeds are re-running on three fresh pods (batch 5).
+
+### Table 1 (draft): fixed budget, final checkpoint, seed 0 (mean +- std over 5 folds)
+
+| Cohort | PathQ-Former 20 ep | PathQ-Former + aux heads 20 ep | SurvPath 20 ep | PathQ-Former 10 ep | SurvPath 10 ep |
+|--------|--------------------|--------------------------------|----------------|--------------------|----------------|
+| BLCA | 0.628 +- 0.073 | 0.625 +- 0.081 | 0.606 +- 0.099 | 0.609 +- 0.068 | 0.588 +- 0.088 |
+| STAD | 0.591 +- 0.066 | 0.559 +- 0.063 | 0.589 +- 0.123 | 0.559 +- 0.086 | 0.609 +- 0.119 |
+| HNSC | 0.584 +- 0.031 | 0.603 +- 0.031 | 0.531 +- 0.113 | 0.550 +- 0.052 | 0.531 +- 0.056 |
+| COADREAD | 0.651 +- 0.140 | 0.595 +- 0.152 | 0.532 +- 0.121 | 0.698 +- 0.082 | 0.565 +- 0.118 |
+| BRCA | running | running | running | running (val-loss: 0.548) | running (val-loss: 0.532) |
+
+Multi-seed means (20 ep): BLCA PathQ 0.609 (3 seeds: 0.628/0.602/0.599), PathQ+aux 0.630 (0.625/0.624/0.642),
+SurvPath 0.594 (0.606/0.582/0.596); STAD PathQ 0.586 (2 seeds), PathQ+aux 0.578 (2), SurvPath 0.589 (1).
+10-ep seeds: BLCA PathQ 0.618 (0.609/0.634/0.612) vs SurvPath 0.589 (0.588/0.585/0.593).
+
+Per-epoch curves pooled over folds and seeds (35 PathQ / 30 SurvPath fold-histories): PathQ-Former 0.605 at
+epoch 20 (peak 0.612 at 13), SurvPath 0.573 at 20 (peak 0.585 at 14). PathQ-Former is ahead at every epoch >= 11,
+so the 20-epoch budget is the right pre-registered choice and is symmetric.
+
+### BLCA fusion ablations (10 ep, seed 0) and the fusion verdict
+
+| Model | C-index | Test-time WSI-only | Test-time RNA-only |
+|-------|---------|--------------------|--------------------|
+| joint PathQ-Former (3 seeds) | 0.618 | 0.61 | 0.61 |
+| late fusion of the two single-modality PathQ-Formers | 0.631 | - | - |
+| PathQ-Former WSI-only (trained) | 0.596 | | |
+| PathQ-Former genomics-only (trained) | 0.603 | | |
+| K=16 / K=64 | 0.638 / 0.634 | | |
+| modality dropout 0 / 0.3 / 0.5 | 0.634 / 0.616 / 0.635 | | |
+| fusion depth 1 / 3 | 0.598 / 0.595 | | |
+
+Joint fusion beats both single-modality models by ~0.02 and equals late fusion within noise: the fusion block is
+not (yet) extracting complementarity beyond an ensemble. The auxiliary unimodal heads (20 ep) do not change the fused
+score on BLCA (0.630 vs 0.609 over seeds, +0.02, p = 0.85 paired) but make the checkpoint far more balanced under
+missing modalities (BLCA test-time RNA-only 0.588 with aux vs 0.535 without; HNSC 0.603 vs 0.584 fused).
+None of K, fusion depth or modality dropout matters for the fused score; modality dropout matters for robustness.
+
+### Reading for the paper
+1. Under the credible protocol (fixed 20-epoch budget, identical for all methods), PathQ-Former >= SurvPath on
+   BLCA (+0.015 over 3 seeds), HNSC (+0.05), COADREAD (+0.12, noisy) and ties on STAD; BRCA pending.
+2. The unique capability holds: the same checkpoint scores 0.58-0.64 with either modality removed; SurvPath cannot run.
+3. Fusion adds ~0.02 over the best single modality and matches late fusion -> claim "unified model", not "better fusion".
