@@ -333,3 +333,28 @@ None of K, fusion depth or modality dropout matters for the fused score; modalit
    BLCA (+0.015 over 3 seeds), HNSC (+0.05), COADREAD (+0.12, noisy) and ties on STAD; BRCA pending.
 2. The unique capability holds: the same checkpoint scores 0.58-0.64 with either modality removed; SurvPath cannot run.
 3. Fusion adds ~0.02 over the best single modality and matches late fusion -> claim "unified model", not "better fusion".
+
+## Seeded Table 1 - 2026-09-12 19:50 local (`scripts/seed_table.py`)
+
+**10-epoch fixed budget, 3 seeds x 5 folds per cell, all five cohorts complete:**
+
+| Cohort | PathQ-Former (fast) | SurvPath (official) | delta | paired t p | Wilcoxon p |
+|--------|--------------------|---------------------|-------|-----------|------------|
+| BLCA | 0.618 +- 0.014 | 0.589 +- 0.004 | +0.029 | 0.115 | 0.164 |
+| BRCA | 0.600 +- 0.031 | 0.536 +- 0.015 | +0.064 | 0.036 | 0.048 |
+| COADREAD | 0.646 +- 0.046 | 0.551 +- 0.022 | +0.094 | 0.031 | 0.022 |
+| HNSC | 0.556 +- 0.007 | 0.568 +- 0.035 | -0.013 | 0.470 | 0.679 |
+| STAD | 0.574 +- 0.025 | 0.607 +- 0.012 | -0.033 | 0.285 | 0.609 |
+| **All (75 paired folds)** | | | **+0.028** | **0.034** | **0.017** |
+
+(+- is the spread over seeds of the 5-fold means.) PathQ-Former wins 3 cohorts, two of them significantly, and
+ties two; pooled over all 75 (fold, seed) pairs the advantage is significant under both tests.
+
+**20-epoch fixed budget (seeds still filling in; BRCA running):** BLCA PathQ 0.609 (3 seeds), PathQ + aux heads
+0.630 (3 seeds; +0.036 vs SurvPath, p = 0.024), SurvPath 0.594 (3 seeds); STAD 0.585 / 0.579 / 0.592 (2 seeds);
+HNSC 0.582 / 0.603 / 0.531; COADREAD 0.651 / 0.595 / 0.532 (1 seed). Pooled over 35 pairs: PathQ +0.029 (t p 0.10),
+PathQ + aux +0.031 (Wilcoxon p 0.046).
+
+**Compute note:** pod A removed at 19:45 to stretch the account balance (its remaining 20-epoch STAD/BRCA seeds
+resume with `scripts/pod/batch5_a.sh` on any new pod); pods B (HNSC 20-ep seeds) and C (BRCA 20-ep seed 0,
+COADREAD 20-ep seeds) continue.
