@@ -358,3 +358,27 @@ PathQ + aux +0.031 (Wilcoxon p 0.046).
 **Compute note:** pod A removed at 19:45 to stretch the account balance (its remaining 20-epoch STAD/BRCA seeds
 resume with `scripts/pod/batch5_a.sh` on any new pod); pods B (HNSC 20-ep seeds) and C (BRCA 20-ep seed 0,
 COADREAD 20-ep seeds) continue.
+
+## 20-epoch seeded table - 2026-09-14 12:30 local (pods B, C finished 09-13; 101 runs on the volume)
+
+Seeds per cell: 3 for BLCA/COADREAD/HNSC, 2 for STAD, 1 for BRCA (STAD seed 2 and BRCA seeds 1-2 re-running on
+the recovery pod; they were pod A's share, removed on 09-12 to protect the account balance).
+
+| Cohort | PathQ-Former 20 ep | PathQ-Former + aux heads 20 ep | SurvPath 20 ep |
+|--------|--------------------|--------------------------------|----------------|
+| BLCA | 0.609 +- 0.016 | **0.630 +- 0.010** (p = 0.024 vs SurvPath) | 0.594 +- 0.012 |
+| BRCA | 0.568 | **0.647** (p = 0.038, 1 seed) | 0.552 |
+| COADREAD | **0.638 +- 0.031** | 0.613 +- 0.023 | 0.570 +- 0.038 |
+| HNSC | 0.575 +- 0.012 | **0.582 +- 0.025** | 0.552 +- 0.019 |
+| STAD | 0.585 +- 0.008 | 0.579 +- 0.028 | **0.592 +- 0.004** |
+| **All (60 paired folds)** | +0.027, t p 0.033, W p 0.067 | **+0.033, t p 0.025, W p 0.006** | - |
+
+Missing-modality (seed 0, same checkpoint tested WSI-only / RNA-only): plain 20-ep model leans on WSI
+(BLCA 0.635 / 0.535, HNSC 0.585 / 0.548); the aux-head model is balanced (BLCA 0.598 / 0.588, BRCA 0.610 / 0.671,
+HNSC 0.604 / 0.575). With 10-50 % of patients randomly missing one modality the fused C-index moves by < 0.01
+(BLCA 0.628 -> 0.620-0.626; BRCA 0.568 -> 0.557-0.567).
+
+**Recommended final configuration for the paper:** `pathq_fast_e20_aux` (lr 1e-4, accumulation 2, 20 epochs,
+auxiliary unimodal heads, modality dropout 0.15): best or tied on 4/5 cohorts, +0.033 pooled vs the official
+SurvPath under an identical protocol (Wilcoxon p = 0.006 over 60 paired folds), and graceful degradation in both
+missing-modality directions.
