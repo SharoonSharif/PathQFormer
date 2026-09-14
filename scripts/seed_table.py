@@ -34,7 +34,7 @@ def collect(roots, methods):
             with open(rj) as f:
                 res = json.load(f)
             folds = {d["fold"]: d["c_index"] for d in res["folds"]}
-            if len(folds) == 5:
+            if folds:  # any completed set of folds; partial runs are included as they stand
                 data[method][cohort][seed] = folds
     return data
 
