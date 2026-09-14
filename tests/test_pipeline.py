@@ -114,6 +114,40 @@ def test_aux_unimodal_heads_and_checkpoint_compatibility():
     plain.load_state_dict({k: v for k, v in m.state_dict().items() if not k.startswith("aux_head")})
 
 
+def test_attention_maps_are_distributions_over_valid_keys(model):
+    x, g = torch.randn(2, 20, 64), torch.randn(2, 7, 32)
+    mask = torch.ones(2, 20, dtype=torch.bool)
+    mask[1, 12:] = False
+    _, attn = model(x, g, mask, return_attention=True)
+    assert torch.allclose(attn["histology"].sum(-1), torch.ones(2, 4), atol=1e-5)
+    assert torch.allclose(attn["genomic"].sum(-1), torch.ones(2, 4), atol=1e-5)
+    assert float(attn["histology"][1, :, 12:].abs().max()) == 0.0
+
+
+def test_post_norm_variant_and_null_tokens_are_learnable():
+    m = PathQFormer(wsi_input_dim=16, genomic_input_dim=8, hidden_dim=16, num_queries=2, num_heads=2,
+                    query_layers=1, fusion_layers=1, norm_first=False).eval()
+    out = m(torch.randn(2, 5, 16), torch.randn(2, 3, 8))
+    assert out.shape == (2, 4)
+    names = {n for n, p in m.named_parameters() if p.requires_grad}
+    assert "null_tokens.null_histology" in names and "null_tokens.null_genomic" in names
+    # gradient reaches the null code when a modality is absent
+    m.train()
+    loss = m(None, torch.randn(2, 3, 8)).sum()
+    loss.backward()
+    assert m.null_tokens.null_histology.grad is not None and float(m.null_tokens.null_histology.grad.abs().sum()) > 0
+
+
+def test_batched_modality_dropout_is_per_sample(model):
+    model.train()
+    torch.manual_seed(3)
+    drops = torch.stack([torch.stack(model._sample_modality_dropout(256, True, True, torch.device("cpu"))) for _ in range(4)])
+    d_w, d_g = drops[:, 0].float(), drops[:, 1].float()
+    assert 0.3 < d_w.mean() < 0.6 and 0.3 < d_g.mean() < 0.6  # p = 0.5 per modality, minus the never-both rule
+    assert not bool((drops[:, 0] & drops[:, 1]).any())
+    model.eval()
+
+
 def test_training_dropout_never_removes_both_modalities(model):
     model.train()
     torch.manual_seed(1)
@@ -159,6 +193,40 @@ def test_survival_metrics_run_end_to_end():
     assert 0.5 < m["c_index"] <= 1.0
     for key in ("c_index_ipcw", "ibs", "iauc"):
         assert key in m
+
+
+def test_eval_grid_and_ipcw_horizon_follow_the_training_quartiles():
+    from src.training.evaluate import eval_times, ipcw_horizon
+
+    edges = np.array([-np.inf, 8.0, 14.0, 21.0, np.inf])
+    train_time = np.linspace(1, 100, 200)
+    val_time = np.linspace(2, 60, 50)
+    assert eval_times(train_time, val_time, edges).tolist() == [8.0, 14.0, 21.0]
+    assert ipcw_horizon(train_time, edges) == 21.0
+    # an interior edge beyond the validation follow-up is dropped; the horizon never exceeds the training follow-up
+    assert eval_times(train_time, np.linspace(2, 15, 50), edges).tolist() == [8.0, 14.0]
+    assert ipcw_horizon(np.linspace(1, 10, 20), edges) == 10.0
+
+
+def test_survival_metrics_degrade_to_nan_not_crash():
+    rng = np.random.default_rng(1)
+    t_train, e_train = rng.exponential(30, 100), rng.random(100) < 0.5
+    time, event = rng.exponential(30, 30), rng.random(30) < 0.5
+    S = np.clip(rng.random((30, 4)), 0.01, 0.99)
+    S.sort(axis=1)
+    S = S[:, ::-1].copy()
+    # a grid with no valid interior edges: Brier/IBS/AUC are NaN or empty, C-index still computed
+    m = survival_metrics(e_train, t_train, event, time, rng.random(30), S, np.array([-np.inf, np.inf]))
+    assert np.isfinite(m["c_index"]) and m["eval_times"] == [] and np.isnan(m["ibs"]) and np.isnan(m["iauc"])
+
+
+def test_collate_pads_and_masks_multiple_patients():
+    a = {"case_id": "a", "slide_ids": ["a"], "wsi_features": torch.ones(3, 4), "gene_expression": torch.zeros(5),
+         "survival_time_bin": torch.tensor(1), "censorship": torch.tensor(0.0), "survival_time": torch.tensor(2.0)}
+    b = {**a, "case_id": "b", "wsi_features": torch.ones(7, 4) * 2}
+    batch = collate_multimodal([a, b])
+    assert batch["wsi_features"].shape == (2, 7, 4) and batch["wsi_mask"].sum(1).tolist() == [3, 7]
+    assert float(batch["wsi_features"][0, 3:].abs().sum()) == 0.0 and batch["case_ids"] == ["a", "b"]
 
 
 def test_mean_ci95():

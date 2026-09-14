@@ -113,6 +113,33 @@ paired t / Wilcoxon tests against PathQ-Former over the five folds.
 Other cancers: `--cancer_type brca|stad|coadread|hnsc` after downloading their embeddings.
 Other endpoints: `--set endpoint=os` or `pfi`.
 
+## Tests
+
+```bash
+.venv/Scripts/python.exe -m pytest -m "not slow"     # ~20 s: bins, scaler, loss, model, metrics, dataset, baselines
+.venv/Scripts/python.exe -m pytest                   # + end-to-end trainer tests on the dummy embeddings (~10 min, CPU)
+```
+
+The slow suite (`tests/test_trainer.py`) trains real folds with tiny models and checks: config overrides and
+validation, the weighted sampler, other endpoints, patients without embeddings, a full `train_cv` run and the
+fold skip on rerun, mid-fold resume, all three selection rules, seed determinism, the auxiliary loss, every
+baseline through the trainer, and the analysis scripts end to end.
+
+## Experiment scripts
+
+| Script | Purpose |
+|---|---|
+| `scripts/run_experiments.sh` | resumable queue of configs (`cfg.yaml::key=v,key=v` for overrides), logs in `logs/` |
+| `scripts/aggregate_results.py` | cross-run tables (all metrics, missing-modality columns) with paired t / Wilcoxon vs a reference run |
+| `scripts/seed_table.py` | Table 1 with seeds: mean over runs, spread over seeds, paired tests over (fold, seed) pairs |
+| `scripts/epoch_curves.py` | mean validation C-index per epoch pooled over folds/cohorts: choose a fixed budget post hoc |
+| `scripts/late_fusion.py` | late-fusion baseline from two single-modality runs (z-scored risk average) |
+| `scripts/eval_missing_impute.py` | missing-modality evaluation with training-mean imputation, for models that cannot skip a modality |
+| `scripts/efficiency.py` | params, latency, peak memory of PathQ-Former vs SurvPath on real patients |
+| `scripts/recompute_metrics.py` | re-derive all metric blocks of finished runs from saved predictions with the current evaluation code |
+| `scripts/analyze_run.py` | training curves, pooled KM curves, missing-modality plot, pathway attention, patch-attention export |
+| `scripts/pod/*` | Runpod: setup, streamed cohort download, resumable multi-cohort queues, chaining, batch scripts |
+
 ## Layout
 
 ```

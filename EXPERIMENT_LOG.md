@@ -382,3 +382,30 @@ HNSC 0.604 / 0.575). With 10-50 % of patients randomly missing one modality the 
 auxiliary unimodal heads, modality dropout 0.15): best or tied on 4/5 cohorts, +0.033 pooled vs the official
 SurvPath under an identical protocol (Wilcoxon p = 0.006 over 60 paired folds), and graceful degradation in both
 missing-modality directions.
+
+## 2026-09-14 - test suite and remaining experiments (Experiments 9-13)
+
+**Tests.** `tests/test_trainer.py` (end-to-end on the dummy embeddings, marked `slow`): config overrides and
+validation, weighted (bin, censorship) sampler, OS/PFI endpoints, patients without embeddings, full `train_cv`
+run + fold skip on rerun, mid-fold resume from `latest_checkpoint.pt`, val_loss / val_cindex / fixed-budget
+selection, seed determinism on CPU, auxiliary unimodal loss, ABMIL / SNN / MLP / official SurvPath through the
+trainer, and the analysis scripts (recompute, late fusion, aggregation, seed table, epoch curves, figures +
+attention export). Unit additions in `tests/test_pipeline.py`: attention maps are distributions over valid keys,
+post-norm variant, learnable null codes, per-sample dropout statistics, evaluation grid / IPCW horizon rules,
+graceful NaNs, multi-patient collate. First bug caught: `--set lr=1e-4` was parsed as the *string* "1e-4"
+(YAML 1.1); overrides now coerce numeric strings.
+
+**Experiments queued (recovery pod, `scripts/pod/batch6.sh`, chained after the last 20-epoch seeds):**
+9. Efficiency: params, forward / forward+backward latency, peak memory, PathQ-Former (all patches and 4096)
+   vs SurvPath (4096 and all) on real BLCA validation patients (`scripts/efficiency.py`).
+10. Single-modality baselines under the fixed 20-epoch budget (ABMIL, SNN, MLP), five cohorts.
+11. Mean-imputation missing-modality evaluation of the finished 20-epoch SurvPath and PathQ-Former checkpoints
+    (`scripts/eval_missing_impute.py`): the baseline receives the training-mean gene vector / mean patch
+    instead of crashing, so Table 3 compares degradation, not availability.
+12. Single-modality PathQ-Former at 20 epochs on five cohorts + late-fusion baseline per cohort (does joint
+    fusion beat an ensemble anywhere?).
+13. Overall survival (OS) endpoint for PathQ-Former+aux and SurvPath, five cohorts, seed 0 (`outputs_os`).
+**Laptop (CPU):** ablations of the final configuration on BLCA - Hallmark (50) and Xena (281) pathway sets,
+2 and 8 survival bins, 4096-patch training subsample (`configs/ablation_fixed/pathq_aux_e20_*.yaml`).
+Laptop CPU efficiency (real BLCA slide, 36k patches): PathQ-Former fwd 190 ms / fwd+bwd 1013 ms; SurvPath on the
+same bag 188 / 724 ms; both ~45 / ~215 ms at 4096 patches.

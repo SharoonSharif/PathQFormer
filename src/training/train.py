@@ -687,7 +687,15 @@ def parse_overrides(items: list[str] | None) -> dict:
         if "=" not in item:
             raise SystemExit(f"--set expects key=value, got {item!r}")
         k, v = item.split("=", 1)
-        out[k.strip()] = yaml.safe_load(v)
+        val = yaml.safe_load(v)
+        if isinstance(val, str):  # YAML 1.1 reads "1e-4" as a string; users mean a number
+            for cast in (int, float):
+                try:
+                    val = cast(val)
+                    break
+                except ValueError:
+                    continue
+        out[k.strip()] = val
     return out
 
 
