@@ -409,3 +409,17 @@ graceful NaNs, multi-patient collate. First bug caught: `--set lr=1e-4` was pars
 2 and 8 survival bins, 4096-patch training subsample (`configs/ablation_fixed/pathq_aux_e20_*.yaml`).
 Laptop CPU efficiency (real BLCA slide, 36k patches): PathQ-Former fwd 190 ms / fwd+bwd 1013 ms; SurvPath on the
 same bag 188 / 724 ms; both ~45 / ~215 ms at 4096 patches.
+
+## 20-epoch seeded table, update 2026-09-15 09:50 local (BRCA now 2 seeds, STAD 3 seeds; 70 paired folds)
+
+| Cohort | PathQ-Former 20 ep | PathQ-Former + aux | SurvPath 20 ep | aux vs SurvPath |
+|--------|--------------------|--------------------|----------------|-----------------|
+| BLCA | 0.609 +- 0.016 (3) | **0.630 +- 0.010** (3) | 0.594 +- 0.012 (3) | +0.036, p 0.024 |
+| BRCA | 0.607 +- 0.055 (2) | **0.641 +- 0.009** (2) | 0.552 +- 0.000 (2) | +0.089, p 0.019 |
+| COADREAD | **0.638 +- 0.031** (3) | 0.613 +- 0.023 (3) | 0.570 +- 0.038 (3) | +0.044, ns |
+| HNSC | 0.575 +- 0.012 (3) | **0.582 +- 0.025** (3) | 0.552 +- 0.019 (3) | +0.031, ns |
+| STAD | **0.593 +- 0.015** (3) | 0.572 +- 0.022 (3) | 0.587 +- 0.008 (3) | -0.015, ns |
+| All 70 pairs | +0.032, t p 0.006, W p 0.016 | **+0.033, t p 0.017, W p 0.004** | | |
+
+Remaining: BRCA seed 2 for the three configs (recovery pod, ~10 h), then batch 6. Laptop: Hallmark-pathway
+ablation on its last fold (folds 1-4: 0.717 / ... / 0.523), then Xena, 2 bins, 8 bins, 4096 patches.
