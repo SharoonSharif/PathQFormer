@@ -39,11 +39,13 @@ def timeit(fn, n_warmup=3, n=20, device=None):
     return float(np.median(ts)) * 1000
 
 
-def profile(cfg_path: str, label: str, device, n_patients: int, max_patches: int | None):
+def profile(cfg_path: str, label: str, device, n_patients: int, max_patches: int | None, embeddings_dir: str | None = None):
     cfg = with_defaults(yaml.safe_load(open(cfg_path)))
     cfg.update(cache_in_ram=False, num_workers=0)
+    if embeddings_dir:
+        cfg["embeddings_dir"] = embeddings_dir
     if not Path(cfg["embeddings_dir"]).exists():
-        cfg["embeddings_dir"] = "data/embeddings/uni2h_dummy"
+        raise SystemExit(f"embeddings not found at {cfg['embeddings_dir']}; pass --embeddings_dir (e.g. /workspace/embeddings/BLCA)")
     train_ds, val_ds = build_datasets(cfg, 0)
     model, tok = build_model(cfg, train_ds.gene_columns, data_paths(cfg, 0)["composition"], device)
     n_params = sum(p.numel() for p in model.parameters()) + sum(p.numel() for p in tok.parameters())
@@ -85,13 +87,14 @@ def main() -> None:
     ap.add_argument("--baseline", default="configs/protocol_fixed/survpath_e20.yaml")
     ap.add_argument("--n", type=int, default=40)
     ap.add_argument("--out", default="results/efficiency.md")
+    ap.add_argument("--embeddings_dir", default=None, help="override the config's embeddings_dir (pods: /workspace/embeddings/BLCA)")
     args = ap.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     rows = [
-        profile(args.config, "PathQ-Former (all patches)", device, args.n, None),
-        profile(args.config, "PathQ-Former (4096 patches)", device, args.n, 4096),
-        profile(args.baseline, "SurvPath (4096 patches, as trained)", device, args.n, 4096),
-        profile(args.baseline, "SurvPath (all patches)", device, args.n, None),
+        profile(args.config, "PathQ-Former (all patches)", device, args.n, None, args.embeddings_dir),
+        profile(args.config, "PathQ-Former (4096 patches)", device, args.n, 4096, args.embeddings_dir),
+        profile(args.baseline, "SurvPath (4096 patches, as trained)", device, args.n, 4096, args.embeddings_dir),
+        profile(args.baseline, "SurvPath (all patches)", device, args.n, None, args.embeddings_dir),
     ]
     lines = [f"# Compute cost per patient ({device}, BLCA fold-0 validation, {args.n} patients, medians)", "",
              "| Model | Params (M) | Patches | Forward (ms) | Forward+backward (ms) | Peak GPU mem (GiB) |", "|---|---|---|---|---|---|"]

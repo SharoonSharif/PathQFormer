@@ -423,3 +423,40 @@ same bag 188 / 724 ms; both ~45 / ~215 ms at 4096 patches.
 
 Remaining: BRCA seed 2 for the three configs (recovery pod, ~10 h), then batch 6. Laptop: Hallmark-pathway
 ablation on its last fold (folds 1-4: 0.717 / ... / 0.523), then Xena, 2 bins, 8 bins, 4096 patches.
+
+## Final 20-epoch Table 1 and Table 3 - 2026-09-16 09:00 local (3 seeds x 5 folds x 5 cohorts; 127 finished runs)
+
+| Cohort | PathQ-Former | PathQ-Former + aux | SurvPath | ABMIL (WSI) | SNN (RNA) | MLP (RNA) |
+|--------|-------------|--------------------|----------|-------------|-----------|-----------|
+| BLCA | 0.609 +- 0.016 | **0.630 +- 0.010** | 0.594 +- 0.012 | 0.578 | 0.599 | 0.619 |
+| BRCA | 0.611 +- 0.039 | 0.622 +- 0.033 | 0.536 +- 0.026 | 0.574 | 0.552 | **0.629** |
+| COADREAD | **0.638 +- 0.031** | 0.613 +- 0.023 | 0.570 +- 0.038 | 0.595 | 0.543 | 0.630 |
+| HNSC | 0.575 +- 0.012 | **0.582 +- 0.025** | 0.552 +- 0.019 | 0.570 | 0.536 | 0.541 |
+| STAD | **0.593 +- 0.015** | 0.572 +- 0.022 | 0.587 +- 0.008 | 0.543 | 0.556 | 0.524 |
+
+(baselines: seed 0 only so far; seeds 1-2 queued as batch 7.) Paired over 75 (fold, seed) pairs vs SurvPath:
+PathQ-Former +0.037 (t p 0.002, Wilcoxon p 0.005), PathQ-Former+aux +0.036 (t p 0.007, W p 0.002).
+vs MLP on RNA (25 pairs, seed 0): +0.016 / +0.017, not significant. vs ABMIL: aux +0.034 (W p 0.037).
+**Honest reading:** the multimodal model clearly beats the strongest published multimodal baseline, but a plain MLP
+on 4,999 genes is within noise of it on BRCA and COADREAD. The defensible accuracy claim is "matches or beats every
+baseline"; the differentiator is robustness.
+
+### Table 3: missing modalities at test time (20 ep, seed 0, same checkpoint)
+Baselines receive the training-mean gene vector / mean patch (`scripts/eval_missing_impute.py`); PathQ-Former uses its
+learned null codes (imputation results for it are similar).
+
+| Cohort | SurvPath full | SurvPath, RNA missing | SurvPath, WSI missing | PathQ+aux full | PathQ+aux, RNA missing | PathQ+aux, WSI missing |
+|--------|---------------|-----------------------|-----------------------|----------------|------------------------|-------------------------|
+| BLCA | 0.606 | 0.608 | 0.509 | 0.625 | 0.598 | 0.588 |
+| BRCA | 0.552 | 0.552 | 0.514 | 0.647 | 0.610 | 0.671 |
+| COADREAD | 0.532 | 0.534 | 0.480 | 0.595 | 0.547 | 0.594 |
+| HNSC | 0.531 | 0.533 | 0.551 | 0.603 | 0.604 | 0.575 |
+| STAD | 0.589 | 0.590 | 0.462 | 0.559 | 0.579 | 0.541 |
+
+SurvPath's score is unchanged when RNA is removed and falls to chance when WSI is removed: it effectively ignores the
+genomic branch. PathQ-Former+aux keeps 0.54-0.67 with either modality removed. Without the auxiliary heads PathQ-Former
+behaves like SurvPath (RNA-only ~0.52-0.55), so the heads are what buys the robustness.
+
+**Compute/ops:** batch 6 running on the recovery pod (single-modality PathQ-Former 20 ep + late fusion, then OS
+endpoint); efficiency step failed there (laptop embeddings path) - fixed (`--embeddings_dir`) and queued in batch 7
+with baseline seeds 1-2. Laptop rebooted 09-15 and killed the ablation queue; relaunched 09-16 08:54 (resumes).
