@@ -460,3 +460,31 @@ behaves like SurvPath (RNA-only ~0.52-0.55), so the heads are what buys the robu
 **Compute/ops:** batch 6 running on the recovery pod (single-modality PathQ-Former 20 ep + late fusion, then OS
 endpoint); efficiency step failed there (laptop embeddings path) - fixed (`--embeddings_dir`) and queued in batch 7
 with baseline seeds 1-2. Laptop rebooted 09-15 and killed the ablation queue; relaunched 09-16 08:54 (resumes).
+
+## 2026-09-17 10:55 local - late fusion on all cohorts, OS endpoint, final-config ablations (148 finished runs)
+
+**Fusion vs ensemble (20 ep, seed 0 for the ensemble ingredients):**
+
+| Cohort | PathQ+aux (3 seeds) | late fusion (WSI-only + RNA-only PathQ) | WSI-only PathQ | RNA-only PathQ |
+|--------|---------------------|------------------------------------------|----------------|----------------|
+| BLCA | 0.630 | **0.642** | 0.593 | 0.631 |
+| BRCA | **0.622** | 0.592 | 0.596 | 0.558 |
+| COADREAD | **0.613** | 0.571 | 0.588 | 0.566 |
+| HNSC | **0.582** | 0.578 | 0.586 | 0.563 |
+| STAD | **0.572** | 0.549 | 0.567 | 0.512 |
+
+Joint fusion beats the late-fusion ensemble on 4/5 cohorts, +0.020 pooled over 25 pairs (p = 0.24). Together with
+the BLCA 10-epoch result (+0.02 vs the best single modality) the honest statement is: fusion adds a small, consistent
+but not individually significant gain over an ensemble of the same two branches.
+
+**Overall survival (OS) endpoint, 20 ep, seed 0 (BRCA running):** PathQ+aux vs SurvPath BLCA 0.595 vs 0.552
+(p = 0.008), STAD 0.603 vs 0.559, HNSC 0.536 vs 0.510 (p = 0.046), COADREAD 0.581 vs 0.596; pooled +0.024 over
+20 pairs (t p 0.041, W p 0.024). Missing-modality robustness holds on OS (both / WSI-only / RNA-only: BLCA
+0.595 / 0.576 / 0.592, STAD 0.603 / 0.574 / 0.582).
+
+**Final-config ablations on BLCA (laptop, 20 ep, seed 0):** 275 Reactome+Hallmark pathways 0.630 (3 seeds) |
+Xena 281 pathways 0.628 | 50 Hallmark pathways 0.600 - the richer pathway sets help; 2 bins / 8 bins / 4096
+training patches running (laptop reboots keep killing the detached queue; it resumes on relaunch).
+
+**Pod:** batch 6 finishing (OS BRCA), then batch 7 (baseline seeds 1-2, clean efficiency numbers), then the pod
+removes itself.
