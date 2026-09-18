@@ -477,14 +477,26 @@ Joint fusion beats the late-fusion ensemble on 4/5 cohorts, +0.020 pooled over 2
 the BLCA 10-epoch result (+0.02 vs the best single modality) the honest statement is: fusion adds a small, consistent
 but not individually significant gain over an ensemble of the same two branches.
 
-**Overall survival (OS) endpoint, 20 ep, seed 0 (BRCA running):** PathQ+aux vs SurvPath BLCA 0.595 vs 0.552
-(p = 0.008), STAD 0.603 vs 0.559, HNSC 0.536 vs 0.510 (p = 0.046), COADREAD 0.581 vs 0.596; pooled +0.024 over
-20 pairs (t p 0.041, W p 0.024). Missing-modality robustness holds on OS (both / WSI-only / RNA-only: BLCA
-0.595 / 0.576 / 0.592, STAD 0.603 / 0.574 / 0.582).
+**Overall survival (OS) endpoint, 20 ep, seed 0, all five cohorts (pod batch 6, finished 2026-09-17; pulled 2026-09-18):**
+
+| Cohort | PathQ+aux | SurvPath | delta | paired t p (5 folds) |
+|--------|-----------|----------|-------|----------------------|
+| BLCA | **0.595** | 0.552 | +0.043 | 0.008 |
+| BRCA | **0.596** | 0.523 | +0.073 | 0.015 |
+| COADREAD | 0.581 | **0.596** | -0.015 | 0.58 |
+| HNSC | **0.536** | 0.510 | +0.025 | 0.046 |
+| STAD | **0.603** | 0.559 | +0.044 | 0.23 |
+| pooled (25 folds) | | | **+0.034** | t 0.0028, Wilcoxon 0.0025 |
+
+Same picture as DSS: PathQ+aux wins 4/5 cohorts (significantly on BLCA, BRCA, HNSC) and ties COADREAD. Absolute OS
+C-indices sit ~0.02-0.03 below DSS for both methods (OS counts non-cancer deaths). Missing-modality robustness holds
+on OS (both / WSI-only / RNA-only: BLCA 0.595 / 0.576 / 0.592, STAD 0.603 / 0.574 / 0.582).
 
 **Final-config ablations on BLCA (laptop, 20 ep, seed 0):** 275 Reactome+Hallmark pathways 0.630 (3 seeds) |
 Xena 281 pathways 0.628 | 50 Hallmark pathways 0.600 - the richer pathway sets help; 2 bins / 8 bins / 4096
 training patches running (laptop reboots keep killing the detached queue; it resumes on relaunch).
 
-**Pod:** batch 6 finishing (OS BRCA), then batch 7 (baseline seeds 1-2, clean efficiency numbers), then the pod
-removes itself.
+**Pod:** batch 6 finished 2026-09-17 (OS complete). Batch 7 had finished 24/30 baseline-seed runs (ABMIL/SNN/MLP,
+seeds 1-2, BLCA/STAD/HNSC/COADREAD + BRCA ABMIL seed 1) when the Runpod balance hit $0 late on 2026-09-17 and every
+pod was deleted (volume intact). After a top-up, pod `pathq-gpu-f` (RTX PRO 4000, $0.57/h) resumed batch 7 on
+2026-09-18 12:10 local: BRCA SNN s1 (fold 5), MLP s1, ABMIL/SNN/MLP s2, then `efficiency.md` (~4 h).
