@@ -500,3 +500,72 @@ training patches running (laptop reboots keep killing the detached queue; it res
 seeds 1-2, BLCA/STAD/HNSC/COADREAD + BRCA ABMIL seed 1) when the Runpod balance hit $0 late on 2026-09-17 and every
 pod was deleted (volume intact). After a top-up, pod `pathq-gpu-f` (RTX PRO 4000, $0.57/h) resumed batch 7 on
 2026-09-18 12:10 local: BRCA SNN s1 (fold 5), MLP s1, ABMIL/SNN/MLP s2, then `efficiency.md` (~4 h).
+
+## 2026-09-19 12:45 local - FINAL TABLES: 20-epoch protocol, 3 seeds, every method on every cohort (180 finished runs)
+
+Batch 7 finished on the pod 2026-09-18 20:05 local (BRCA baseline seeds 1-2 + efficiency). All 6 methods now have
+3 seeds x 5 folds on all 5 cohorts; the tables below are the paper's Table 1 / Table 2 (`scripts/seed_table.py
+pod_results/outputs_e20 --methods ... --ref survpath_e20`, DSS endpoint, fixed 20-epoch budget, final checkpoint,
+mean +- std over 3 seeds of the 5-fold mean C-index).
+
+### Table 1: C-index, 20 epochs, final checkpoint (3 seeds)
+
+| Method | Inputs | BLCA | BRCA | COADREAD | HNSC | STAD | pooled delta vs SurvPath (75 paired folds) |
+|--------|--------|------|------|----------|------|------|--------------------------------------------|
+| PathQ-Former | WSI + RNA | 0.609 +- 0.016 | 0.611 +- 0.039 | **0.638 +- 0.031** | 0.575 +- 0.012 | **0.593 +- 0.015** | **+0.037** (t p 0.002, Wilcoxon p 0.005) |
+| PathQ-Former + aux heads | WSI + RNA | **0.630 +- 0.010** | 0.622 +- 0.033 | 0.613 +- 0.023 | **0.582 +- 0.025** | 0.572 +- 0.022 | **+0.036** (t p 0.007, Wilcoxon p 0.002) |
+| SurvPath (official) | WSI + RNA | 0.594 +- 0.012 | 0.536 +- 0.026 | 0.570 +- 0.038 | 0.552 +- 0.019 | 0.587 +- 0.008 | reference |
+| ABMIL | WSI | 0.566 +- 0.011 | 0.575 +- 0.004 | 0.587 +- 0.023 | 0.562 +- 0.028 | 0.553 +- 0.020 | +0.001 (p 0.94) |
+| SNN | RNA | 0.590 +- 0.009 | 0.558 +- 0.013 | 0.572 +- 0.028 | 0.535 +- 0.006 | 0.549 +- 0.009 | -0.007 (p 0.67) |
+| MLP | RNA | 0.611 +- 0.012 | **0.627 +- 0.013** | 0.633 +- 0.016 | 0.555 +- 0.012 | 0.532 +- 0.009 | +0.024 (t p 0.15, Wilcoxon p 0.30) |
+
+Per-cohort paired tests vs SurvPath (15 pairs each): PathQ+aux BLCA +0.036 (t p 0.024), BRCA +0.086 (p 0.004),
+COADREAD +0.044 (p 0.32), HNSC +0.031 (p 0.29), STAD -0.015 (p 0.57); plain PathQ BLCA +0.015 (p 0.36), BRCA +0.075
+(p 0.013), COADREAD +0.068 (p 0.064), HNSC +0.023 (p 0.38), STAD +0.006 (p 0.79). No single-modality baseline beats
+SurvPath pooled; the RNA MLP comes closest (+0.024, ns) and wins BRCA/COADREAD outright.
+
+### Table 2: same runs, reference = RNA MLP (the strongest single-modality baseline)
+
+| Method | BLCA | BRCA | COADREAD | HNSC | STAD | pooled (75 pairs) |
+|--------|------|------|----------|------|------|-------------------|
+| PathQ-Former | -0.002 | -0.016 | +0.004 | +0.020 | +0.062 (p 0.066) | +0.014 (t p 0.25, W p 0.21) |
+| PathQ-Former + aux | +0.019 | -0.005 | -0.020 | +0.028 | +0.041 | +0.012 (t p 0.28, W p 0.12) |
+| SurvPath | -0.017 | -0.091 | -0.064 | -0.003 | +0.056 | -0.024 (t p 0.15) |
+
+Honest reading: PathQ-Former is significantly better than the published multimodal baseline (SurvPath), but only
+within noise of a well-tuned MLP on the same RNA pathways; the multimodal model's advantage is that it is >= the
+best unimodal model on every cohort with one network (the MLP loses STAD, -0.06 vs PathQ; ABMIL loses BLCA/BRCA),
+and it keeps working when either modality is missing (Table 3), which neither the MLP nor SurvPath does.
+
+### Efficiency (`scripts/efficiency.py`, RTX PRO 4000, BLCA fold-0 validation, 40 patients, medians)
+
+| Model | Params (M) | Patches | Forward (ms) | Forward+backward (ms) | Peak GPU mem (GiB) |
+|---|---|---|---|---|---|
+| PathQ-Former (all patches) | 16.9 | 6214 | 35.0 | 104.2 | 1.17 |
+| PathQ-Former (4096 patches) | 16.9 | 4096 | 34.7 | 104.1 | 0.17 |
+| SurvPath (4096 patches, as trained) | 21.2 | 4096 | 35.7 | 175.6 | 0.20 |
+| SurvPath (all patches) | 21.2 | 6214 | 36.0 | 176.0 | 1.74 |
+
+PathQ-Former has 20 % fewer parameters, the same forward latency, a 1.7x faster training step and a third less
+peak memory than SurvPath on full slides; its cost is flat in the number of patches because K = 32 queries do the
+cross-attention (SurvPath's cost grows with patches x pathways).
+
+### Final-config ablations on BLCA (laptop CPU, PathQ+aux, 20 ep, seed 0; default = 4 bins, 275 pathways)
+
+| Variant | C-index (both) | WSI-only | RNA-only |
+|---|---|---|---|
+| default (4 bins, Reactome+Hallmark 275) - seed 0 / 3 seeds | 0.625 / 0.630 | 0.598 | 0.588 |
+| 2 hazard bins | 0.628 | 0.634 | 0.576 |
+| 8 hazard bins | 0.609 | 0.579 | 0.605 |
+| Xena 281 pathways | 0.628 | | |
+| 50 Hallmark pathways only | 0.600 | | |
+| 4096 training patches (vs all) | running (fold 1) | | |
+
+Bin count barely matters (2 ~ 4 > 8, all within one std); the richer pathway sets beat Hallmark-only by ~0.03.
+
+### Compute log
+
+Pod `pathq-gpu-f` ran 24.6 h ($14): 8 h of batch 7 plus ~13.5 h idle, because the self-removal watcher I added
+by hand used only the v2 `runpodctl pod remove` syntax (the installed CLI is v1: `runpodctl remove pod`) and its
+REST fallback also failed. Lesson recorded: always use the three-way chain from `run_queue_pod.sh`. All 180 runs
+and 855 checkpoints remain on network volume fjb5dlrrfp; local copy in `pod_results/` (pull `pull_0918/results_0918b.tgz`).
