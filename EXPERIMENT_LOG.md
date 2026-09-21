@@ -559,9 +559,11 @@ cross-attention (SurvPath's cost grows with patches x pathways).
 | 8 hazard bins | 0.609 | 0.579 | 0.605 |
 | Xena 281 pathways | 0.628 | | |
 | 50 Hallmark pathways only | 0.600 | | |
-| 4096 training patches (vs all) | running (fold 1) | | |
+| 4096 training patches (vs all) | 0.626 | 0.591 | 0.622 |
 
-Bin count barely matters (2 ~ 4 > 8, all within one std); the richer pathway sets beat Hallmark-only by ~0.03.
+Bin count barely matters (2 ~ 4 > 8, all within one std); the richer pathway sets beat Hallmark-only by ~0.03; training
+on a 4096-patch subsample instead of every patch changes nothing (0.626 vs 0.625), so the gain over SurvPath is not
+explained by PathQ-Former seeing more patches. All BLCA ablations of the final config finished 2026-09-19 13:38 (laptop).
 
 ### Compute log
 
