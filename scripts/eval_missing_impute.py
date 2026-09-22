@@ -8,6 +8,11 @@ vector of the training split, the absent slide by a single patch equal to the me
 embedding. Each fold's selected checkpoint is re-evaluated under both conditions; the metrics are stored
 in fold_results.json under ``wsi_only_impute`` / ``genomic_only_impute`` and rolled up into results.json
 and summary.md, so aggregate_results.py shows them as extra test-time conditions.
+
+``--permute`` adds a permutation test: the validation patients' gene vectors (``rna_permuted``) or slides
+(``wsi_permuted``) are shuffled across patients, so each patient is scored with someone else's modality. A model
+that ignores a modality is unaffected by permuting it; the drop measures how much of the score that modality
+carries in the presence of the other. One permutation per fold (seeded), 15 per cohort over 3 seeds.
 """
 
 from __future__ import annotations
@@ -75,7 +80,43 @@ def predict_imputed(model, tokenizer, loader, criterion, device, mode: str, gene
             "time": torch.cat(times).numpy().astype(float), "event": torch.cat(events).numpy().astype(bool)}
 
 
-def process_run(run_dir: Path, device, bootstrap: int | None) -> None:
+@torch.no_grad()
+def predict_permuted(model, tokenizer, val_ds, loader, criterion, device, mode: str, seed: int) -> dict:
+    """Score patient i with patient perm[i]'s RNA (rna_permuted) or slides (wsi_permuted)."""
+    model.eval()
+    tokenizer.eval()
+    import numpy as np
+
+    perm = np.random.default_rng(seed).permutation(len(val_ds))
+    gene_matrix = getattr(val_ds, "gene_matrix", None)
+    logits_all, times, events, total, n = [], [], [], 0.0, 0
+    for i, batch in enumerate(loader):
+        assert batch["gene_expression"].shape[0] == 1, "permutation eval expects batch_size 1"
+        j = int(perm[i])
+        if mode == "rna_permuted":
+            wsi = batch["wsi_features"].to(device).float()
+            mask = batch["wsi_mask"].to(device)
+            gene = (torch.as_tensor(gene_matrix[j]).float().view(1, -1) if gene_matrix is not None
+                    else val_ds[j]["gene_expression"].view(1, -1)).to(device)
+        else:
+            other = val_ds[j]["wsi_features"].float().unsqueeze(0)
+            wsi = other.to(device)
+            mask = torch.ones(1, other.shape[1], dtype=torch.bool, device=device)
+            gene = batch["gene_expression"].to(device)
+        logits = model(wsi_features=wsi, genomic_features=tokenizer(gene), wsi_mask=mask)
+        loss = criterion(logits, batch["survival_time_bin"].to(device), batch["censorship"].to(device))
+        total += loss.item()
+        n += 1
+        logits_all.append(logits.float().cpu())
+        times.append(batch["survival_time"])
+        events.append(1.0 - batch["censorship"])
+    logits = torch.cat(logits_all)
+    _, S = hazards_to_survival(logits)
+    return {"loss": total / max(n, 1), "risk": risk_from_logits(logits).numpy(), "survival": S.numpy(),
+            "time": torch.cat(times).numpy().astype(float), "event": torch.cat(events).numpy().astype(bool)}
+
+
+def process_run(run_dir: Path, device, bootstrap: int | None, permute: bool = False, impute: bool = True) -> None:
     with open(run_dir / "results.json") as f:
         results = json.load(f)
     cfg = with_defaults(results["config"])
@@ -102,16 +143,26 @@ def process_run(run_dir: Path, device, bootstrap: int | None) -> None:
         tok.load_state_dict(ckpt["pathway_tokenizer"])
         gene_mean, patch_mean = training_means(train_ds)
         loader = make_loader(val_ds, {**cfg, "num_workers": 0, "batch_size": 1}, shuffle=False, seed=seed, device=device)
-        for mode in ("wsi_only", "genomic_only"):
-            pred = predict_imputed(model, tok, loader, criterion, device, mode, gene_mean, patch_mean)
-            fr["metrics"][f"{mode}_impute"] = metrics_from_prediction(pred, train_ds, val_ds, cfg, seed)
-        fr["imputation_evaluated_at"] = datetime.now().isoformat(timespec="seconds")
+        if impute:
+            for mode in ("wsi_only", "genomic_only"):
+                pred = predict_imputed(model, tok, loader, criterion, device, mode, gene_mean, patch_mean)
+                fr["metrics"][f"{mode}_impute"] = metrics_from_prediction(pred, train_ds, val_ds, cfg, seed)
+            fr["imputation_evaluated_at"] = datetime.now().isoformat(timespec="seconds")
+        if permute:
+            for mode in ("rna_permuted", "wsi_permuted"):
+                pred = predict_permuted(model, tok, val_ds, loader, criterion, device, mode, seed)
+                fr["metrics"][mode] = metrics_from_prediction(pred, train_ds, val_ds, cfg, seed)
+            fr["permutation_evaluated_at"] = datetime.now().isoformat(timespec="seconds")
         with open(fr_path, "w") as f:
             json.dump(fr, f, indent=2)
         progress["fold_details"][str(fold)] = {k: v for k, v in fr.items() if k != "history"}
         m = fr["metrics"]
-        print(f"  fold {fold}: both {m['both']['c_index']:.3f} | WSI-only(impute) {m['wsi_only_impute']['c_index']:.3f} "
-              f"| RNA-only(impute) {m['genomic_only_impute']['c_index']:.3f}", flush=True)
+        parts = [f"both {m['both']['c_index']:.3f}"]
+        for k, label in (("wsi_only_impute", "WSI-only(impute)"), ("genomic_only_impute", "RNA-only(impute)"),
+                         ("rna_permuted", "RNA permuted"), ("wsi_permuted", "WSI permuted")):
+            if k in m:
+                parts.append(f"{label} {m[k]['c_index']:.3f}")
+        print(f"  fold {fold}: " + " | ".join(parts), flush=True)
     save_progress(run_dir, progress)
     details = [progress["fold_details"][k] for k in sorted(progress["fold_details"], key=int)]
     results["summary"] = aggregate(details)
@@ -125,6 +176,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("run_dirs", nargs="+")
     ap.add_argument("--bootstrap", type=int, default=None)
+    ap.add_argument("--permute", action="store_true", help="also run the RNA / WSI permutation test")
+    ap.add_argument("--no-impute", action="store_true", help="skip the mean-imputation conditions (e.g. permutation only)")
     args = ap.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     for rd in args.run_dirs:
@@ -133,7 +186,7 @@ def main() -> None:
             print(f"{run_dir}: not finished, skipped")
             continue
         print(f"== {run_dir}")
-        process_run(run_dir, device, args.bootstrap)
+        process_run(run_dir, device, args.bootstrap, permute=args.permute, impute=not args.no_impute)
 
 
 if __name__ == "__main__":
