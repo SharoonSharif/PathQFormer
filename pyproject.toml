@@ -5,7 +5,7 @@ description = "PathQ-Former: query-based multimodal fusion of WSI and pathway to
 requires-python = ">=3.10"
 license = {text = "MIT"}
 readme = "README.md"
-authors = [{name = "Sharoon Sunny Thomas"}]
+authors = [{name = "Sharoon Sharif"}]
 
 [project.urls]
 Repository = "https://github.com/SharoonSharif/PathQFormer"
