@@ -79,7 +79,7 @@ def main() -> None:
         for method, mean in pooled_curves.items():
             ax.plot(np.arange(1, len(mean) + 1), mean, marker="o", ms=3, label=labels.get(method, method))
         ax.set_xlabel("training epochs (fixed budget, final checkpoint)")
-        ax.set_ylabel("validation C-index, pooled over folds, seeds, cohorts")
+        ax.set_ylabel("pooled validation C-index")
         ax.set_xticks(range(1, args.epochs + 1, max(1, args.epochs // 10)))
         ax.grid(alpha=0.3)
         ax.legend(frameon=False)

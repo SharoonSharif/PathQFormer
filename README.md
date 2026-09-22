@@ -8,7 +8,7 @@ Query-based multimodal fusion of whole-slide-image (WSI) patch embeddings and RN
 cancer survival prediction, with **missing-modality robustness** built in. One checkpoint serves patients
 with WSI + RNA, WSI only, or RNA only.
 
-**Results, protocol and every table:** [REPORT.md](REPORT.md). **Chronological record:** [EXPERIMENT_LOG.md](EXPERIMENT_LOG.md).
+**Results, protocol and every table:** [REPORT.md](REPORT.md). **Chronological record:** [EXPERIMENT_LOG.md](EXPERIMENT_LOG.md). **Paper draft:** [paper/draft.md](paper/draft.md), figures in [paper/figures/](paper/figures/). **Checkpoints:** [sharoonsharif1/PathQFormer-checkpoints](https://huggingface.co/sharoonsharif1/PathQFormer-checkpoints) on the HuggingFace Hub (275 fold checkpoints, 18 GB: the final model and every baseline row of Table 1 for seed 0, three seeds for PathQ-Former, the single-modality models and the OS endpoint). **Release:** [v0.2.0](https://github.com/SharoonSharif/PathQFormer/releases/tag/v0.2.0).
 
 | DSS C-index, 20 epochs, final checkpoint, 3 seeds x 5 folds | BLCA | BRCA | COADREAD | HNSC | STAD | pooled vs SurvPath (75 pairs) |
 |---|---|---|---|---|---|---|
@@ -131,7 +131,9 @@ expects). The other experiments:
 | Ablations (bins, pathway sets, patch budget) | `configs/ablation_fixed/pathq_aux_e20_*.yaml`; fusion ablations (K, depth, modality dropout): `configs/ablation_fixed/pathq_fast_e10_*.yaml` |
 | Epoch curves (budget choice) | `scripts/epoch_curves.py <roots> --runs pathq_fast_e20 survpath_e20 --epochs 20` |
 | Efficiency | `scripts/efficiency.py --embeddings_dir data/embeddings/uni2h/BLCA --out results/efficiency.md` |
-| Attention / KM / training-curve figures | `scripts/analyze_run.py <run_dir> --attention` |
+| Attention / KM / training-curve figures | `scripts/analyze_run.py <run_dir> --attention` (the committed ones in `paper/figures/` came from the Hub checkpoints on a pod) |
+| Pooled epoch curves (Figure 3) | `scripts/epoch_curves.py pod_results/outputs_e20 --runs pathq_fast_e20 pathq_fast_e20_aux survpath_e20 --epochs 20 --plot paper/figures/epoch_curves_pooled.png` |
+| Checkpoint upload | `scripts/upload_checkpoints_hf.py --root outputs_e20 --runs ...` |
 
 The full campaign took about 210 GPU-hours (RTX PRO 4000 class; training is I/O-bound on slide features)
 and about 130 USD on Runpod. `scripts/pod/` holds the exact queue scripts used (Runpod-specific, but

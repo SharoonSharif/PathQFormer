@@ -330,7 +330,7 @@ PathQ-Former's compute is dominated by the 32-query cross-attention, so latency 
 ## 14. Next steps
 
 1. **Paper draft** from Sections 4-9 (NeurIPS 2026 workshop target, ICLR 2027 main).
-2. **Interpretability figures**: attention over patches and pathways for the final checkpoints (one short pod session; checkpoints on the volume).
+2. ~~Interpretability figures~~ done 2026-09-22: `paper/figures/` (KM, training curves, missing-modality curves, pathway attention per cohort; pooled epoch curves). Checkpoints published: https://huggingface.co/sharoonsharif1/PathQFormer-checkpoints (275 fold checkpoints, 18 GB).
 3. **Seeds for the secondary experiments** (OS, single-modality PathQ-Former, late fusion) if the reviewers' bar requires it: ~10 GPU-hours.
 4. **Optional strengthening of the accuracy claim**: a pathway-token input for the MLP baseline (to separate "pathway tokens help" from "fusion helps"), and an external cohort (CPTAC) for the robustness claim.
 5. **Housekeeping**: remove the network volume when the figures are done (it bills ~1 USD/day); rotate the HuggingFace and Runpod credentials used during the campaign.

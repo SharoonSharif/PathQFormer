@@ -137,7 +137,7 @@ Code: https://github.com/SharoonSharif/PathQFormer (MIT). `scripts/reproduce_tab
 ## Figures (to insert)
 
 - **Figure 1.** Architecture (query blocks, null codes, fusion, auxiliary heads).
-- **Figure 2.** C-index vs share of patients missing one modality, five cohorts (`analysis/missing_modality.png` per cohort).
-- **Figure 3.** Pooled validation C-index per epoch, PathQ-Former vs SurvPath (`scripts/epoch_curves.py`), justifying the 20-epoch budget.
-- **Figure 4.** Pathway importance (mean genomic cross-attention) and patch-attention heatmaps for highest- and lowest-risk patients (`analysis/pathway_importance.png`, `analysis/attention/*.npz`).
-- **Figure 5.** Kaplan-Meier curves, high vs low predicted risk, pooled over folds (`analysis/km_curves.png`).
+- **Figure 2.** C-index vs share of patients missing one modality, five cohorts (`figures/pathq_fast_e20_aux/<cohort>/missing_modality.png`).
+- **Figure 3.** Pooled validation C-index per epoch, PathQ-Former vs SurvPath (`figures/epoch_curves_pooled.png`): PathQ-Former leads at every epoch >= 11; SurvPath peaks at epoch 7 (0.578) and ends at 0.568.
+- **Figure 4.** Pathway importance (mean genomic cross-attention) and patch-attention heatmaps for highest- and lowest-risk patients (`figures/pathq_fast_e20_aux/<cohort>/pathway_importance.png` + `.csv`; per-patient patch attention exported as `.npz` by `scripts/analyze_run.py --attention`, not committed). BLCA top pathways: HALLMARK_APICAL_JUNCTION, telomere packaging, HEME_METABOLISM, EPITHELIAL_MESENCHYMAL_TRANSITION, EGFR signalling, KRAS_SIGNALING_UP.
+- **Figure 5.** Kaplan-Meier curves, high vs low predicted risk, pooled over folds (`figures/pathq_fast_e20_aux/<cohort>/km_curves.png`; BLCA log-rank p = 0.008 for PathQ-Former + aux vs 0.014 for SurvPath).

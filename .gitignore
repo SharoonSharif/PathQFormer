@@ -37,3 +37,7 @@ Thumbs.db
 
 # Run logs
 logs/
+
+# Paper figure by-products (large): attention exports are regenerated with scripts/analyze_run.py --attention
+paper/figures/attention_npz/
+*.npz
