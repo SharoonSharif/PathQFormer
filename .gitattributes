@@ -1,0 +1,15 @@
+# Normalise line endings so shell scripts and the Makefile work on Linux pods and CI when committed from Windows.
+* text=auto
+*.sh text eol=lf
+*.py text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.md text eol=lf
+*.cff text eol=lf
+Makefile text eol=lf
+Dockerfile text eol=lf
+*.tgz binary
+*.pt binary
+*.h5 binary
+*.ipynb text eol=lf
