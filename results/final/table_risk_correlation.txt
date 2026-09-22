@@ -1,0 +1,18 @@
+
+== pathq_fast_e20_aux: fused risk vs the same checkpoint's single-modality risks (Spearman rho, mean +- std over folds x seeds; n) ==
+cohort                both~genomic_only                both~wsi_only        wsi_only~genomic_only
+blca                 0.42 +- 0.13 (n=15)          0.90 +- 0.08 (n=15)          0.22 +- 0.07 (n=15)
+brca                 0.36 +- 0.12 (n=15)          0.85 +- 0.08 (n=15)          0.09 +- 0.08 (n=15)
+coadread             0.53 +- 0.20 (n=15)          0.73 +- 0.14 (n=15)          0.16 +- 0.19 (n=15)
+hnsc                 0.47 +- 0.08 (n=15)          0.84 +- 0.09 (n=15)          0.15 +- 0.10 (n=15)
+stad                 0.45 +- 0.20 (n=15)          0.82 +- 0.16 (n=15)          0.13 +- 0.23 (n=15)
+pooled                             0.45                         0.83                         0.15
+
+== pathq_fast_e20_aux fused risk vs other models' risk (same fold, same seed) (Spearman rho, mean +- std over folds x seeds; n) ==
+cohort                        abmil_e20                mlp_omics_e20               pathq_fast_e20                      snn_e20                 survpath_e20
+blca                 0.46 +- 0.14 (n=15)          0.42 +- 0.09 (n=15)          0.79 +- 0.06 (n=15)          0.38 +- 0.11 (n=15)          0.63 +- 0.08 (n=15)
+brca                 0.51 +- 0.17 (n=15)          0.26 +- 0.08 (n=15)          0.62 +- 0.14 (n=15)          0.23 +- 0.09 (n=15)          0.38 +- 0.17 (n=15)
+coadread             0.38 +- 0.11 (n=15)          0.37 +- 0.20 (n=15)          0.66 +- 0.09 (n=15)          0.36 +- 0.16 (n=15)          0.38 +- 0.09 (n=15)
+hnsc                 0.44 +- 0.13 (n=15)          0.29 +- 0.06 (n=15)          0.71 +- 0.10 (n=15)          0.29 +- 0.07 (n=15)          0.45 +- 0.24 (n=15)
+stad                 0.48 +- 0.11 (n=15)          0.41 +- 0.19 (n=15)          0.69 +- 0.13 (n=15)          0.43 +- 0.21 (n=15)          0.48 +- 0.12 (n=15)
+pooled                             0.46                         0.35                         0.69                         0.34                         0.46

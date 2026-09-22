@@ -101,6 +101,40 @@ def main():
                 a, b = np.array(a), np.array(b)
                 print(f"  {m:24s} {'ALL':10s} delta {np.mean(a - b):+.3f}  t p={stats.ttest_rel(a, b).pvalue:.4f}  W p={stats.wilcoxon(a, b).pvalue:.4f}  n={len(a)}")
 
+        # seed-averaged: one value per (cohort, fold) = mean over seeds, then paired over folds (25 pairs pooled).
+        # Seeds of the same fold share the validation patients, so (fold, seed) pairs are not independent; this
+        # is the conservative test reviewers ask for.
+        print(f"\nSeed-averaged paired tests vs {args.ref} (per (cohort, fold): mean over seeds; then paired over folds)")
+
+        def seed_avg(method, c):
+            by_fold = defaultdict(list)
+            for folds in data[method].get(c, {}).values():
+                for k, v in folds.items():
+                    by_fold[k].append(v)
+            return {k: float(np.mean(v)) for k, v in by_fold.items()}
+
+        for m in args.methods:
+            if m == args.ref:
+                continue
+            pooled_a, pooled_b = [], []
+            for c in cohorts:
+                a_f, b_f = seed_avg(m, c), seed_avg(args.ref, c)
+                keys = sorted(set(a_f) & set(b_f))
+                if len(keys) < 3:
+                    continue
+                a = np.array([a_f[k] for k in keys])
+                b = np.array([b_f[k] for k in keys])
+                pooled_a += list(a)
+                pooled_b += list(b)
+                try:
+                    wp = stats.wilcoxon(a, b).pvalue
+                except ValueError:
+                    wp = float("nan")
+                print(f"  {m:24s} {c:10s} delta {np.mean(a - b):+.3f}  t p={stats.ttest_rel(a, b).pvalue:.3f}  W p={wp:.3f}  n={len(a)} folds  wins {int(np.sum(a > b))}/{len(a)}")
+            if len(pooled_a) >= 3:
+                a, b = np.array(pooled_a), np.array(pooled_b)
+                print(f"  {m:24s} {'ALL':10s} delta {np.mean(a - b):+.3f}  t p={stats.ttest_rel(a, b).pvalue:.4f}  W p={stats.wilcoxon(a, b).pvalue:.4f}  n={len(a)} folds  wins {int(np.sum(a > b))}/{len(a)}")
+
 
 if __name__ == "__main__":
     main()

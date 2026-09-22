@@ -12,3 +12,11 @@ Paired over (fold, seed) pairs vs survpath_e20: delta, paired-t p, Wilcoxon p, n
   pathq_fast_e20_aux       hnsc       delta +0.025  t p=0.046  W p=0.125  n=5
   pathq_fast_e20_aux       stad       delta +0.044  t p=0.230  W p=0.312  n=5
   pathq_fast_e20_aux       ALL        delta +0.034  t p=0.0028  W p=0.0025  n=25
+
+Seed-averaged paired tests vs survpath_e20 (per (cohort, fold): mean over seeds; then paired over folds)
+  pathq_fast_e20_aux       blca       delta +0.043  t p=0.008  W p=0.062  n=5 folds  wins 5/5
+  pathq_fast_e20_aux       brca       delta +0.073  t p=0.015  W p=0.062  n=5 folds  wins 5/5
+  pathq_fast_e20_aux       coadread   delta -0.015  t p=0.578  W p=0.625  n=5 folds  wins 2/5
+  pathq_fast_e20_aux       hnsc       delta +0.025  t p=0.046  W p=0.125  n=5 folds  wins 4/5
+  pathq_fast_e20_aux       stad       delta +0.044  t p=0.230  W p=0.312  n=5 folds  wins 3/5
+  pathq_fast_e20_aux       ALL        delta +0.034  t p=0.0028  W p=0.0025  n=25 folds  wins 19/25

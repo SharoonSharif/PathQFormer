@@ -50,6 +50,10 @@ echo "[tables] per-run summaries (all metrics, missing-modality blocks, per-fold
 "$PY" scripts/aggregate_results.py pod_results/outputs_ablate --out "$OUT/summary_ablate_all_runs.md" >/dev/null
 "$PY" scripts/aggregate_results.py pod_results/outputs_v2 --out "$OUT/summary_v2_all_runs.md" >/dev/null
 
+echo "[tables] missing-modality over seeds, risk correlations"
+"$PY" scripts/missing_modality_table.py "$E20" --methods pathq_fast_e20_aux pathq_fast_e20 survpath_e20 > "$OUT/table_missing_modality_seeds.txt"
+"$PY" scripts/risk_correlation.py "$E20" --run pathq_fast_e20_aux --others survpath_e20 mlp_omics_e20 abmil_e20 snn_e20 pathq_fast_e20 > "$OUT/table_risk_correlation.txt"
+
 cp "$E20/efficiency.md" "$OUT/efficiency.md"
 
 echo "[tables] done -> $OUT/"

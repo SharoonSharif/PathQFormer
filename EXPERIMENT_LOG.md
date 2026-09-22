@@ -571,3 +571,42 @@ Pod `pathq-gpu-f` ran 24.6 h ($14): 8 h of batch 7 plus ~13.5 h idle, because th
 by hand used only the v2 `runpodctl pod remove` syntax (the installed CLI is v1: `runpodctl remove pod`) and its
 REST fallback also failed. Lesson recorded: always use the three-way chain from `run_queue_pod.sh`. All 180 runs
 and 855 checkpoints remain on network volume fjb5dlrrfp; local copy in `pod_results/` (pull `pull_0918/results_0918b.tgz`).
+
+## 2026-09-22 - Reviewer-requested recomputes (no new training; `scripts/seed_table.py`, `scripts/missing_modality_table.py`, `scripts/risk_correlation.py`)
+
+**1. Seed-averaged paired tests (25 folds).** Seeds of the same fold share validation patients, so the 75 (fold, seed)
+pairs in Table 1 are not independent. Averaging the three seeds per fold first and pairing over the 25 (cohort, fold)
+units gives, vs SurvPath: PathQ-Former +0.037, t p = 0.020, Wilcoxon p = 0.020, wins 17/25; PathQ-Former + aux +0.036,
+t p = 0.074, Wilcoxon p = 0.030, wins 18/25. Per cohort (5 folds) only BRCA stays significant (aux +0.086, t p 0.017;
+plain +0.075, p 0.073). Baselines vs SurvPath: ABMIL +0.001 (p 0.95), SNN -0.007 (p 0.80), MLP +0.024 (p 0.38). vs the
+RNA MLP: PathQ +0.014 (p 0.47), aux +0.012 (p 0.47). OS (one seed, unchanged): +0.034, p 0.003. **Paper wording:** report
+the seed-averaged 25-fold tests as primary; the plain model's gain is significant under both tests, the aux model's under
+the rank test only.
+
+**2. Missing-modality with three seeds (same checkpoints, null codes; mean over seeds of the 5-fold mean, +- over seeds):**
+
+| Cohort | PathQ+aux both | WSI-only | RNA-only | PathQ both | WSI-only | RNA-only |
+|---|---|---|---|---|---|---|
+| BLCA | 0.630 +- .008 | 0.600 +- .002 | 0.613 +- .018 | 0.609 +- .013 | 0.612 +- .017 | 0.590 +- .041 |
+| BRCA | 0.622 +- .027 | 0.592 +- .038 | 0.617 +- .042 | 0.611 +- .032 | 0.600 +- .037 | 0.572 +- .027 |
+| COADREAD | 0.613 +- .019 | 0.576 +- .020 | 0.583 +- .018 | 0.638 +- .026 | 0.633 +- .022 | 0.601 +- .046 |
+| HNSC | 0.582 +- .021 | 0.596 +- .013 | 0.545 +- .022 | 0.575 +- .010 | 0.588 +- .006 | 0.533 +- .014 |
+| STAD | 0.572 +- .018 | 0.589 +- .008 | 0.538 +- .003 | 0.593 +- .012 | 0.595 +- .017 | 0.578 +- .029 |
+
+Pooled drop vs both (75 pairs / seed-averaged 25): aux WSI-only -0.013 (p 0.13 / 0.27), RNA-only -0.025 (p 0.053 /
+0.19); plain WSI-only +0.000, RNA-only -0.030 (p 0.016 / 0.080). Random 10-50 % missing moves the aux model by <= 0.025
+on every cohort with three seeds. With three seeds the aux heads still help RNA-only on BLCA/BRCA (+0.023 / +0.045 vs
+plain) but the plain model is slightly better WSI-only; the 20-epoch checkpoints are less one-sided than the seed-0
+Table 3 suggested (plain RNA-only 0.59/0.57/0.60/0.53/0.58, not 0.52-0.55). The SurvPath imputation columns and the
+PathQ imputation variants still have one seed (needs checkpoints on a pod; batch 9).
+
+**3. Risk-score correlations (Spearman over validation patients, mean over 15 fold x seed):** within the aux model the
+fused risk correlates 0.83 with its own WSI-only risk and 0.45 with its RNA-only risk (pooled); the two branches
+correlate only 0.15 with each other, i.e. they carry nearly independent signal and the fused score is still
+histology-led. Across models: aux vs plain PathQ 0.69, vs SurvPath 0.46, vs ABMIL 0.46, vs MLP 0.35, vs SNN 0.34.
+The multimodal model ranks patients differently from every baseline of equal accuracy, which is the ensemble
+headroom that Section 6 measured at +0.02.
+
+**Still open (need a pod, `scripts/pod/batch9.sh`):** SurvPath learning-rate x alpha grid under the protocol (the
+manuscript currently compares against the published hyper-parameters only); single-modality PathQ-Former seeds 1-2
+for a three-seed fusion-vs-ensemble table; mean-imputation columns for seeds 1-2; RNA / WSI permutation test.

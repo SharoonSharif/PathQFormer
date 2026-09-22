@@ -283,6 +283,8 @@ PathQ-Former's compute is dominated by the 32-query cross-attention, so latency 
 - Missing-modality evaluation removes a modality from all validation patients of a fold or from random subsets; it does not model informative missingness.
 - Single seed for the OS endpoint, single-modality PathQ-Formers, late fusion and Table 3; three seeds everywhere in Table 1.
 
+**Seed-averaged tests (added 2026-09-22).** Pairing over the 25 (cohort, fold) units after averaging seeds, the pooled gain vs SurvPath is +0.037 (t p 0.020, Wilcoxon p 0.020) for PathQ-Former and +0.036 (t p 0.074, Wilcoxon p 0.030) for the aux variant; per cohort only BRCA remains significant. Three-seed missing-modality and risk-correlation tables: EXPERIMENT_LOG.md, section "Reviewer-requested recomputes".
+
 **Known sources of variance**: 5-45 events per validation fold; fold 3 of BLCA is weak for every method; fold 0 of COADREAD scores 0.75-0.84 for both methods with 5 events.
 
 ---

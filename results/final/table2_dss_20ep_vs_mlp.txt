@@ -24,3 +24,23 @@ Paired over (fold, seed) pairs vs mlp_omics_e20: delta, paired-t p, Wilcoxon p, 
   pathq_fast_e20           ALL        delta +0.014  t p=0.2492  W p=0.2108  n=75
   pathq_fast_e20_aux       ALL        delta +0.012  t p=0.2809  W p=0.1156  n=75
   survpath_e20             ALL        delta -0.024  t p=0.1499  W p=0.2982  n=75
+
+Seed-averaged paired tests vs mlp_omics_e20 (per (cohort, fold): mean over seeds; then paired over folds)
+  pathq_fast_e20           blca       delta -0.002  t p=0.953  W p=1.000  n=5 folds  wins 3/5
+  pathq_fast_e20           brca       delta -0.016  t p=0.771  W p=0.812  n=5 folds  wins 3/5
+  pathq_fast_e20           coadread   delta +0.004  t p=0.907  W p=0.812  n=5 folds  wins 3/5
+  pathq_fast_e20           hnsc       delta +0.020  t p=0.597  W p=0.625  n=5 folds  wins 4/5
+  pathq_fast_e20           stad       delta +0.062  t p=0.320  W p=0.312  n=5 folds  wins 3/5
+  pathq_fast_e20           ALL        delta +0.014  t p=0.4689  W p=0.3666  n=25 folds  wins 16/25
+  pathq_fast_e20_aux       blca       delta +0.019  t p=0.542  W p=0.625  n=5 folds  wins 3/5
+  pathq_fast_e20_aux       brca       delta -0.005  t p=0.938  W p=0.812  n=5 folds  wins 3/5
+  pathq_fast_e20_aux       coadread   delta -0.020  t p=0.478  W p=0.625  n=5 folds  wins 2/5
+  pathq_fast_e20_aux       hnsc       delta +0.028  t p=0.461  W p=0.438  n=5 folds  wins 4/5
+  pathq_fast_e20_aux       stad       delta +0.041  t p=0.420  W p=0.812  n=5 folds  wins 2/5
+  pathq_fast_e20_aux       ALL        delta +0.012  t p=0.4709  W p=0.3388  n=25 folds  wins 14/25
+  survpath_e20             blca       delta -0.017  t p=0.686  W p=0.812  n=5 folds  wins 2/5
+  survpath_e20             brca       delta -0.091  t p=0.312  W p=0.438  n=5 folds  wins 2/5
+  survpath_e20             coadread   delta -0.064  t p=0.374  W p=0.312  n=5 folds  wins 1/5
+  survpath_e20             hnsc       delta -0.003  t p=0.945  W p=0.812  n=5 folds  wins 2/5
+  survpath_e20             stad       delta +0.056  t p=0.458  W p=0.438  n=5 folds  wins 3/5
+  survpath_e20             ALL        delta -0.024  t p=0.3835  W p=0.4108  n=25 folds  wins 10/25

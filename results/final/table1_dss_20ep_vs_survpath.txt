@@ -36,3 +36,35 @@ Paired over (fold, seed) pairs vs survpath_e20: delta, paired-t p, Wilcoxon p, n
   abmil_e20                ALL        delta +0.001  t p=0.9401  W p=0.9789  n=75
   snn_e20                  ALL        delta -0.007  t p=0.6679  W p=0.5367  n=75
   mlp_omics_e20            ALL        delta +0.024  t p=0.1499  W p=0.2982  n=75
+
+Seed-averaged paired tests vs survpath_e20 (per (cohort, fold): mean over seeds; then paired over folds)
+  pathq_fast_e20           blca       delta +0.015  t p=0.518  W p=0.625  n=5 folds  wins 3/5
+  pathq_fast_e20           brca       delta +0.075  t p=0.073  W p=0.125  n=5 folds  wins 4/5
+  pathq_fast_e20           coadread   delta +0.068  t p=0.202  W p=0.188  n=5 folds  wins 4/5
+  pathq_fast_e20           hnsc       delta +0.023  t p=0.580  W p=0.625  n=5 folds  wins 4/5
+  pathq_fast_e20           stad       delta +0.006  t p=0.847  W p=0.812  n=5 folds  wins 2/5
+  pathq_fast_e20           ALL        delta +0.037  t p=0.0198  W p=0.0203  n=25 folds  wins 17/25
+  pathq_fast_e20_aux       blca       delta +0.036  t p=0.175  W p=0.312  n=5 folds  wins 3/5
+  pathq_fast_e20_aux       brca       delta +0.086  t p=0.017  W p=0.062  n=5 folds  wins 5/5
+  pathq_fast_e20_aux       coadread   delta +0.044  t p=0.583  W p=0.625  n=5 folds  wins 4/5
+  pathq_fast_e20_aux       hnsc       delta +0.031  t p=0.544  W p=0.625  n=5 folds  wins 4/5
+  pathq_fast_e20_aux       stad       delta -0.015  t p=0.719  W p=0.625  n=5 folds  wins 2/5
+  pathq_fast_e20_aux       ALL        delta +0.036  t p=0.0737  W p=0.0296  n=25 folds  wins 18/25
+  abmil_e20                blca       delta -0.029  t p=0.316  W p=0.812  n=5 folds  wins 3/5
+  abmil_e20                brca       delta +0.039  t p=0.017  W p=0.062  n=5 folds  wins 5/5
+  abmil_e20                coadread   delta +0.017  t p=0.697  W p=1.000  n=5 folds  wins 2/5
+  abmil_e20                hnsc       delta +0.011  t p=0.755  W p=1.000  n=5 folds  wins 3/5
+  abmil_e20                stad       delta -0.035  t p=0.226  W p=0.188  n=5 folds  wins 1/5
+  abmil_e20                ALL        delta +0.001  t p=0.9538  W p=0.8532  n=25 folds  wins 14/25
+  snn_e20                  blca       delta -0.005  t p=0.918  W p=0.812  n=5 folds  wins 2/5
+  snn_e20                  brca       delta +0.022  t p=0.811  W p=0.625  n=5 folds  wins 1/5
+  snn_e20                  coadread   delta +0.003  t p=0.973  W p=0.812  n=5 folds  wins 3/5
+  snn_e20                  hnsc       delta -0.017  t p=0.767  W p=1.000  n=5 folds  wins 2/5
+  snn_e20                  stad       delta -0.039  t p=0.578  W p=0.812  n=5 folds  wins 2/5
+  snn_e20                  ALL        delta -0.007  t p=0.7963  W p=0.7310  n=25 folds  wins 10/25
+  mlp_omics_e20            blca       delta +0.017  t p=0.686  W p=0.812  n=5 folds  wins 3/5
+  mlp_omics_e20            brca       delta +0.091  t p=0.312  W p=0.438  n=5 folds  wins 3/5
+  mlp_omics_e20            coadread   delta +0.064  t p=0.374  W p=0.312  n=5 folds  wins 4/5
+  mlp_omics_e20            hnsc       delta +0.003  t p=0.945  W p=0.812  n=5 folds  wins 3/5
+  mlp_omics_e20            stad       delta -0.056  t p=0.458  W p=0.438  n=5 folds  wins 2/5
+  mlp_omics_e20            ALL        delta +0.024  t p=0.3835  W p=0.4108  n=25 folds  wins 15/25
