@@ -22,7 +22,13 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from src.training.train import aggregate, build_datasets, metrics_from_prediction, summary_markdown, with_defaults  # noqa: E402
+from src.training.train import (  # noqa: E402
+    aggregate,
+    build_datasets,
+    metrics_from_prediction,
+    summary_markdown,
+    with_defaults,
+)
 
 
 def load_run(run_dir: Path) -> tuple[dict, dict[int, Path]]:

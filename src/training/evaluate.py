@@ -10,9 +10,9 @@ from __future__ import annotations
 import warnings
 
 import numpy as np
-from scipy import stats
 from lifelines.statistics import logrank_test
 from lifelines.utils import concordance_index as _lifelines_cindex
+from scipy import stats
 
 try:  # scikit-survival has no wheels for some very new Python versions
     from sksurv.metrics import (

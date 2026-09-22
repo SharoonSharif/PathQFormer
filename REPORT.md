@@ -1,6 +1,6 @@
 # PathQ-Former: Final Experimental Report
 
-**Date:** 2026-09-20 | **Status:** all planned experiments complete (180 GPU runs + 12 laptop runs) | **Code:** commit 8e713a9, `C:\Users\ssharif\PathQFormer` | **Raw record:** `EXPERIMENT_LOG.md`
+**Date:** 2026-09-20 | **Status:** all planned experiments complete (180 GPU runs + 12 laptop runs) | **Code:** commit 8e713a9 (this repository) | **Raw record:** `EXPERIMENT_LOG.md`
 
 ---
 
@@ -333,7 +333,7 @@ PathQ-Former's compute is dominated by the 32-query cross-attention, so latency 
 2. **Interpretability figures**: attention over patches and pathways for the final checkpoints (one short pod session; checkpoints on the volume).
 3. **Seeds for the secondary experiments** (OS, single-modality PathQ-Former, late fusion) if the reviewers' bar requires it: ~10 GPU-hours.
 4. **Optional strengthening of the accuracy claim**: a pathway-token input for the MLP baseline (to separate "pathway tokens help" from "fusion helps"), and an external cohort (CPTAC) for the robustness claim.
-5. **Housekeeping**: remove the network volume when the figures are done (it bills ~1 USD/day); rotate the HF and Runpod tokens that appeared in the chat transcript.
+5. **Housekeeping**: remove the network volume when the figures are done (it bills ~1 USD/day); rotate the HuggingFace and Runpod credentials used during the campaign.
 
 ---
 

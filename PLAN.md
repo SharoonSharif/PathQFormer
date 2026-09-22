@@ -1,5 +1,10 @@
 # PathQ-Former — Master Plan
 
+> **Status 2026-09-21:** this plan is the historical working document (last revised 2026-09-10). All planned
+> experiments are complete; the results and the current state of the project are in `REPORT.md`, the
+> chronological record in `EXPERIMENT_LOG.md`.
+
+
 **Project**: Q-Former-based multimodal fusion for WSI + genomics cancer survival prediction
 **Target venues**: NeurIPS 2026 Workshop (Oct deadline) → ICLR 2027 (Sep deadline)
 **Status**: Phase 2b — re-running BLCA under the corrected v2 protocol (see EXPERIMENT_LOG.md 2026-09-10); Phases 4E and 5 evaluation are now automatic in every run

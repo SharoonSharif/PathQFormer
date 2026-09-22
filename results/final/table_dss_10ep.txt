@@ -1,0 +1,14 @@
+cohort                   pathq_fast_e10                 survpath_e10
+blca               0.618 +- 0.014 (n=3)         0.589 +- 0.004 (n=3)
+brca               0.600 +- 0.031 (n=3)         0.536 +- 0.015 (n=3)
+coadread           0.646 +- 0.046 (n=3)         0.551 +- 0.022 (n=3)
+hnsc               0.556 +- 0.007 (n=3)         0.568 +- 0.035 (n=3)
+stad               0.574 +- 0.025 (n=3)         0.607 +- 0.012 (n=3)
+
+Paired over (fold, seed) pairs vs survpath_e10: delta, paired-t p, Wilcoxon p, n pairs
+  pathq_fast_e10           blca       delta +0.029  t p=0.115  W p=0.164  n=15
+  pathq_fast_e10           brca       delta +0.064  t p=0.036  W p=0.048  n=15
+  pathq_fast_e10           coadread   delta +0.094  t p=0.031  W p=0.022  n=15
+  pathq_fast_e10           hnsc       delta -0.013  t p=0.470  W p=0.679  n=15
+  pathq_fast_e10           stad       delta -0.033  t p=0.285  W p=0.609  n=15
+  pathq_fast_e10           ALL        delta +0.028  t p=0.0335  W p=0.0169  n=75

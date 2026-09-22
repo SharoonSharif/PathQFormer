@@ -2,9 +2,10 @@
 
 from pathlib import Path
 
-import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+
 matplotlib.use("Agg")
 
 

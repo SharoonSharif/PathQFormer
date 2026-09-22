@@ -5,10 +5,10 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-from .query_block import ModalityQueryBlock
 from .fusion_block import CrossModalFusionBlock
-from .survival_head import SurvivalHead
 from .null_tokens import NullTokenModule
+from .query_block import ModalityQueryBlock
+from .survival_head import SurvivalHead
 
 
 class PathQFormer(nn.Module):

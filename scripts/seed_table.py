@@ -74,7 +74,8 @@ def main():
                         continue
                     for k in folds:
                         if k in ref:
-                            a.append(folds[k]); b.append(ref[k])
+                            a.append(folds[k])
+                            b.append(ref[k])
                 if len(a) >= 3:
                     a, b = np.array(a), np.array(b)
                     tp = stats.ttest_rel(a, b).pvalue
@@ -94,7 +95,8 @@ def main():
                     if ref:
                         for k in folds:
                             if k in ref:
-                                a.append(folds[k]); b.append(ref[k])
+                                a.append(folds[k])
+                                b.append(ref[k])
             if len(a) >= 3:
                 a, b = np.array(a), np.array(b)
                 print(f"  {m:24s} {'ALL':10s} delta {np.mean(a - b):+.3f}  t p={stats.ttest_rel(a, b).pvalue:.4f}  W p={stats.wilcoxon(a, b).pvalue:.4f}  n={len(a)}")

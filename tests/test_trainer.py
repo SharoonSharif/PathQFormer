@@ -6,7 +6,6 @@ run `pytest -m "not slow"` for the fast subset.
 
 from __future__ import annotations
 
-import json
 import shutil
 import subprocess
 import sys

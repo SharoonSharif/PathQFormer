@@ -14,12 +14,9 @@ Usage:
 """
 
 import argparse
-import os
-import json
 from pathlib import Path
 
 import pandas as pd
-import numpy as np
 
 XENA_BASE = "https://tcga-xena-hub.s3.us-east-1.amazonaws.com/download"
 

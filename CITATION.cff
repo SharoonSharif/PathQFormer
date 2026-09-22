@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this code or the archived results, please cite it as below."
+title: "PathQ-Former: query-based multimodal fusion of whole-slide images and pathway tokens for missing-modality-robust cancer survival prediction"
+type: software
+version: 0.2.0
+date-released: 2026-09-21
+license: MIT
+repository-code: "https://github.com/SharoonSharif/PathQFormer"
+authors:
+  - family-names: Thomas
+    given-names: Sharoon Sunny
+keywords:
+  - computational pathology
+  - multimodal learning
+  - survival analysis
+  - Q-Former
+  - missing modality
+  - TCGA
+abstract: >-
+  PathQ-Former reads whole-slide-image patch embeddings and RNA-seq pathway tokens through two banks of
+  learned queries, fuses the codes with a small Transformer and predicts discrete-time survival hazards.
+  Absent modalities are replaced by learned null codes, so one checkpoint serves WSI+RNA, WSI-only and
+  RNA-only patients. Under an identical fixed-budget protocol on five TCGA cohorts it improves the C-index
+  over the official SurvPath implementation by +0.037 pooled over 75 paired folds (p = 0.002) while keeping
+  0.54-0.67 with either modality removed.
