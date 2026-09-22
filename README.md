@@ -2,13 +2,14 @@
 
 [![CI](https://github.com/SharoonSharif/PathQFormer/actions/workflows/ci.yml/badge.svg)](https://github.com/SharoonSharif/PathQFormer/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22900123.svg)](https://doi.org/10.5281/zenodo.22900123)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
 
 Query-based multimodal fusion of whole-slide-image (WSI) patch embeddings and RNA-seq pathway tokens for
 cancer survival prediction, with **missing-modality robustness** built in. One checkpoint serves patients
 with WSI + RNA, WSI only, or RNA only.
 
-**Results, protocol and every table:** [REPORT.md](REPORT.md). **Chronological record:** [EXPERIMENT_LOG.md](EXPERIMENT_LOG.md). **Paper draft:** [paper/draft.md](paper/draft.md), figures in [paper/figures/](paper/figures/). **Checkpoints:** [sharoonsharif1/PathQFormer-checkpoints](https://huggingface.co/sharoonsharif1/PathQFormer-checkpoints) on the HuggingFace Hub (275 fold checkpoints, 18 GB: the final model and every baseline row of Table 1 for seed 0, three seeds for PathQ-Former, the single-modality models and the OS endpoint). **Release:** [v0.2.0](https://github.com/SharoonSharif/PathQFormer/releases/tag/v0.2.0).
+**Results, protocol and every table:** [REPORT.md](REPORT.md). **Chronological record:** [EXPERIMENT_LOG.md](EXPERIMENT_LOG.md). **Paper draft:** [paper/draft.md](paper/draft.md), figures in [paper/figures/](paper/figures/). **Checkpoints:** [sharoonsharif1/PathQFormer-checkpoints](https://huggingface.co/sharoonsharif1/PathQFormer-checkpoints) on the HuggingFace Hub (275 fold checkpoints, 18 GB: the final model and every baseline row of Table 1 for seed 0, three seeds for PathQ-Former, the single-modality models and the OS endpoint). **Release:** [v0.2.1](https://github.com/SharoonSharif/PathQFormer/releases/tag/v0.2.1), archived on Zenodo: DOI [10.5281/zenodo.22900123](https://doi.org/10.5281/zenodo.22900123) (concept DOI, resolves to the latest version).
 
 | DSS C-index, 20 epochs, final checkpoint, 3 seeds x 5 folds | BLCA | BRCA | COADREAD | HNSC | STAD | pooled vs SurvPath (75 pairs) |
 |---|---|---|---|---|---|---|
@@ -210,7 +211,7 @@ and the analysis scripts end to end. CI runs the fast suite on every push and th
 
 ## 8. Citation and licence
 
-Code is released under the [MIT licence](LICENSE); see [CITATION.cff](CITATION.cff). The SurvPath baseline
+Code is released under the [MIT licence](LICENSE); see [CITATION.cff](CITATION.cff). Please cite the Zenodo DOI 10.5281/zenodo.22900123 (all versions) or 10.5281/zenodo.22900124 (v0.2.1). The SurvPath baseline
 imports the authors' code from `data/survpath_repo` at run time, which is GPLv3 and for non-commercial
 academic use under the Mahmood Lab's terms; UNI2-h features and TCGA data carry their own access terms.
 Nothing from those sources is redistributed here.

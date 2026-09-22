@@ -115,7 +115,7 @@ On an RTX PRO 4000 with real BLCA patients (median 6,214 patches): PathQ-Former 
 PathQ-Former turns missing modalities into a first-class case of multimodal survival modelling with a query-based design whose cost is independent of slide size. Under a strict protocol it significantly outperforms the strongest published multimodal baseline and, unlike it, keeps working with either modality absent, while its parity with an RNA-only MLP and its ensemble-level fusion gain mark the current limits of multimodal fusion on TCGA. Code, configurations, all 180 run results and the checkpoints are public.
 
 ## Reproducibility statement
-Code: https://github.com/SharoonSharif/PathQFormer (MIT). `scripts/reproduce_tables.sh` regenerates every table from the archived per-run results in one minute; each Table 1 cell is one documented command; checkpoints are on the HuggingFace Hub (`sharoonsharif1/PathQFormer-checkpoints`). Data access: SurvPath repository (splits, RNA, pathways) and the gated UNI2-h features.
+Code: https://github.com/SharoonSharif/PathQFormer (MIT), archived at https://doi.org/10.5281/zenodo.22900123. `scripts/reproduce_tables.sh` regenerates every table from the archived per-run results in one minute; each Table 1 cell is one documented command; checkpoints are on the HuggingFace Hub (`sharoonsharif1/PathQFormer-checkpoints`). Data access: SurvPath repository (splits, RNA, pathways) and the gated UNI2-h features.
 
 ## References
 
