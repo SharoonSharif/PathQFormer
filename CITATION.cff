@@ -15,8 +15,8 @@ identifiers:
 license: MIT
 repository-code: "https://github.com/SharoonSharif/PathQFormer"
 authors:
-  - family-names: Thomas
-    given-names: Sharoon Sunny
+  - family-names: Sharif
+    given-names: Sharoon
 keywords:
   - computational pathology
   - multimodal learning

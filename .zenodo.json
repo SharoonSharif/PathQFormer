@@ -3,7 +3,7 @@
   "description": "<p>Code, configurations, archived per-run results (180 five-fold runs on five TCGA cohorts) and the experimental report for PathQ-Former, a Q-Former-style fusion model of whole-slide-image patch embeddings (UNI2-h) and RNA-seq pathway tokens that predicts discrete-time survival hazards and keeps working when either modality is missing. Under an identical fixed-budget protocol it improves the C-index over the official SurvPath implementation by +0.037 pooled over 75 paired folds (paired t p = 0.002). Trained checkpoints are on the HuggingFace Hub (sharoonsharif1/PathQFormer-checkpoints).</p>",
   "creators": [
     {
-      "name": "Thomas, Sharoon Sunny"
+      "name": "Sharif, Sharoon"
     }
   ],
   "license": "MIT",
