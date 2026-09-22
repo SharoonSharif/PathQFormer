@@ -48,7 +48,10 @@ def main() -> None:
     ap.add_argument("roots", nargs="+")
     ap.add_argument("--runs", nargs="+", default=["pathq_fast_e10", "survpath_e10"])
     ap.add_argument("--epochs", type=int, default=10)
+    ap.add_argument("--plot", default=None, help="save the pooled curves as a figure (png/pdf)")
+    ap.add_argument("--labels", nargs="+", default=None, help="legend labels, one per --runs entry")
     args = ap.parse_args()
+    pooled_curves = {}
 
     data = collect(args.roots, args.runs)
     for method, by_cohort in data.items():
@@ -61,8 +64,29 @@ def main() -> None:
             pooled += hists
             print(f"{cohort:10s} {len(hists):6d}   " + " ".join(f"{v:.3f}" if np.isfinite(v) else "  -  " for v in mean))
         mean, n = curve(pooled, args.epochs)
+        pooled_curves[method] = mean
         best = int(np.nanargmax(mean)) + 1
         print(f"{'POOLED':10s} {len(pooled):6d}   " + " ".join(f"{v:.3f}" for v in mean) + f"   <- best budget: {best} epochs ({mean[best - 1]:.3f}); at 10: {mean[-1]:.3f}")
+
+    if args.plot:
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+
+        labels = dict(zip(args.runs, args.labels or args.runs))
+        fig, ax = plt.subplots(figsize=(5.2, 3.4))
+        for method, mean in pooled_curves.items():
+            ax.plot(np.arange(1, len(mean) + 1), mean, marker="o", ms=3, label=labels.get(method, method))
+        ax.set_xlabel("training epochs (fixed budget, final checkpoint)")
+        ax.set_ylabel("validation C-index, pooled over folds, seeds, cohorts")
+        ax.set_xticks(range(1, args.epochs + 1, max(1, args.epochs // 10)))
+        ax.grid(alpha=0.3)
+        ax.legend(frameon=False)
+        fig.tight_layout()
+        Path(args.plot).parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(args.plot, dpi=200)
+        print(f"figure -> {args.plot}")
 
 
 if __name__ == "__main__":
