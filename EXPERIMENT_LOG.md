@@ -610,3 +610,49 @@ headroom that Section 6 measured at +0.02.
 **Still open (need a pod, `scripts/pod/batch9.sh`):** SurvPath learning-rate x alpha grid under the protocol (the
 manuscript currently compares against the published hyper-parameters only); single-modality PathQ-Former seeds 1-2
 for a three-seed fusion-vs-ensemble table; mean-imputation columns for seeds 1-2; RNA / WSI permutation test.
+
+## 2026-09-23 - Batch 9 part 1: permutation test, three-seed imputation, two-seed fusion-vs-ensemble (pod h; grid paused)
+
+Pod h finished the evaluation passes and 18/20 single-modality runs before the account balance forced a stop
+(BRCA seed 2 pair pending; grid paused at 1/35 after its first cell showed ~58 GPU-h for the full grid).
+
+**Permutation test and imputation, three seeds (mean over seeds of the 5-fold mean C-index; pooled deltas vs `both`
+over 75 (fold, seed) pairs, seed-averaged 25-fold p in brackets):**
+
+| PathQ-Former + aux | both | RNA-only (null code) | RNA-only (mean patch) | WSI-only (null code) | WSI-only (mean genes) | RNA permuted | WSI permuted |
+|---|---|---|---|---|---|---|---|
+| BLCA | 0.630 | 0.613 | 0.595 | 0.600 | 0.597 | 0.597 | 0.570 |
+| BRCA | 0.622 | 0.617 | 0.591 | 0.592 | 0.607 | 0.572 | 0.539 |
+| COADREAD | 0.613 | 0.583 | 0.580 | 0.576 | 0.602 | 0.618 | 0.556 |
+| HNSC | 0.582 | 0.545 | 0.558 | 0.596 | 0.589 | 0.566 | 0.539 |
+| STAD | 0.572 | 0.538 | 0.521 | 0.589 | 0.581 | 0.555 | 0.484 |
+| pooled delta | | -0.025 (p .053 [.19]) | -0.035 (p .004 [.040]) | -0.013 (p .13 [.27]) | -0.009 (p .20 [.29]) | **-0.023 (p .016 [.075])** | **-0.067 (p 6e-7 [2e-4])** |
+
+| SurvPath | both | RNA-only (mean patch) | WSI-only (mean genes) | RNA permuted | WSI permuted |
+|---|---|---|---|---|---|
+| BLCA | 0.594 | 0.486 | 0.595 | 0.594 | 0.511 |
+| BRCA | 0.536 | 0.520 | 0.536 | 0.537 | 0.532 |
+| COADREAD | 0.570 | 0.473 | 0.572 | 0.572 | 0.510 |
+| HNSC | 0.552 | 0.504 | 0.553 | 0.552 | 0.489 |
+| STAD | 0.587 | 0.493 | 0.588 | 0.587 | 0.459 |
+| pooled delta | | -0.073 (p 6e-5 [.003]) | +0.001 (n.s.) | **+0.001 (p .43 [.36])** | **-0.068 (p 3e-4 [.016])** |
+
+Reading. (1) SurvPath's prediction does not use RNA: replacing it by the training mean or by another patient's RNA
+changes nothing (+0.001, three seeds), and removing WSI drops it to chance. (2) PathQ-Former + aux does use RNA:
+permuting it costs 0.023 (significant over 75 pairs, p = 0.075 seed-averaged), about a third of what permuting WSI
+costs (0.067); the fused prediction is histology-led but not histology-only, consistent with the 0.83 / 0.45 risk
+correlations. (3) Null codes vs mean imputation for the same PathQ checkpoints: RNA-only 0.579 vs 0.569 (+0.010,
+p 0.27), WSI-only 0.591 vs 0.595 (n.s.); the learned null codes are at least as good as imputation, not the source
+of the robustness. (4) The robustness claim holds with three seeds: PathQ+aux keeps 0.54-0.62 with either modality
+removed on every cohort; SurvPath keeps its score only when RNA is removed.
+
+**Fusion vs late-fusion ensemble, two seeds (0-1), 50 (fold, seed) pairs:** late fusion 0.629 / 0.606 / 0.620 /
+0.571 / 0.544 (BLCA / BRCA / COADREAD / HNSC / STAD). Joint PathQ+aux vs ensemble +0.011 (t p .39, W p .22;
+seed-averaged +0.010, p .32, wins 14/25); plain PathQ +0.009 (p .51). The ensemble itself is +0.027 over SurvPath
+(t p .16, W p .071). Single-modality PathQ-Former vs SurvPath: WSI-only +0.015 (n.s.), RNA-only -0.006. So: joint
+fusion ~ ensemble (+0.01), and most of the gain over SurvPath is already present in an ensemble of the two branches.
+
+**Grid (1/35 cells):** PathQ+aux with lr 2e-4 on BLCA 0.615 (seed 0) vs 0.630 at lr 1e-4; inconclusive alone.
+
+**Pending on the volume (resumable):** BRCA seed 2 WSI-only (killed in fold 1) and RNA-only, late fusion seed 2,
+34 grid runs (~$5 + ~$33 at $0.57/h). Pod h ran 27 h (~$15.5); the grid pod ran 1.7 h before I removed it.

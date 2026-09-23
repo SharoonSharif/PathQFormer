@@ -20,7 +20,7 @@ echo "[tables] python: $PY"
 # Unpack the archives on a fresh clone (the extracted directories are git-ignored).
 if [ ! -f pod_results/outputs_e20/efficiency.md ] || [ ! -d pod_results/outputs_os ]; then
   echo "[tables] extracting archived results"
-  for t in pod_results/pod_results.tgz pod_results/pull_0918/results_0918a.tgz pod_results/pull_0918/results_0918b.tgz; do
+  for t in pod_results/pod_results.tgz pod_results/pull_0918/results_0918a.tgz pod_results/pull_0918/results_0918b.tgz pod_results/pull_0923/results_0923.tgz; do
     tar xzf "$t" -C pod_results/
   done
 fi
@@ -50,8 +50,13 @@ echo "[tables] per-run summaries (all metrics, missing-modality blocks, per-fold
 "$PY" scripts/aggregate_results.py pod_results/outputs_ablate --out "$OUT/summary_ablate_all_runs.md" >/dev/null
 "$PY" scripts/aggregate_results.py pod_results/outputs_v2 --out "$OUT/summary_v2_all_runs.md" >/dev/null
 
+echo "[tables] fusion vs late-fusion ensemble (seeds available), grid"
+"$PY" scripts/seed_table.py "$E20" --methods pathq_fast_e20_aux pathq_fast_e20 late_fusion_e20 pathq_e20_wsi_only pathq_e20_genomic_only \n  --ref late_fusion_e20 > "$OUT/table_fusion_vs_ensemble.txt"
+[ -d pod_results/outputs_grid ] && "$PY" scripts/seed_table.py pod_results/outputs_grid "$E20" \n  --methods pathq_fast_e20_aux $(ls pod_results/outputs_grid 2>/dev/null | grep -v summary | tr "
+" " ") survpath_e20 --ref survpath_e20 > "$OUT/table_grid.txt" || true
+
 echo "[tables] missing-modality over seeds, risk correlations"
-"$PY" scripts/missing_modality_table.py "$E20" --methods pathq_fast_e20_aux pathq_fast_e20 survpath_e20 > "$OUT/table_missing_modality_seeds.txt"
+"$PY" scripts/missing_modality_table.py "$E20" --methods pathq_fast_e20_aux pathq_fast_e20 survpath_e20 > "$OUT/table_missing_modality_seeds.txt"   # incl. *_impute and rna/wsi_permuted
 "$PY" scripts/risk_correlation.py "$E20" --run pathq_fast_e20_aux --others survpath_e20 mlp_omics_e20 abmil_e20 snn_e20 pathq_fast_e20 > "$OUT/table_risk_correlation.txt"
 
 cp "$E20/efficiency.md" "$OUT/efficiency.md"

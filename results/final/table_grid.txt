@@ -1,0 +1,26 @@
+cohort               pathq_fast_e20_aux    pathq_fast_e20_aux_lr2e-4    pathq_fast_e20_aux_lr5e-5                 survpath_e20
+blca               0.630 +- 0.010 (n=3)           0.615 +- nan (n=1)                            -         0.594 +- 0.012 (n=3)
+brca               0.622 +- 0.033 (n=3)                            -                            -         0.536 +- 0.026 (n=3)
+coadread           0.613 +- 0.023 (n=3)                            -                            -         0.570 +- 0.038 (n=3)
+hnsc               0.582 +- 0.025 (n=3)                            -                            -         0.552 +- 0.019 (n=3)
+stad               0.572 +- 0.022 (n=3)                            -                            -         0.587 +- 0.008 (n=3)
+
+Paired over (fold, seed) pairs vs survpath_e20: delta, paired-t p, Wilcoxon p, n pairs
+  pathq_fast_e20_aux       blca       delta +0.036  t p=0.024  W p=0.022  n=15
+  pathq_fast_e20_aux       brca       delta +0.086  t p=0.004  W p=0.005  n=15
+  pathq_fast_e20_aux       coadread   delta +0.044  t p=0.322  W p=0.229  n=15
+  pathq_fast_e20_aux       hnsc       delta +0.031  t p=0.285  W p=0.221  n=15
+  pathq_fast_e20_aux       stad       delta -0.015  t p=0.571  W p=0.804  n=15
+  pathq_fast_e20_aux_lr2e-4 blca       delta +0.009  t p=0.816  W p=1.000  n=5
+  pathq_fast_e20_aux       ALL        delta +0.036  t p=0.0067  W p=0.0017  n=75
+  pathq_fast_e20_aux_lr2e-4 ALL        delta +0.009  t p=0.8158  W p=1.0000  n=5
+
+Seed-averaged paired tests vs survpath_e20 (per (cohort, fold): mean over seeds; then paired over folds)
+  pathq_fast_e20_aux       blca       delta +0.036  t p=0.175  W p=0.312  n=5 folds  wins 3/5
+  pathq_fast_e20_aux       brca       delta +0.086  t p=0.017  W p=0.062  n=5 folds  wins 5/5
+  pathq_fast_e20_aux       coadread   delta +0.044  t p=0.583  W p=0.625  n=5 folds  wins 4/5
+  pathq_fast_e20_aux       hnsc       delta +0.031  t p=0.544  W p=0.625  n=5 folds  wins 4/5
+  pathq_fast_e20_aux       stad       delta -0.015  t p=0.719  W p=0.625  n=5 folds  wins 2/5
+  pathq_fast_e20_aux       ALL        delta +0.036  t p=0.0737  W p=0.0296  n=25 folds  wins 18/25
+  pathq_fast_e20_aux_lr2e-4 blca       delta +0.020  t p=0.567  W p=0.625  n=5 folds  wins 3/5
+  pathq_fast_e20_aux_lr2e-4 ALL        delta +0.020  t p=0.5665  W p=0.6250  n=5 folds  wins 3/5

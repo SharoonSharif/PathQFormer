@@ -1,6 +1,6 @@
 # PathQ-Former results
 
-105 run(s) under pod_results/outputs_e20
+128 run(s) under pod_results/outputs_e20
 
 | Run | Cancer | Folds | Train modalities | Selection | C-index (both) | 95% CI | IPCW | IBS | td-AUC | WSI-only | Genomics-only | log-rank p (median) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -24,6 +24,11 @@
 | late_fusion_e20 | COADREAD | 5 | both | late_fusion | **0.5710 ± 0.1702** | [0.360, 0.782] | 0.5692 | 0.0697 | 0.6301 | nan | nan | 0.311 |
 | late_fusion_e20 | HNSC | 5 | both | late_fusion | **0.5778 ± 0.0345** | [0.535, 0.621] | 0.5931 | 0.1759 | 0.5696 | nan | nan | 0.386 |
 | late_fusion_e20 | STAD | 5 | both | late_fusion | **0.5486 ± 0.1060** | [0.417, 0.680] | 0.5632 | 0.1690 | 0.5500 | nan | nan | 0.214 |
+| late_fusion_e20_seed1 | BLCA | 5 | both | late_fusion | **0.6167 ± 0.0521** | [0.552, 0.681] | 0.6269 | 0.1661 | 0.6772 | nan | nan | 0.087 |
+| late_fusion_e20_seed1 | BRCA | 5 | both | late_fusion | **0.6197 ± 0.1223** | [0.468, 0.772] | 0.6463 | 0.0659 | 0.6566 | nan | nan | 0.203 |
+| late_fusion_e20_seed1 | COADREAD | 5 | both | late_fusion | **0.6683 ± 0.2424** | [0.367, 0.969] | 0.6825 | 0.0732 | 0.6822 | nan | nan | 0.352 |
+| late_fusion_e20_seed1 | HNSC | 5 | both | late_fusion | **0.5646 ± 0.0401** | [0.515, 0.614] | 0.5747 | 0.1772 | 0.5675 | nan | nan | 0.226 |
+| late_fusion_e20_seed1 | STAD | 5 | both | late_fusion | **0.5399 ± 0.0839** | [0.436, 0.644] | 0.5495 | 0.1794 | 0.5391 | nan | nan | 0.533 |
 | mlp_omics_e20 | BLCA | 5 | genomic | last | **0.6194 ± 0.0807** | [0.519, 0.720] | 0.6149 | 0.1883 | 0.6822 | nan | 0.6194 | 0.409 |
 | mlp_omics_e20 | BRCA | 5 | genomic | last | **0.6295 ± 0.0767** | [0.534, 0.725] | 0.5852 | 0.0765 | 0.6603 | nan | 0.6295 | 0.180 |
 | mlp_omics_e20 | COADREAD | 5 | genomic | last | **0.6299 ± 0.1390** | [0.457, 0.802] | 0.6234 | 0.0809 | 0.6612 | nan | 0.6299 | 0.360 |
@@ -44,11 +49,29 @@
 | pathq_e20_genomic_only | COADREAD | 5 | genomic | last | **0.5658 ± 0.0541** | [0.499, 0.633] | 0.5541 | 0.0717 | 0.5145 | nan | 0.5658 | 0.581 |
 | pathq_e20_genomic_only | HNSC | 5 | genomic | last | **0.5630 ± 0.0498** | [0.501, 0.625] | 0.5743 | 0.2005 | 0.6108 | nan | 0.5630 | 0.424 |
 | pathq_e20_genomic_only | STAD | 5 | genomic | last | **0.5115 ± 0.0849** | [0.406, 0.617] | 0.5249 | 0.1821 | 0.4550 | nan | 0.5115 | 0.394 |
+| pathq_e20_genomic_only_seed1 | BLCA | 5 | genomic | last | **0.5954 ± 0.0987** | [0.473, 0.718] | 0.5991 | 0.1814 | 0.6324 | nan | 0.5954 | 0.241 |
+| pathq_e20_genomic_only_seed1 | BRCA | 5 | genomic | last | **0.5597 ± 0.0746** | [0.467, 0.652] | 0.6058 | 0.0673 | 0.5793 | nan | 0.5597 | 0.519 |
+| pathq_e20_genomic_only_seed1 | COADREAD | 5 | genomic | last | **0.6360 ± 0.1626** | [0.434, 0.838] | 0.6623 | 0.0742 | 0.6299 | nan | 0.6360 | 0.292 |
+| pathq_e20_genomic_only_seed1 | HNSC | 5 | genomic | last | **0.5603 ± 0.0365** | [0.515, 0.606] | 0.5781 | 0.1794 | 0.5634 | nan | 0.5603 | 0.452 |
+| pathq_e20_genomic_only_seed1 | STAD | 5 | genomic | last | **0.5060 ± 0.0560** | [0.436, 0.576] | 0.5137 | 0.2296 | 0.5116 | nan | 0.5060 | 0.545 |
+| pathq_e20_genomic_only_seed2 | BLCA | 5 | genomic | last | **0.5984 ± 0.0788** | [0.501, 0.696] | 0.5967 | 0.1872 | 0.6559 | nan | 0.5984 | 0.441 |
+| pathq_e20_genomic_only_seed2 | COADREAD | 5 | genomic | last | **0.5927 ± 0.0963** | [0.473, 0.712] | 0.5736 | 0.0789 | 0.6556 | nan | 0.5927 | 0.614 |
+| pathq_e20_genomic_only_seed2 | HNSC | 5 | genomic | last | **0.5396 ± 0.0837** | [0.436, 0.644] | 0.5523 | 0.2025 | 0.5265 | nan | 0.5396 | 0.396 |
+| pathq_e20_genomic_only_seed2 | STAD | 5 | genomic | last | **0.5164 ± 0.1131** | [0.376, 0.657] | 0.5173 | 0.2116 | 0.4889 | nan | 0.5164 | 0.341 |
 | pathq_e20_wsi_only | BLCA | 5 | wsi | last | **0.5926 ± 0.0908** | [0.480, 0.705] | 0.5921 | 0.2318 | 0.6388 | 0.5926 | nan | 0.308 |
 | pathq_e20_wsi_only | BRCA | 5 | wsi | last | **0.5960 ± 0.1402** | [0.422, 0.770] | 0.6248 | 0.0965 | 0.6192 | 0.5960 | nan | 0.117 |
 | pathq_e20_wsi_only | COADREAD | 5 | wsi | last | **0.5876 ± 0.1544** | [0.396, 0.779] | 0.5884 | 0.0877 | 0.6234 | 0.5876 | nan | 0.619 |
 | pathq_e20_wsi_only | HNSC | 5 | wsi | last | **0.5865 ± 0.0496** | [0.525, 0.648] | 0.6006 | 0.2282 | 0.5660 | 0.5865 | nan | 0.590 |
 | pathq_e20_wsi_only | STAD | 5 | wsi | last | **0.5674 ± 0.0726** | [0.477, 0.658] | 0.5697 | 0.2033 | 0.6192 | 0.5674 | nan | 0.446 |
+| pathq_e20_wsi_only_seed1 | BLCA | 5 | wsi | last | **0.5942 ± 0.0846** | [0.489, 0.699] | 0.5930 | 0.2336 | 0.6272 | 0.5942 | nan | 0.183 |
+| pathq_e20_wsi_only_seed1 | BRCA | 5 | wsi | last | **0.6336 ± 0.1162** | [0.489, 0.778] | 0.6161 | 0.0842 | 0.6551 | 0.6336 | nan | 0.206 |
+| pathq_e20_wsi_only_seed1 | COADREAD | 5 | wsi | last | **0.5879 ± 0.2067** | [0.331, 0.845] | 0.6144 | 0.0898 | 0.7053 | 0.5879 | nan | 0.541 |
+| pathq_e20_wsi_only_seed1 | HNSC | 5 | wsi | last | **0.5817 ± 0.0346** | [0.539, 0.625] | 0.5846 | 0.2434 | 0.5753 | 0.5817 | nan | 0.289 |
+| pathq_e20_wsi_only_seed1 | STAD | 5 | wsi | last | **0.5754 ± 0.0854** | [0.469, 0.681] | 0.5758 | 0.1924 | 0.5843 | 0.5754 | nan | 0.140 |
+| pathq_e20_wsi_only_seed2 | BLCA | 5 | wsi | last | **0.5890 ± 0.0988** | [0.466, 0.712] | 0.5883 | 0.2460 | 0.6671 | 0.5890 | nan | 0.193 |
+| pathq_e20_wsi_only_seed2 | COADREAD | 5 | wsi | last | **0.5463 ± 0.1793** | [0.324, 0.769] | 0.5525 | 0.0880 | 0.6537 | 0.5463 | nan | 0.706 |
+| pathq_e20_wsi_only_seed2 | HNSC | 5 | wsi | last | **0.5859 ± 0.0330** | [0.545, 0.627] | 0.5901 | 0.2430 | 0.5742 | 0.5859 | nan | 0.267 |
+| pathq_e20_wsi_only_seed2 | STAD | 5 | wsi | last | **0.6030 ± 0.0821** | [0.501, 0.705] | 0.6202 | 0.2107 | 0.6279 | 0.6030 | nan | 0.417 |
 | pathq_fast_e20 | BLCA | 5 | both | last | **0.6277 ± 0.0729** | [0.537, 0.718] | 0.6333 | 0.2155 | 0.6828 | 0.6350 | 0.5346 | 0.086 |
 | pathq_fast_e20 | BRCA | 5 | both | last | **0.5683 ± 0.1365** | [0.399, 0.738] | 0.6116 | 0.0808 | 0.6086 | 0.5647 | 0.5386 | 0.381 |
 | pathq_fast_e20 | COADREAD | 5 | both | last | **0.6511 ± 0.1402** | [0.477, 0.825] | 0.6525 | 0.0771 | 0.7497 | 0.6376 | 0.6507 | 0.562 |
@@ -169,6 +192,11 @@
 | late_fusion_e20 | COADREAD | 0.7927 | 0.4882 | 0.3365 | 0.6314 | 0.6061 | 0.5710 |
 | late_fusion_e20 | HNSC | 0.5472 | 0.5726 | 0.5919 | 0.5476 | 0.6297 | 0.5778 |
 | late_fusion_e20 | STAD | 0.3808 | 0.6459 | 0.5265 | 0.6308 | 0.5591 | 0.5486 |
+| late_fusion_e20_seed1 | BLCA | 0.6404 | 0.6006 | 0.6783 | 0.5382 | 0.6259 | 0.6167 |
+| late_fusion_e20_seed1 | BRCA | 0.6890 | 0.7269 | 0.5947 | 0.4185 | 0.6695 | 0.6197 |
+| late_fusion_e20_seed1 | COADREAD | 0.8740 | 0.5098 | 0.3365 | 0.7182 | 0.9030 | 0.6683 |
+| late_fusion_e20_seed1 | HNSC | 0.5878 | 0.5801 | 0.5795 | 0.5825 | 0.4932 | 0.5646 |
+| late_fusion_e20_seed1 | STAD | 0.4272 | 0.6598 | 0.5548 | 0.5462 | 0.5114 | 0.5399 |
 | mlp_omics_e20 | BLCA | 0.6115 | 0.5696 | 0.7551 | 0.5486 | 0.6122 | 0.6194 |
 | mlp_omics_e20 | BRCA | 0.5189 | 0.7255 | 0.6174 | 0.6145 | 0.6710 | 0.6295 |
 | mlp_omics_e20 | COADREAD | 0.7886 | 0.5706 | 0.4231 | 0.6883 | 0.6788 | 0.6299 |
@@ -189,11 +217,29 @@
 | pathq_e20_genomic_only | COADREAD | 0.5732 | 0.5569 | 0.4904 | 0.5664 | 0.6424 | 0.5658 |
 | pathq_e20_genomic_only | HNSC | 0.5457 | 0.5586 | 0.5750 | 0.4993 | 0.6365 | 0.5630 |
 | pathq_e20_genomic_only | STAD | 0.4205 | 0.4819 | 0.4629 | 0.6346 | 0.5578 | 0.5115 |
+| pathq_e20_genomic_only_seed1 | BLCA | 0.5740 | 0.4691 | 0.7377 | 0.5647 | 0.6317 | 0.5954 |
+| pathq_e20_genomic_only_seed1 | BRCA | 0.6478 | 0.5960 | 0.5018 | 0.4648 | 0.5880 | 0.5597 |
+| pathq_e20_genomic_only_seed1 | COADREAD | 0.7236 | 0.5078 | 0.4519 | 0.6423 | 0.8545 | 0.6360 |
+| pathq_e20_genomic_only_seed1 | HNSC | 0.5689 | 0.5501 | 0.6043 | 0.5729 | 0.5051 | 0.5603 |
+| pathq_e20_genomic_only_seed1 | STAD | 0.4536 | 0.5630 | 0.4393 | 0.5269 | 0.5470 | 0.5060 |
+| pathq_e20_genomic_only_seed2 | BLCA | 0.5106 | 0.5812 | 0.7018 | 0.6544 | 0.5439 | 0.5984 |
+| pathq_e20_genomic_only_seed2 | COADREAD | 0.7073 | 0.5784 | 0.5673 | 0.6558 | 0.4545 | 0.5927 |
+| pathq_e20_genomic_only_seed2 | HNSC | 0.5123 | 0.5398 | 0.6223 | 0.6090 | 0.4147 | 0.5396 |
+| pathq_e20_genomic_only_seed2 | STAD | 0.4272 | 0.4128 | 0.4806 | 0.6808 | 0.5806 | 0.5164 |
 | pathq_e20_wsi_only | BLCA | 0.6885 | 0.6044 | 0.6424 | 0.4476 | 0.5799 | 0.5926 |
 | pathq_e20_wsi_only | BRCA | 0.4845 | 0.7767 | 0.6042 | 0.4339 | 0.6809 | 0.5960 |
 | pathq_e20_wsi_only | COADREAD | 0.7764 | 0.5686 | 0.3558 | 0.6612 | 0.5758 | 0.5876 |
 | pathq_e20_wsi_only | HNSC | 0.5356 | 0.6232 | 0.5321 | 0.6031 | 0.6382 | 0.5865 |
 | pathq_e20_wsi_only | STAD | 0.5894 | 0.6218 | 0.6443 | 0.4885 | 0.4933 | 0.5674 |
+| pathq_e20_wsi_only_seed1 | BLCA | 0.6413 | 0.6035 | 0.6537 | 0.4466 | 0.6259 | 0.5942 |
+| pathq_e20_wsi_only_seed1 | BRCA | 0.5687 | 0.7368 | 0.7050 | 0.4604 | 0.6969 | 0.6336 |
+| pathq_e20_wsi_only_seed1 | COADREAD | 0.9065 | 0.5588 | 0.3846 | 0.6531 | 0.4364 | 0.5879 |
+| pathq_e20_wsi_only_seed1 | HNSC | 0.5631 | 0.6289 | 0.5366 | 0.5845 | 0.5956 | 0.5817 |
+| pathq_e20_wsi_only_seed1 | STAD | 0.5199 | 0.6770 | 0.6584 | 0.5269 | 0.4946 | 0.5754 |
+| pathq_e20_wsi_only_seed2 | BLCA | 0.6500 | 0.6180 | 0.6373 | 0.4136 | 0.6259 | 0.5890 |
+| pathq_e20_wsi_only_seed2 | COADREAD | 0.8171 | 0.5412 | 0.3365 | 0.5881 | 0.4485 | 0.5463 |
+| pathq_e20_wsi_only_seed2 | HNSC | 0.5806 | 0.6092 | 0.5333 | 0.5886 | 0.6177 | 0.5859 |
+| pathq_e20_wsi_only_seed2 | STAD | 0.6060 | 0.6028 | 0.7244 | 0.5885 | 0.4933 | 0.6030 |
 | pathq_fast_e20 | BLCA | 0.6769 | 0.5377 | 0.6783 | 0.5590 | 0.6863 | 0.6277 |
 | pathq_fast_e20 | BRCA | 0.4948 | 0.6856 | 0.6639 | 0.3634 | 0.6337 | 0.5683 |
 | pathq_fast_e20 | COADREAD | 0.8415 | 0.6725 | 0.4519 | 0.6775 | 0.6121 | 0.6511 |
