@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use this code or the archived results, please cite it as below."
 title: "PathQ-Former: query-based multimodal fusion of whole-slide images and pathway tokens for missing-modality-robust cancer survival prediction"
 type: software
-version: 0.2.1
-date-released: 2026-09-22
+version: 0.2.2
+date-released: 2026-09-23
 doi: 10.5281/zenodo.22900124
 identifiers:
   - type: doi

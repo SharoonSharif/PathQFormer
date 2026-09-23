@@ -11,15 +11,17 @@ with WSI + RNA, WSI only, or RNA only.
 
 **Results, protocol and every table:** [REPORT.md](REPORT.md). **Chronological record:** [EXPERIMENT_LOG.md](EXPERIMENT_LOG.md). **Paper draft:** [paper/draft.md](paper/draft.md), figures in [paper/figures/](paper/figures/). **Checkpoints:** [sharoonsharif1/PathQFormer-checkpoints](https://huggingface.co/sharoonsharif1/PathQFormer-checkpoints) on the HuggingFace Hub (275 fold checkpoints, 18 GB: the final model and every baseline row of Table 1 for seed 0, three seeds for PathQ-Former, the single-modality models and the OS endpoint). **Release:** [v0.2.1](https://github.com/SharoonSharif/PathQFormer/releases/tag/v0.2.1), archived on Zenodo: DOI [10.5281/zenodo.22900123](https://doi.org/10.5281/zenodo.22900123) (concept DOI, resolves to the latest version).
 
-| DSS C-index, 20 epochs, final checkpoint, 3 seeds x 5 folds | BLCA | BRCA | COADREAD | HNSC | STAD | pooled vs SurvPath (75 pairs) |
+| DSS C-index, 20 epochs, final checkpoint, 3 seeds x 5 folds | BLCA | BRCA | COADREAD | HNSC | STAD | pooled vs SurvPath (75 pairs; seed-averaged 25 folds) |
 |---|---|---|---|---|---|---|
-| **PathQ-Former + aux heads** (final config) | **0.630** | 0.622 | 0.613 | **0.582** | 0.572 | **+0.036**, t p 0.007, Wilcoxon p 0.002 |
-| PathQ-Former | 0.609 | 0.611 | **0.638** | 0.575 | **0.593** | **+0.037**, t p 0.002, Wilcoxon p 0.005 |
+| **PathQ-Former + aux heads** (final config) | **0.630** | 0.622 | 0.613 | **0.582** | 0.572 | **+0.036**, t p 0.007, W p 0.002 (seed-avg: t p 0.074, W p 0.030) |
+| PathQ-Former | 0.609 | 0.611 | **0.638** | 0.575 | **0.593** | **+0.037**, t p 0.002, W p 0.005 (seed-avg: t p 0.020, W p 0.020) |
 | SurvPath (official code, same protocol) | 0.594 | 0.536 | 0.570 | 0.552 | 0.587 | reference |
 | ABMIL (WSI) / SNN (RNA) / MLP (RNA) | 0.566 / 0.590 / 0.611 | 0.575 / 0.558 / **0.627** | 0.587 / 0.572 / 0.633 | 0.562 / 0.535 / 0.555 | 0.553 / 0.549 / 0.532 | +0.001 / -0.007 / +0.024, all n.s. |
 
-With either modality removed at test time the final model keeps 0.54-0.67; SurvPath is unchanged without RNA
-(it ignores it) and drops to chance without WSI. Same forward latency as SurvPath, 1.7x faster training
+With either modality removed at test time the final model keeps 0.54-0.62 (three seeds); SurvPath is unchanged
+without RNA and drops to chance without WSI. A permutation test makes the difference explicit: shuffling RNA across
+patients costs PathQ-Former 0.023 C-index and SurvPath 0.001. Joint fusion is worth about an ensemble of the two
+branches (+0.01, n.s.). Same forward latency as SurvPath, 1.7x faster training
 step, 20 % fewer parameters. Honest caveat: PathQ-Former is within noise of a tuned RNA-only MLP pooled
 (+0.012); the claim is "at least as good as the best unimodal model on every cohort, with one robust network".
 
@@ -101,7 +103,7 @@ Rerunning a finished config is a no-op. Every run stores its config, seed, git c
 
 ### 4.1 Tables from the archived results (1 minute, no GPU)
 
-The per-run results of all 180 GPU runs (`results.json`, `summary.md`, `config.yaml`, per-fold metrics and
+The per-run results of all 204 GPU runs (`results.json`, `summary.md`, `config.yaml`, per-fold metrics and
 predictions; no checkpoints) are archived in `pod_results/*.tgz` (18 MB).
 
 ```bash

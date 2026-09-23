@@ -1,6 +1,6 @@
 [project]
 name = "pathqformer"
-version = "0.2.1"
+version = "0.2.2"
 description = "PathQ-Former: query-based multimodal fusion of WSI and pathway tokens for cancer survival prediction"
 requires-python = ">=3.10"
 license = {text = "MIT"}

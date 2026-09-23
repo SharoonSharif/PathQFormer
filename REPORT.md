@@ -1,6 +1,6 @@
 # PathQ-Former: Final Experimental Report
 
-**Date:** 2026-09-20 | **Status:** all planned experiments complete (180 GPU runs + 12 laptop runs) | **Code:** commit 8e713a9 (this repository) | **Raw record:** `EXPERIMENT_LOG.md`
+**Date:** 2026-09-23 | **Status:** main campaign complete (180 GPU runs + 12 laptop runs); reviewer-requested batch 9 part 1 done (24 more runs + evaluations, Sections 4-6 and the log's 'Batch 9' entries); pending: BRCA seed-2 single-modality pair and the 34-cell hyper-parameter grid | **Code:** this repository, tag v0.2.2 | **Raw record:** `EXPERIMENT_LOG.md`
 
 ---
 
@@ -10,7 +10,7 @@ PathQ-Former is a Q-Former-style fusion model that reads a patient's whole-slide
 
 Under a single, pre-registered protocol (SurvPath's 5-fold patient-level splits, disease-specific survival, fixed 20-epoch budget, final checkpoint, 3 seeds, identical for every method) on five TCGA cohorts:
 
-1. **PathQ-Former beats the official SurvPath implementation** by +0.037 C-index pooled over 75 paired (fold, seed) pairs (paired t p = 0.002, Wilcoxon p = 0.005). The variant with auxiliary unimodal heads gains +0.036 (p = 0.007 / 0.002). The wins are significant on BLCA (+0.036, p = 0.024) and BRCA (+0.086, p = 0.004); COADREAD, HNSC and STAD are ties within noise.
+1. **PathQ-Former beats the official SurvPath implementation** by +0.037 C-index pooled over 75 paired (fold, seed) pairs (paired t p = 0.002, Wilcoxon p = 0.005; seed-averaged over 25 folds: p = 0.020 / 0.020). The variant with auxiliary unimodal heads gains +0.036 (p = 0.007 / 0.002). The wins are significant on BLCA (+0.036, p = 0.024) and BRCA (+0.086, p = 0.004); COADREAD, HNSC and STAD are ties within noise.
 2. **No single-modality baseline beats SurvPath pooled** (ABMIL +0.001, SNN -0.007, RNA-MLP +0.024, all n.s.), but the RNA-only MLP is **within noise of PathQ-Former** (PathQ-Former is +0.012 to +0.014 over it pooled, n.s.) and wins BRCA and COADREAD outright. The defensible accuracy claim is therefore "matches or beats every baseline on every cohort with one network", not "beats everything".
 3. **The differentiator is robustness.** SurvPath's score is unchanged when its RNA input is replaced by the training mean and falls to chance (0.46-0.55) when WSI is removed: it ignores the genomic branch. PathQ-Former + aux keeps 0.54-0.67 with either modality removed and moves by < 0.01 when 10-50 % of patients randomly lack a modality. The auxiliary unimodal heads are what buy this (without them the model leans on WSI like SurvPath does). A permutation test over three seeds confirms the mechanism: shuffling RNA across patients costs PathQ-Former + aux 0.023 C-index (p = 0.016 over 75 pairs) and SurvPath nothing (+0.001); shuffling WSI costs both about 0.067.
 4. **Fusion adds a small, not significant gain** over an ensemble of the two single-modality PathQ-Formers (+0.010 pooled over 50 pairs with two seeds, p = 0.32; +0.020 with seed 0 alone). The ensemble itself is +0.027 over SurvPath (n.s.). The honest framing is a unified model, not "better fusion".
@@ -309,7 +309,7 @@ PathQ-Former's compute is dominated by the 32-query cross-attention, so latency 
 
 | Item | Amount |
 |---|---|
-| Finished GPU runs (5-fold CV each) | 180 (outputs_v2 34, outputs_ablate 31, outputs_e20 101, outputs_os 10 + late fusion) |
+| Finished GPU runs (5-fold CV each) | 204 (outputs_v2 34, outputs_ablate 31, outputs_e20 128 incl. late fusion, outputs_os 10, outputs_grid 1) |
 | Laptop CPU runs | 12 (BLCA val-loss protocol table, final-config ablations) |
 | Pod hours | roughly 210 GPU-hours across 9 pods, 2026-09-10 to 2026-09-19 |
 | Runpod spend | about 130 USD including the network volume (~1 USD/day) |
@@ -368,5 +368,5 @@ Per-run artefacts: `pod_results/outputs_*/<run>/<cohort>/{results.json, summary.
 |---|---|---|
 | outputs_v2 | val-loss protocol (all methods, 5 cohorts, BLCA seeds), 10-ep fixed budget seed 0, laptop ablations | 34 (+12 laptop) |
 | outputs_ablate | BLCA fusion ablations, late fusion, 10-ep seeds 1-2 for PathQ-Former and SurvPath | 31 |
-| outputs_e20 | 20-ep protocol: 6 methods x 5 cohorts x 3 seeds, single-modality PathQ-Former, late fusion, efficiency | 101 |
+| outputs_e20 | 20-ep protocol: 6 methods x 5 cohorts x 3 seeds, single-modality PathQ-Former (seeds 0-1, BRCA seed 2 pending), late fusion (seeds 0-1), imputation + permutation evaluations, efficiency | 128 |
 | outputs_os | OS endpoint, PathQ+aux and SurvPath, 5 cohorts | 10 |
