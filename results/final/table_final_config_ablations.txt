@@ -1,0 +1,47 @@
+
+== pathq_aux_e20_bins2 ==  (mean over seeds of the 5-fold mean C-index +- std over seeds; n = seeds)
+cohort                           both               genomic_only               rna_permuted                   wsi_only               wsi_permuted
+blca                0.628 +- nan (n=1)         0.575 +- nan (n=1)         0.619 +- nan (n=1)         0.634 +- nan (n=1)         0.571 +- nan (n=1)
+random missing (one modality):   10%   20%   30%   50%
+  blca      0.627  0.628  0.620  0.616
+paired vs both, pooled over cohorts:  delta | t p | Wilcoxon p | n   [(fold,seed) pairs]   ||   seed-averaged folds
+  genomic_only           -0.052 | 0.307 | 0.438 |   5   ||   -0.052 | 0.307 | 0.438 |   5
+  rna_permuted           -0.009 | 0.632 | 0.812 |   5   ||   -0.009 | 0.632 | 0.812 |   5
+  wsi_only               +0.006 | 0.685 | 0.875 |   5   ||   +0.006 | 0.685 | 0.875 |   5
+  wsi_permuted           -0.057 | 0.0887 | 0.125 |   5   ||   -0.057 | 0.0887 | 0.125 |   5
+
+== pathq_aux_e20_bins8 ==  (mean over seeds of the 5-fold mean C-index +- std over seeds; n = seeds)
+cohort                           both               genomic_only                   wsi_only
+blca                0.609 +- nan (n=1)         0.605 +- nan (n=1)         0.578 +- nan (n=1)
+random missing (one modality):   10%   20%   30%   50%
+  blca      0.617  0.619  0.611  0.604
+paired vs both, pooled over cohorts:  delta | t p | Wilcoxon p | n   [(fold,seed) pairs]   ||   seed-averaged folds
+  genomic_only           -0.004 | 0.925 | 1 |   5   ||   -0.004 | 0.925 | 1 |   5
+  wsi_only               -0.031 | 0.184 | 0.25 |   5   ||   -0.031 | 0.184 | 0.25 |   5
+
+== pathq_aux_e20_hallmarks ==  (mean over seeds of the 5-fold mean C-index +- std over seeds; n = seeds)
+cohort                           both               genomic_only                   wsi_only
+blca                0.600 +- nan (n=1)         0.554 +- nan (n=1)         0.608 +- nan (n=1)
+random missing (one modality):   10%   20%   30%   50%
+  blca      0.600  0.606  0.596  0.597
+paired vs both, pooled over cohorts:  delta | t p | Wilcoxon p | n   [(fold,seed) pairs]   ||   seed-averaged folds
+  genomic_only           -0.046 | 0.0175 | 0.0625 |   5   ||   -0.046 | 0.0175 | 0.0625 |   5
+  wsi_only               +0.008 | 0.737 | 1 |   5   ||   +0.008 | 0.737 | 1 |   5
+
+== pathq_aux_e20_patches4096 ==  (mean over seeds of the 5-fold mean C-index +- std over seeds; n = seeds)
+cohort                           both               genomic_only                   wsi_only
+blca                0.626 +- nan (n=1)         0.622 +- nan (n=1)         0.591 +- nan (n=1)
+random missing (one modality):   10%   20%   30%   50%
+  blca      0.627  0.625  0.621  0.611
+paired vs both, pooled over cohorts:  delta | t p | Wilcoxon p | n   [(fold,seed) pairs]   ||   seed-averaged folds
+  genomic_only           -0.004 | 0.932 | 1 |   5   ||   -0.004 | 0.932 | 1 |   5
+  wsi_only               -0.035 | 0.239 | 0.312 |   5   ||   -0.035 | 0.239 | 0.312 |   5
+
+== pathq_aux_e20_xena ==  (mean over seeds of the 5-fold mean C-index +- std over seeds; n = seeds)
+cohort                           both               genomic_only                   wsi_only
+blca                0.628 +- nan (n=1)         0.634 +- nan (n=1)         0.604 +- nan (n=1)
+random missing (one modality):   10%   20%   30%   50%
+  blca      0.631  0.629  0.626  0.615
+paired vs both, pooled over cohorts:  delta | t p | Wilcoxon p | n   [(fold,seed) pairs]   ||   seed-averaged folds
+  genomic_only           +0.006 | 0.886 | 1 |   5   ||   +0.006 | 0.886 | 1 |   5
+  wsi_only               -0.025 | 0.0246 | 0.0625 |   5   ||   -0.025 | 0.0246 | 0.0625 |   5

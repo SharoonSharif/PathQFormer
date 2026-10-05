@@ -18,9 +18,9 @@ fi
 echo "[tables] python: $PY"
 
 # Unpack the archives on a fresh clone (the extracted directories are git-ignored).
-if [ ! -f pod_results/outputs_e20/efficiency.md ] || [ ! -d pod_results/outputs_os ]; then
+if [ ! -f pod_results/outputs_e20/efficiency.md ] || [ ! -d pod_results/outputs_os ] || [ ! -d pod_results/outputs_v2/pathq_aux_e20_xena ]; then
   echo "[tables] extracting archived results"
-  for t in pod_results/pod_results.tgz pod_results/pull_0918/results_0918a.tgz pod_results/pull_0918/results_0918b.tgz pod_results/pull_0923/results_0923.tgz; do
+  for t in pod_results/pod_results.tgz pod_results/pull_0918/results_0918a.tgz pod_results/pull_0918/results_0918b.tgz pod_results/pull_0923/results_0923.tgz pod_results/laptop_runs.tgz; do
     tar xzf "$t" -C pod_results/
   done
 fi
@@ -66,6 +66,9 @@ echo "[tables] post-hoc checkpoint-selection rules replayed on the stored per-ep
 
 echo "[tables] primary seed-averaged paired tests (bootstrap CI, Holm over cohorts) and secondary metrics (IPCW C, IBS)"
 "$PY" scripts/primary_tests.py --e20 "$E20" --os pod_results/outputs_os --out-dir "$OUT" >/dev/null   # -> table_primary_tests.txt, table_secondary_metrics.txt
+
+echo "[tables] final-configuration ablations on BLCA (20 epochs, seed 0, laptop CPU runs archived in pod_results/laptop_runs.tgz)"
+"$PY" scripts/missing_modality_table.py pod_results/outputs_v2 --methods pathq_aux_e20_bins2 pathq_aux_e20_bins8 pathq_aux_e20_hallmarks pathq_aux_e20_patches4096 pathq_aux_e20_xena > "$OUT/table_final_config_ablations.txt"
 
 cp "$E20/efficiency.md" "$OUT/efficiency.md"
 
