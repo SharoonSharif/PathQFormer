@@ -51,13 +51,21 @@ echo "[tables] per-run summaries (all metrics, missing-modality blocks, per-fold
 "$PY" scripts/aggregate_results.py pod_results/outputs_v2 --out "$OUT/summary_v2_all_runs.md" >/dev/null
 
 echo "[tables] fusion vs late-fusion ensemble (seeds available), grid"
-"$PY" scripts/seed_table.py "$E20" --methods pathq_fast_e20_aux pathq_fast_e20 late_fusion_e20 pathq_e20_wsi_only pathq_e20_genomic_only \n  --ref late_fusion_e20 > "$OUT/table_fusion_vs_ensemble.txt"
-[ -d pod_results/outputs_grid ] && "$PY" scripts/seed_table.py pod_results/outputs_grid "$E20" \n  --methods pathq_fast_e20_aux $(ls pod_results/outputs_grid 2>/dev/null | grep -v summary | tr "
-" " ") survpath_e20 --ref survpath_e20 > "$OUT/table_grid.txt" || true
+"$PY" scripts/seed_table.py "$E20" --methods pathq_fast_e20_aux pathq_fast_e20 late_fusion_e20 pathq_e20_wsi_only pathq_e20_genomic_only \
+  --ref late_fusion_e20 > "$OUT/table_fusion_vs_ensemble.txt"
+[ -d pod_results/outputs_grid ] && "$PY" scripts/seed_table.py pod_results/outputs_grid "$E20" \
+  --methods pathq_fast_e20_aux $(ls pod_results/outputs_grid 2>/dev/null | grep -v summary | tr "\n" " ") survpath_e20 --ref survpath_e20 > "$OUT/table_grid.txt" || true
 
 echo "[tables] missing-modality over seeds, risk correlations"
 "$PY" scripts/missing_modality_table.py "$E20" --methods pathq_fast_e20_aux pathq_fast_e20 survpath_e20 > "$OUT/table_missing_modality_seeds.txt"   # incl. *_impute and rna/wsi_permuted
 "$PY" scripts/risk_correlation.py "$E20" --run pathq_fast_e20_aux --others survpath_e20 mlp_omics_e20 abmil_e20 snn_e20 pathq_fast_e20 > "$OUT/table_risk_correlation.txt"
+
+echo "[tables] post-hoc checkpoint-selection rules replayed on the stored per-epoch histories (selects on the held-out fold)"
+"$PY" scripts/posthoc_selection.py --roots "$E20" pod_results/outputs_v2 pod_results/outputs_ablate --v2-root pod_results/outputs_v2 \
+  --patience 5 --min-epochs 0 --out - > "$OUT/table_selection_rules.txt"
+
+echo "[tables] primary seed-averaged paired tests (bootstrap CI, Holm over cohorts) and secondary metrics (IPCW C, IBS)"
+"$PY" scripts/primary_tests.py --e20 "$E20" --os pod_results/outputs_os --out-dir "$OUT" >/dev/null   # -> table_primary_tests.txt, table_secondary_metrics.txt
 
 cp "$E20/efficiency.md" "$OUT/efficiency.md"
 

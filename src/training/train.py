@@ -47,7 +47,7 @@ from src.utils.repro import git_commit, physical_cores, set_seed
 MODALITIES = ("both", "wsi", "genomic")
 
 DEFAULTS: dict = {
-    "model_type": "pathqformer",  # pathqformer | survpath | abmil | snn | mlp_omics
+    "model_type": "pathqformer",  # pathqformer | survpath | survpath_recipe | abmil | snn | mlp_omics
     "optimizer": "adamw",  # adamw | radam | adam
     "weighted_sample": False,  # SurvPath-style class-balanced sampling over (bin, censorship)
     "cache_dtype": "float32",
@@ -90,11 +90,12 @@ def with_defaults(cfg: dict) -> dict:
     if out["selection_metric"] not in ("val_loss", "val_cindex", "last"):
         raise ValueError("selection_metric must be 'val_loss', 'val_cindex' or 'last' (fixed epoch budget, no early stopping)")
     if out["model_type"] != "pathqformer":
-        forced = {"survpath": "both", "abmil": "wsi", "snn": "genomic", "mlp_omics": "genomic"}
+        forced = {"survpath": "both", "survpath_recipe": "both", "abmil": "wsi", "snn": "genomic", "mlp_omics": "genomic"}
         if out["model_type"] not in forced:
             raise ValueError(f"unknown model_type {out['model_type']!r}; choose pathqformer or {sorted(forced)}")
         out["train_modalities"] = forced[out["model_type"]]
-        out["eval_missing"] = False
+        if not bool(getattr(BASELINES[out["model_type"]], "supports_missing", False)):
+            out["eval_missing"] = False
     return out
 
 
@@ -183,6 +184,13 @@ def build_model(cfg: dict, gene_columns: list[str], composition_csv: Path, devic
                 pathway_composition=comp, wsi_input_dim=cfg["wsi_input_dim"], num_bins=cfg["num_bins"],
                 dropout=cfg["dropout"], min_genes=cfg["min_genes"], max_genes=cfg["max_genes"],
                 survpath_dir=cfg["survpath_dir"],
+            )
+        elif kind == "survpath_recipe":  # official SurvPath + null tokens / modality dropout / aux heads
+            model = BASELINES[kind](
+                pathway_composition=comp, wsi_input_dim=cfg["wsi_input_dim"], num_bins=cfg["num_bins"],
+                dropout=cfg["dropout"], min_genes=cfg["min_genes"], max_genes=cfg["max_genes"],
+                survpath_dir=cfg["survpath_dir"], modality_dropout=cfg["modality_dropout"],
+                aux_heads=float(cfg["aux_unimodal_weight"]) > 0,
             )
         elif kind == "abmil":
             model = BASELINES[kind](wsi_input_dim=cfg["wsi_input_dim"], dropout=cfg["dropout"], num_bins=cfg["num_bins"])

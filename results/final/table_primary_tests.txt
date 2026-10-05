@@ -1,0 +1,105 @@
+Primary comparisons: Harrell's C-index on the held-out fold, 20-epoch budget, selection 'last' (last epoch)
+Campaigns: DSS = pod_results/outputs_e20, OS = pod_results/outputs_os. Seeds available (run directories <method>[_seedN]):
+  DSS: abmil_e20 0,1,2; late_fusion_e20 0,1; mlp_omics_e20 0,1,2; pathq_fast_e20 0,1,2; pathq_fast_e20_aux 0,1,2; survpath_e20 0,1,2
+  OS:  pathq_fast_e20_aux 0; survpath_e20 0
+Unit of analysis: one value per (cohort, fold) = mean over the seeds available for BOTH methods (listed per block);
+  paired over the 25 (cohort, fold) units pooled (n=25) and over the 5 folds per cohort (n=5). The 75 (fold, seed)
+  pairs of Table 1 are not independent units (the seeds of one fold share the validation patients), so n here is
+  25 / 5, not 75 / 15. Against late fusion both sides are restricted to seeds 0-1; the OS block has a single seed
+  (no averaging). Per-fold seeds are run seed + fold.
+Held-out fold: in the 5-fold CV the validation fold IS the reported fold (c_index == last_epoch_val_cindex for every
+  trained fold, verified while loading); no checkpoint selection is applied, and any post-hoc selection on val_loss /
+  val_cindex would be evaluated on the same fold it selects on.
+Statistics: delta = first method - second method (positive favours the first); 95% CI = percentile bootstrap of the
+  mean delta over folds (10,000 resamples with replacement of the paired units, numpy default_rng(0));
+  t p = paired t-test (scipy.stats.ttest_rel); W p = Wilcoxon signed-rank (two-sided, exact for n <= 50 without
+  ties); Holm = Holm-Bonferroni step-down over the 5 per-cohort tests of one comparison (t and W adjusted
+  separately; the pooled test is not part of that family); wins = folds with delta > 0.
+
+Consistency check: every trained fold has c_index == last_epoch_val_cindex and == metrics[<condition>].c_index.
+
+Pooled over the seed-averaged (cohort, fold) units (n = 25 folds unless stated):
+  comparison                                   end.  seeds   delta  95% bootstrap CI      t p      W p  wins
+  pathq_fast_e20_aux vs survpath_e20           DSS   0,1,2  +0.036  [-0.004, +0.071]   0.0737   0.0296  18/25
+  pathq_fast_e20 vs survpath_e20               DSS   0,1,2  +0.037  [+0.009, +0.065]   0.0198   0.0203  17/25
+  pathq_fast_e20_aux vs mlp_omics_e20          DSS   0,1,2  +0.012  [-0.022, +0.044]   0.4709   0.3388  14/25
+  pathq_fast_e20 vs mlp_omics_e20              DSS   0,1,2  +0.014  [-0.023, +0.049]   0.4689   0.3666  16/25
+  pathq_fast_e20_aux vs late_fusion_e20        DSS     0,1  +0.011  [-0.013, +0.034]   0.3902   0.2752  14/25
+  pathq_fast_e20 vs late_fusion_e20            DSS     0,1  +0.009  [-0.020, +0.036]   0.5427   0.5249  14/25
+  abmil_e20 vs survpath_e20                    DSS   0,1,2  +0.001  [-0.024, +0.026]   0.9538   0.8532  14/25
+  mlp_omics_e20 vs survpath_e20                DSS   0,1,2  +0.024  [-0.027, +0.077]   0.3835   0.4108  15/25
+  pathq_fast_e20_aux vs survpath_e20           OS        0  +0.034  [+0.014, +0.054]   0.0028   0.0025  19/25
+
+Per cohort (n = 5 folds each) and pooled, per comparison:
+
+== pathq_fast_e20_aux vs survpath_e20 ==  (DSS; seeds averaged per (cohort, fold): 0,1,2; Holm over 5 cohorts)
+  blca       delta +0.036  t p=0.175  W p=0.312  Holm t p=0.700  Holm W p=1.000  wins 3/5  n=5 folds
+  brca       delta +0.086  t p=0.017  W p=0.062  Holm t p=0.084  Holm W p=0.312  wins 5/5  n=5 folds
+  coadread   delta +0.044  t p=0.583  W p=0.625  Holm t p=1.000  Holm W p=1.000  wins 4/5  n=5 folds
+  hnsc       delta +0.031  t p=0.544  W p=0.625  Holm t p=1.000  Holm W p=1.000  wins 4/5  n=5 folds
+  stad       delta -0.015  t p=0.719  W p=0.625  Holm t p=1.000  Holm W p=1.000  wins 2/5  n=5 folds
+  ALL        delta +0.036  95% CI [-0.004, +0.071]  t p=0.0737  W p=0.0296  wins 18/25  n=25 folds
+
+== pathq_fast_e20 vs survpath_e20 ==  (DSS; seeds averaged per (cohort, fold): 0,1,2; Holm over 5 cohorts)
+  blca       delta +0.015  t p=0.518  W p=0.625  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
+  brca       delta +0.075  t p=0.073  W p=0.125  Holm t p=0.367  Holm W p=0.625  wins 4/5  n=5 folds
+  coadread   delta +0.068  t p=0.202  W p=0.188  Holm t p=0.807  Holm W p=0.750  wins 4/5  n=5 folds
+  hnsc       delta +0.023  t p=0.580  W p=0.625  Holm t p=1.000  Holm W p=1.000  wins 4/5  n=5 folds
+  stad       delta +0.006  t p=0.847  W p=0.812  Holm t p=1.000  Holm W p=1.000  wins 2/5  n=5 folds
+  ALL        delta +0.037  95% CI [+0.009, +0.065]  t p=0.0198  W p=0.0203  wins 17/25  n=25 folds
+
+== pathq_fast_e20_aux vs mlp_omics_e20 ==  (DSS; seeds averaged per (cohort, fold): 0,1,2; Holm over 5 cohorts)
+  blca       delta +0.019  t p=0.542  W p=0.625  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
+  brca       delta -0.005  t p=0.938  W p=0.812  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
+  coadread   delta -0.020  t p=0.478  W p=0.625  Holm t p=1.000  Holm W p=1.000  wins 2/5  n=5 folds
+  hnsc       delta +0.028  t p=0.461  W p=0.438  Holm t p=1.000  Holm W p=1.000  wins 4/5  n=5 folds
+  stad       delta +0.041  t p=0.420  W p=0.812  Holm t p=1.000  Holm W p=1.000  wins 2/5  n=5 folds
+  ALL        delta +0.012  95% CI [-0.022, +0.044]  t p=0.4709  W p=0.3388  wins 14/25  n=25 folds
+
+== pathq_fast_e20 vs mlp_omics_e20 ==  (DSS; seeds averaged per (cohort, fold): 0,1,2; Holm over 5 cohorts)
+  blca       delta -0.002  t p=0.953  W p=1.000  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
+  brca       delta -0.016  t p=0.771  W p=0.812  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
+  coadread   delta +0.004  t p=0.907  W p=0.812  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
+  hnsc       delta +0.020  t p=0.597  W p=0.625  Holm t p=1.000  Holm W p=1.000  wins 4/5  n=5 folds
+  stad       delta +0.062  t p=0.320  W p=0.312  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
+  ALL        delta +0.014  95% CI [-0.023, +0.049]  t p=0.4689  W p=0.3666  wins 16/25  n=25 folds
+
+== pathq_fast_e20_aux vs late_fusion_e20 ==  (DSS; seeds averaged per (cohort, fold): 0,1; Holm over 5 cohorts)
+  blca       delta -0.004  t p=0.838  W p=0.812  Holm t p=1.000  Holm W p=1.000  wins 2/5  n=5 folds
+  brca       delta +0.035  t p=0.397  W p=0.625  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
+  coadread   delta -0.019  t p=0.663  W p=1.000  Holm t p=1.000  Holm W p=1.000  wins 2/5  n=5 folds
+  hnsc       delta +0.008  t p=0.585  W p=0.812  Holm t p=1.000  Holm W p=1.000  wins 2/5  n=5 folds
+  stad       delta +0.034  t p=0.077  W p=0.062  Holm t p=0.387  Holm W p=0.312  wins 5/5  n=5 folds
+  ALL        delta +0.011  95% CI [-0.013, +0.034]  t p=0.3902  W p=0.2752  wins 14/25  n=25 folds
+
+== pathq_fast_e20 vs late_fusion_e20 ==  (DSS; seeds averaged per (cohort, fold): 0,1; Holm over 5 cohorts)
+  blca       delta -0.015  t p=0.582  W p=0.625  Holm t p=1.000  Holm W p=1.000  wins 2/5  n=5 folds
+  brca       delta +0.001  t p=0.964  W p=0.812  Holm t p=1.000  Holm W p=1.000  wins 2/5  n=5 folds
+  coadread   delta +0.007  t p=0.913  W p=0.812  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
+  hnsc       delta +0.011  t p=0.449  W p=0.312  Holm t p=1.000  Holm W p=1.000  wins 4/5  n=5 folds
+  stad       delta +0.041  t p=0.292  W p=0.438  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
+  ALL        delta +0.009  95% CI [-0.020, +0.036]  t p=0.5427  W p=0.5249  wins 14/25  n=25 folds
+
+== abmil_e20 vs survpath_e20 ==  (DSS; seeds averaged per (cohort, fold): 0,1,2; Holm over 5 cohorts)
+  blca       delta -0.029  t p=0.316  W p=0.812  Holm t p=0.948  Holm W p=1.000  wins 3/5  n=5 folds
+  brca       delta +0.039  t p=0.017  W p=0.062  Holm t p=0.083  Holm W p=0.312  wins 5/5  n=5 folds
+  coadread   delta +0.017  t p=0.697  W p=1.000  Holm t p=1.000  Holm W p=1.000  wins 2/5  n=5 folds
+  hnsc       delta +0.011  t p=0.755  W p=1.000  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
+  stad       delta -0.035  t p=0.226  W p=0.188  Holm t p=0.902  Holm W p=0.750  wins 1/5  n=5 folds
+  ALL        delta +0.001  95% CI [-0.024, +0.026]  t p=0.9538  W p=0.8532  wins 14/25  n=25 folds
+
+== mlp_omics_e20 vs survpath_e20 ==  (DSS; seeds averaged per (cohort, fold): 0,1,2; Holm over 5 cohorts)
+  blca       delta +0.017  t p=0.686  W p=0.812  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
+  brca       delta +0.091  t p=0.312  W p=0.438  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
+  coadread   delta +0.064  t p=0.374  W p=0.312  Holm t p=1.000  Holm W p=1.000  wins 4/5  n=5 folds
+  hnsc       delta +0.003  t p=0.945  W p=0.812  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
+  stad       delta -0.056  t p=0.458  W p=0.438  Holm t p=1.000  Holm W p=1.000  wins 2/5  n=5 folds
+  ALL        delta +0.024  95% CI [-0.027, +0.077]  t p=0.3835  W p=0.4108  wins 15/25  n=25 folds
+
+== pathq_fast_e20_aux vs survpath_e20 ==  (OS; seeds averaged per (cohort, fold): 0; Holm over 5 cohorts)
+  blca       delta +0.043  t p=0.008  W p=0.062  Holm t p=0.039  Holm W p=0.312  wins 5/5  n=5 folds
+  brca       delta +0.073  t p=0.015  W p=0.062  Holm t p=0.058  Holm W p=0.312  wins 5/5  n=5 folds
+  coadread   delta -0.015  t p=0.578  W p=0.625  Holm t p=0.578  Holm W p=0.625  wins 2/5  n=5 folds
+  hnsc       delta +0.025  t p=0.046  W p=0.125  Holm t p=0.138  Holm W p=0.375  wins 4/5  n=5 folds
+  stad       delta +0.044  t p=0.230  W p=0.312  Holm t p=0.460  Holm W p=0.625  wins 3/5  n=5 folds
+  ALL        delta +0.034  95% CI [+0.014, +0.054]  t p=0.0028  W p=0.0025  wins 19/25  n=25 folds

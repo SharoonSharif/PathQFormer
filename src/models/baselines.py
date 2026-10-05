@@ -12,7 +12,9 @@
 Every baseline exposes PathQ-Former's forward signature
 ``forward(wsi_features, genomic_features, wsi_mask, drop_wsi, drop_genomic, return_attention)`` and
 receives the scaled (B, G) gene vector as ``genomic_features`` (the "tokenizer" is ``GenePassthrough``).
-None of them can run with a missing modality, so ``supports_missing = False``.
+None of them can run with a missing modality, so ``supports_missing = False``. ``SurvPathRecipe``
+(``src/models/survpath_recipe.py``, registered as ``"survpath_recipe"``) is the exception: the official
+SurvPath submodules plus PathQ-Former's null tokens / modality dropout / auxiliary heads.
 """
 
 from __future__ import annotations
@@ -177,4 +179,12 @@ class SurvPathBaseline(nn.Module):
         return (logits, {"histology": None, "genomic": None}) if return_attention else logits
 
 
-BASELINES = {"abmil": ABMIL, "snn": SNNOmics, "mlp_omics": MLPOmics, "survpath": SurvPathBaseline}
+from .survpath_recipe import SurvPathRecipe  # noqa: E402  (imports nothing from this module)
+
+BASELINES = {
+    "abmil": ABMIL,
+    "snn": SNNOmics,
+    "mlp_omics": MLPOmics,
+    "survpath": SurvPathBaseline,
+    "survpath_recipe": SurvPathRecipe,
+}
