@@ -1,7 +1,8 @@
 Primary comparisons: Harrell's C-index on the held-out fold, 20-epoch budget, selection 'last' (last epoch)
 Campaigns: DSS = pod_results/outputs_e20, OS = pod_results/outputs_os. Seeds available (run directories <method>[_seedN]):
-  DSS: abmil_e20 0,1,2; late_fusion_e20 0,1; mlp_omics_e20 0,1,2; pathq_fast_e20 0,1,2; pathq_fast_e20_aux 0,1,2; survpath_e20 0,1,2
+  DSS: abmil_e20 0,1,2; late_fusion_e20 0,1; mlp_omics_e20 0,1,2; pathq_fast_e20 0,1,2; pathq_fast_e20_aux 0,1,2; snn_e20 0,1,2; survpath_e20 0,1,2
   OS:  pathq_fast_e20_aux 0; survpath_e20 0
+  DSS, 10-epoch budget (pod_results/outputs_v2, pod_results/outputs_ablate): pathq_fast_e10 0,1,2; survpath_e10 0,1,2
 Unit of analysis: one value per (cohort, fold) = mean over the seeds available for BOTH methods (listed per block);
   paired over the 25 (cohort, fold) units pooled (n=25) and over the 5 folds per cohort (n=5). The 75 (fold, seed)
   pairs of Table 1 are not independent units (the seeds of one fold share the validation patients), so n here is
@@ -19,16 +20,18 @@ Statistics: delta = first method - second method (positive favours the first); 9
 Consistency check: every trained fold has c_index == last_epoch_val_cindex and == metrics[<condition>].c_index.
 
 Pooled over the seed-averaged (cohort, fold) units (n = 25 folds unless stated):
-  comparison                                   end.  seeds   delta  95% bootstrap CI      t p      W p  wins
-  pathq_fast_e20_aux vs survpath_e20           DSS   0,1,2  +0.036  [-0.004, +0.071]   0.0737   0.0296  18/25
-  pathq_fast_e20 vs survpath_e20               DSS   0,1,2  +0.037  [+0.009, +0.065]   0.0198   0.0203  17/25
-  pathq_fast_e20_aux vs mlp_omics_e20          DSS   0,1,2  +0.012  [-0.022, +0.044]   0.4709   0.3388  14/25
-  pathq_fast_e20 vs mlp_omics_e20              DSS   0,1,2  +0.014  [-0.023, +0.049]   0.4689   0.3666  16/25
-  pathq_fast_e20_aux vs late_fusion_e20        DSS     0,1  +0.011  [-0.013, +0.034]   0.3902   0.2752  14/25
-  pathq_fast_e20 vs late_fusion_e20            DSS     0,1  +0.009  [-0.020, +0.036]   0.5427   0.5249  14/25
-  abmil_e20 vs survpath_e20                    DSS   0,1,2  +0.001  [-0.024, +0.026]   0.9538   0.8532  14/25
-  mlp_omics_e20 vs survpath_e20                DSS   0,1,2  +0.024  [-0.027, +0.077]   0.3835   0.4108  15/25
-  pathq_fast_e20_aux vs survpath_e20           OS        0  +0.034  [+0.014, +0.054]   0.0028   0.0025  19/25
+  comparison                                   end.      seeds   delta  95% bootstrap CI      t p      W p  wins
+  pathq_fast_e20_aux vs survpath_e20           DSS       0,1,2  +0.036  [-0.004, +0.071]   0.0737   0.0296  18/25
+  pathq_fast_e20 vs survpath_e20               DSS       0,1,2  +0.037  [+0.009, +0.065]   0.0198   0.0203  17/25
+  pathq_fast_e20_aux vs mlp_omics_e20          DSS       0,1,2  +0.012  [-0.022, +0.044]   0.4709   0.3388  14/25
+  pathq_fast_e20 vs mlp_omics_e20              DSS       0,1,2  +0.014  [-0.023, +0.049]   0.4689   0.3666  16/25
+  pathq_fast_e20_aux vs late_fusion_e20        DSS         0,1  +0.011  [-0.013, +0.034]   0.3902   0.2752  14/25
+  pathq_fast_e20 vs late_fusion_e20            DSS         0,1  +0.009  [-0.020, +0.036]   0.5427   0.5249  14/25
+  abmil_e20 vs survpath_e20                    DSS       0,1,2  +0.001  [-0.024, +0.026]   0.9538   0.8532  14/25
+  snn_e20 vs survpath_e20                      DSS       0,1,2  -0.007  [-0.060, +0.045]   0.7963   0.7310  10/25
+  mlp_omics_e20 vs survpath_e20                DSS       0,1,2  +0.024  [-0.027, +0.077]   0.3835   0.4108  15/25
+  pathq_fast_e20_aux vs survpath_e20           OS            0  +0.034  [+0.014, +0.054]   0.0028   0.0025  19/25
+  pathq_fast_e10 vs survpath_e10               DSS-10ep  0,1,2  +0.028  [-0.001, +0.057]   0.0790   0.0626  18/25
 
 Per cohort (n = 5 folds each) and pooled, per comparison:
 
@@ -88,6 +91,14 @@ Per cohort (n = 5 folds each) and pooled, per comparison:
   stad       delta -0.035  t p=0.226  W p=0.188  Holm t p=0.902  Holm W p=0.750  wins 1/5  n=5 folds
   ALL        delta +0.001  95% CI [-0.024, +0.026]  t p=0.9538  W p=0.8532  wins 14/25  n=25 folds
 
+== snn_e20 vs survpath_e20 ==  (DSS; seeds averaged per (cohort, fold): 0,1,2; Holm over 5 cohorts)
+  blca       delta -0.005  t p=0.918  W p=0.812  Holm t p=1.000  Holm W p=1.000  wins 2/5  n=5 folds
+  brca       delta +0.022  t p=0.811  W p=0.625  Holm t p=1.000  Holm W p=1.000  wins 1/5  n=5 folds
+  coadread   delta +0.003  t p=0.973  W p=0.812  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
+  hnsc       delta -0.017  t p=0.767  W p=1.000  Holm t p=1.000  Holm W p=1.000  wins 2/5  n=5 folds
+  stad       delta -0.039  t p=0.578  W p=0.812  Holm t p=1.000  Holm W p=1.000  wins 2/5  n=5 folds
+  ALL        delta -0.007  95% CI [-0.060, +0.045]  t p=0.7963  W p=0.7310  wins 10/25  n=25 folds
+
 == mlp_omics_e20 vs survpath_e20 ==  (DSS; seeds averaged per (cohort, fold): 0,1,2; Holm over 5 cohorts)
   blca       delta +0.017  t p=0.686  W p=0.812  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
   brca       delta +0.091  t p=0.312  W p=0.438  Holm t p=1.000  Holm W p=1.000  wins 3/5  n=5 folds
@@ -103,3 +114,11 @@ Per cohort (n = 5 folds each) and pooled, per comparison:
   hnsc       delta +0.025  t p=0.046  W p=0.125  Holm t p=0.138  Holm W p=0.375  wins 4/5  n=5 folds
   stad       delta +0.044  t p=0.230  W p=0.312  Holm t p=0.460  Holm W p=0.625  wins 3/5  n=5 folds
   ALL        delta +0.034  95% CI [+0.014, +0.054]  t p=0.0028  W p=0.0025  wins 19/25  n=25 folds
+
+== pathq_fast_e10 vs survpath_e10 ==  (DSS-10ep; seeds averaged per (cohort, fold): 0,1,2; Holm over 5 cohorts)
+  blca       delta +0.029  t p=0.272  W p=0.312  Holm t p=0.817  Holm W p=0.938  wins 4/5  n=5 folds
+  brca       delta +0.064  t p=0.142  W p=0.188  Holm t p=0.569  Holm W p=0.750  wins 4/5  n=5 folds
+  coadread   delta +0.094  t p=0.015  W p=0.062  Holm t p=0.075  Holm W p=0.312  wins 5/5  n=5 folds
+  hnsc       delta -0.013  t p=0.595  W p=1.000  Holm t p=0.942  Holm W p=1.000  wins 3/5  n=5 folds
+  stad       delta -0.033  t p=0.471  W p=0.625  Holm t p=0.942  Holm W p=1.000  wins 2/5  n=5 folds
+  ALL        delta +0.028  95% CI [-0.001, +0.057]  t p=0.0790  W p=0.0626  wins 18/25  n=25 folds

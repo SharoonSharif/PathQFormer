@@ -47,9 +47,12 @@ DEFAULT_COMPARISONS = [
     "pathq_fast_e20_aux:late_fusion_e20",
     "pathq_fast_e20:late_fusion_e20",
     "abmil_e20:survpath_e20",
+    "snn_e20:survpath_e20",
     "mlp_omics_e20:survpath_e20",
 ]
 DEFAULT_OS_COMPARISONS = ["pathq_fast_e20_aux:survpath_e20"]
+DEFAULT_E10_ROOTS = ["pod_results/outputs_v2", "pod_results/outputs_ablate"]   # seed 0 and seeds 1-2 of the 10-epoch runs
+DEFAULT_E10_COMPARISONS = ["pathq_fast_e10:survpath_e10"]
 DEFAULT_SECONDARY = ["pathq_fast_e20_aux", "pathq_fast_e20", "abmil_e20", "mlp_omics_e20", "survpath_e20"]
 
 Fold = dict[str, float]                                   # metric -> value
@@ -102,6 +105,22 @@ def collect(root: Path, methods: set[str]) -> tuple[Runs, dict[str, str], list[s
             folds[int(d["fold"])] = {k: float(met.get(k, float("nan"))) for k in METRICS}
         if folds:
             data[method][cohort][seed] = folds
+    return data, conditions, notes
+
+
+def collect_many(roots: list[Path], methods: set[str]) -> tuple[Runs, dict[str, str], list[str]]:
+    """collect() over several roots whose runs complement each other (e.g. seed 0 in one campaign root, seeds 1-2 in another)."""
+    data: Runs = defaultdict(lambda: defaultdict(dict))
+    conditions: dict[str, str] = {}
+    notes: list[str] = []
+    for root in roots:
+        d, c, n = collect(root, methods)
+        for method, cohorts in d.items():
+            for cohort, seeds in cohorts.items():
+                data[method][cohort].update(seeds)
+        for k, v in c.items():
+            conditions.setdefault(k, v)
+        notes += n
     return data, conditions, notes
 
 
@@ -236,12 +255,14 @@ def comparison_block(data: Runs, a: str, b: str, label: str, metric: str, n_boot
 
 
 def primary_table(e20: Runs, os_: Runs, comparisons: list[tuple[str, str]], os_comparisons: list[tuple[str, str]],
-                  notes: list[str], n_boot: int, boot_seed: int, e20_root: str, os_root: str) -> str:
+                  notes: list[str], n_boot: int, boot_seed: int, e20_root: str, os_root: str,
+                  e10: Runs | None = None, e10_comparisons: list[tuple[str, str]] | None = None, e10_roots: str = "") -> str:
     lines = [
         "Primary comparisons: Harrell's C-index on the held-out fold, 20-epoch budget, selection 'last' (last epoch)",
         f"Campaigns: DSS = {e20_root}, OS = {os_root}. Seeds available (run directories <method>[_seedN]):",
         f"  DSS: {seeds_available(e20)}",
         f"  OS:  {seeds_available(os_)}",
+    ] + ([f"  DSS, 10-epoch budget ({e10_roots}): {seeds_available(e10)}"] if e10 else []) + [
         "Unit of analysis: one value per (cohort, fold) = mean over the seeds available for BOTH methods (listed per block);",
         "  paired over the 25 (cohort, fold) units pooled (n=25) and over the 5 folds per cohort (n=5). The 75 (fold, seed)",
         "  pairs of Table 1 are not independent units (the seeds of one fold share the validation patients), so n here is",
@@ -263,7 +284,10 @@ def primary_table(e20: Runs, os_: Runs, comparisons: list[tuple[str, str]], os_c
         lines += ["Consistency check: every trained fold has c_index == last_epoch_val_cindex and == metrics[<condition>].c_index.", ""]
 
     blocks, summary = [], []
-    for data, pairs, label in ((e20, comparisons, "DSS"), (os_, os_comparisons, "OS")):
+    campaigns = [(e20, comparisons, "DSS"), (os_, os_comparisons, "OS")]
+    if e10 and e10_comparisons:
+        campaigns.append((e10, e10_comparisons, "DSS-10ep"))
+    for data, pairs, label in campaigns:
         for a, b in pairs:
             if a not in data or b not in data:
                 missing = [m for m in (a, b) if m not in data]
@@ -273,11 +297,11 @@ def primary_table(e20: Runs, os_: Runs, comparisons: list[tuple[str, str]], os_c
             rows, pooled = comparison_block(data, a, b, label, "c_index", n_boot, boot_seed)
             blocks += rows + [""]
             if pooled:
-                summary.append(f"  {a + ' vs ' + b:44s} {label:4s} {pooled['seeds']:>6s}  {pooled['delta']:+.3f}  "
+                summary.append(f"  {a + ' vs ' + b:44s} {label:8s} {pooled['seeds']:>6s}  {pooled['delta']:+.3f}  "
                                f"[{pooled['lo']:+.3f}, {pooled['hi']:+.3f}]  {fmt_p(pooled['t_p'], 4):>7s}  {fmt_p(pooled['w_p'], 4):>7s}  "
                                f"{pooled['wins']:2d}/{pooled['n']}")
     lines += ["Pooled over the seed-averaged (cohort, fold) units (n = 25 folds unless stated):",
-              f"  {'comparison':44s} {'end.':4s} {'seeds':>6s}  {'delta':>6s}  {'95% bootstrap CI':16s}  {'t p':>7s}  {'W p':>7s}  wins"]
+              f"  {'comparison':44s} {'end.':8s} {'seeds':>6s}  {'delta':>6s}  {'95% bootstrap CI':16s}  {'t p':>7s}  {'W p':>7s}  wins"]
     lines += summary + ["", "Per cohort (n = 5 folds each) and pooled, per comparison:", ""] + blocks
     return "\n".join(lines).rstrip() + "\n"
 
@@ -372,6 +396,8 @@ def main() -> None:
     ap.add_argument("--os", dest="os_root", default="pod_results/outputs_os", help="OS-endpoint campaign root")
     ap.add_argument("--comparisons", nargs="+", default=DEFAULT_COMPARISONS, help="<method>:<reference> pairs in --e20")
     ap.add_argument("--os-comparisons", nargs="+", default=DEFAULT_OS_COMPARISONS, help="<method>:<reference> pairs in --os")
+    ap.add_argument("--e10", nargs="+", default=DEFAULT_E10_ROOTS, help="10-epoch DSS campaign roots (merged)")
+    ap.add_argument("--e10-comparisons", nargs="+", default=DEFAULT_E10_COMPARISONS, help="<method>:<reference> pairs in --e10")
     ap.add_argument("--secondary-methods", nargs="+", default=DEFAULT_SECONDARY)
     ap.add_argument("--secondary-ref", default="survpath_e20")
     ap.add_argument("--n-boot", type=int, default=10_000)
@@ -383,8 +409,11 @@ def main() -> None:
     e20_methods = {m for p in comparisons for m in p} | set(args.secondary_methods) | {args.secondary_ref}
     e20, conditions, notes = collect(Path(args.e20), e20_methods)
     os_, _os_conditions, os_notes = collect(Path(args.os_root), {m for p in os_comparisons for m in p})
+    e10_comparisons = parse_pairs(args.e10_comparisons)
+    e10, _e10_conditions, e10_notes = collect_many([Path(r) for r in args.e10], {m for p in e10_comparisons for m in p})
 
-    primary = primary_table(e20, os_, comparisons, os_comparisons, notes + os_notes, args.n_boot, args.boot_seed, args.e20, args.os_root)
+    primary = primary_table(e20, os_, comparisons, os_comparisons, notes + os_notes + e10_notes, args.n_boot, args.boot_seed, args.e20, args.os_root,
+                            e10=e10, e10_comparisons=e10_comparisons, e10_roots=", ".join(args.e10))
     secondary = secondary_table(e20, args.secondary_methods, args.secondary_ref, conditions, args.n_boot, args.boot_seed, args.e20)
 
     out = Path(args.out_dir)

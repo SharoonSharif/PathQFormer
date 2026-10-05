@@ -49,7 +49,7 @@ def seed_mean_std(vals: dict) -> tuple[float, float, int]:
     for (fold, seed), c in vals.items():
         by_seed[seed].append(c)
     means = [np.mean(v) for v in by_seed.values()]
-    return float(np.mean(means)), float(np.std(means)) if len(means) > 1 else float("nan"), len(means)
+    return float(np.mean(means)), float(np.std(means, ddof=1)) if len(means) > 1 else float("nan"), len(means)   # sample sd over seeds, as seed_table.py
 
 
 def paired(a: dict, b: dict):
