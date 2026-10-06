@@ -4,7 +4,7 @@
 #   bash scripts/reproduce_tables.sh            # -> results/final/*.txt|md
 #   PY=python3 bash scripts/reproduce_tables.sh # pick the interpreter
 #
-# The archives hold results.json / summary.md / config.yaml / per-fold metrics for all 180 GPU runs
+# The archives hold results.json / summary.md / config.yaml / per-fold metrics for the 204 GPU cohort-level runs and the 13 BLCA laptop runs
 # (checkpoints and figures are excluded; see README "Archived results").
 set -euo pipefail
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

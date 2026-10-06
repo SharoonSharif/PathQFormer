@@ -1,6 +1,7 @@
 {
-  "title": "PathQ-Former: query-based multimodal fusion of whole-slide images and pathway tokens for missing-modality-robust cancer survival prediction",
-  "description": "<p>Code, configurations, archived per-run results (180 five-fold runs on five TCGA cohorts) and the experimental report for PathQ-Former, a Q-Former-style fusion model of whole-slide-image patch embeddings (UNI2-h) and RNA-seq pathway tokens that predicts discrete-time survival hazards and keeps working when either modality is missing. Under an identical fixed-budget protocol it improves the C-index over the official SurvPath implementation by +0.037 pooled over 75 paired folds (paired t p = 0.002). Trained checkpoints are on the HuggingFace Hub (sharoonsharif1/PathQFormer-checkpoints).</p>",
+  "title": "PathQ-Former: a missing-modality audit of histology-transcriptomics survival models and a one-checkpoint training recipe",
+  "description": "<p>Code, configurations, archived per-run results (204 five-fold GPU runs on five TCGA cohorts and 13 BLCA laptop runs), the experimental report and the revised manuscript source (paper/tmlr_v2) for an input-use audit of histology-transcriptomics survival models under an equal 20-epoch, three-seed protocol: every checkpoint is re-evaluated with one input removed or permuted across patients and with a random fraction of patients lacking a modality. The official SurvPath implementation ranks patients the same way when its RNA input is permuted (+0.001 C-index) but loses 0.068 when the slide is permuted and falls to 0.47-0.52 without it. PathQ-Former, a query-bottleneck fusion model of whole-slide-image patch embeddings (UNI2-h) and RNA-seq pathway tokens trained with learned null codes, modality dropout and auxiliary unimodal heads, responds to RNA (-0.023 under permutation), keeps a C-index of 0.54-0.62 with either input removed and moves by at most 0.025 when half of the patients lack a modality, so one checkpoint serves complete, slide-only and RNA-only patients. With both inputs it is not detectably better than an RNA-only MLP or a late-fusion ensemble; its margin over the untuned SurvPath is +0.036 (95% CI [-0.004, +0.071]; paired t p 0.074, Wilcoxon p 0.030 over 25 seed-averaged folds) with auxiliary heads and +0.037 ([+0.009, +0.065]; p 0.020 / 0.020) without them, and no per-cohort difference survives Holm correction. Trained checkpoints are on the HuggingFace Hub (sharoonsharif1/PathQFormer-checkpoints).</p>",
+  "version": "0.3.0",
   "creators": [
     {
       "name": "Sharif, Sharoon"
@@ -14,6 +15,7 @@
     "multimodal learning",
     "survival analysis",
     "missing modality",
+    "model auditing",
     "Q-Former",
     "TCGA",
     "whole-slide images",

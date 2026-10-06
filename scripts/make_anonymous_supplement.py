@@ -5,7 +5,7 @@
 
 The working-tree copies of the tracked files (`git ls-files`) that belong in the supplement are staged
 under a temporary directory (tempfile); every anonymising replacement below is applied to the staged
-copy only (the repository is never modified); the four `pod_results/*.tgz` archives are re-packed in a
+copy only (the repository is never modified); the five `pod_results/*.tgz` archives are re-packed in a
 streaming pass (same member order and headers, GNU format, gzip mtime 0) with the Runpod pod ids and
 the HuggingFace upload block removed; then the zip is written to --out. Afterwards every zipped file
 and every tgz member is re-scanned (case-insensitively) for identifying strings and the script exits
@@ -47,7 +47,7 @@ INCLUDE_FILES = {
 EXCLUDE_FILES = {"scripts/upload_checkpoints_hf.py", SELF}
 EXCLUDE_SUFFIXES = (".zip", ".pt", ".pyc")
 EXCLUDE_PARTS = {"__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache"}
-N_ARCHIVES = 4  # the pod_results tarballs; a different number means the inclusion rules need a review
+N_ARCHIVES = 5  # the pod_results tarballs (four GPU pulls + laptop_runs.tgz); a different number means the inclusion rules need a review
 
 
 def included(path: str) -> bool:
@@ -133,9 +133,8 @@ TEXT_RULES: list[Rule] = [
          lit("(the committed ones in `paper/figures/` came from the Hub checkpoints on a pod)"),
          "(the paper figures were produced this way from the trained checkpoints)"),
     Rule("readme-ci-sentence", "README.md", lit(" CI runs the fast suite on every push and the slow suite on request."), ""),
-    Rule("report-header-status", "REPORT.md", lit("reviewer-requested batch 9 part 1 done"), "additional batch 9 part 1 done"),
-    Rule("report-header-code", "REPORT.md", lit("**Code:** this repository, tag v0.2.2"), "**Code:** this supplementary archive"),
-    Rule("report-header-date", "REPORT.md", r"^\*\*Date:\*\* 2026-09-23\b", "**Date:** September 2026"),
+    Rule("report-header-code", "REPORT.md", lit("**Code:** this repository, v0.3.0"), "**Code:** this supplementary archive"),
+    Rule("report-header-date", "REPORT.md", r"^\*\*Date:\*\* 2026-10-05\b", "**Date:** October 2026"),
     Rule("report-volume-id", "REPORT.md", r" ?" + lit("(fjb5dlrrfp, EU-RO-1)"), ""),
     Rule("report-recomputes-ref", "REPORT.md", lit('section "Reviewer-requested recomputes"'), 'section "Additional recomputes"'),
     Rule("report-incident-4", "REPORT.md",
@@ -144,6 +143,8 @@ TEXT_RULES: list[Rule] = [
     Rule("report-drop-sections-13-14", "REPORT.md",
          r"^## 13\. Recommended paper framing\n.*?^## 14\. Next steps\n.*?(?=^## |\Z)", "",
          flags=re.MULTILINE | re.DOTALL, verify=_verify_sections_13_14),
+    Rule("log-drop-public-release-paragraph", "EXPERIMENT_LOG.md",
+         r"^\*\*Repository made public; version 0\.3\.0\.\*\*[^\n]*\n(?:[^\n]+\n?)*", "", flags=re.MULTILINE),
     Rule("log-commit-0c6e0fc", "EXPERIMENT_LOG.md", lit("from commit 0c6e0fc the"), "from that point the"),
     Rule("log-commit-8298d0f", "EXPERIMENT_LOG.md", lit("fixed in 8298d0f:"), "fixed:"),
     Rule("log-volume-id", "EXPERIMENT_LOG.md", lit("network volume fjb5dlrrfp"), "the network volume"),

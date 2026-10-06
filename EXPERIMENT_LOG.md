@@ -656,3 +656,74 @@ fusion ~ ensemble (+0.01), and most of the gain over SurvPath is already present
 
 **Pending on the volume (resumable):** BRCA seed 2 WSI-only (killed in fold 1) and RNA-only, late fusion seed 2,
 34 grid runs (~$5 + ~$33 at $0.57/h). Pod h ran 27 h (~$15.5); the grid pod ran 1.7 h before I removed it.
+
+## 2026-09-29 - TMLR submission: official-template build and anonymity checks
+
+The manuscript was built with the official TMLR template (`tmlr.sty` / `tmlr.bst`, `pdflatex` + `bibtex`) in
+submission mode (author block hidden, empty `pdfauthor`). Anonymity checks: the supplementary material was built
+from the tracked files by `scripts/make_anonymous_supplement.py` (script and template files committed on
+2026-10-05), which applies the de-identifying replacements
+to staged copies (never to the repository), re-packs the result archives with the pod ids replaced, and re-scans
+every file and archive member for identifying strings; the build exits non-zero on any hit outside the
+allowlist of third-party lines.
+
+## 2026-09-30 - TMLR desk rejection
+
+The submission (TMLR 12727) was desk-rejected on 2026-09-30 ("unlikely to meet one or both of TMLR criterion"); no individual reason was given. The revision that followed is recorded under 2026-10-05.
+
+## 2026-10-05 - Revision (`paper/tmlr_v2/`), laptop-run archive, `reproduce_tables.sh` fix, SurvPath recipe, batch 10
+
+**Revision.** The manuscript was rewritten around the input-use audit (removal, permutation across patients,
+risk-score correlation) and the one-checkpoint recipe; source under `paper/tmlr_v2/` (`main.tex`,
+`figures/`), built with the official template. Changes to the content: every table reports the three-seed runs
+(mean +- sample sd over seeds of the five-fold mean); the primary accuracy tests are the seed-averaged 25-fold
+paired tests with 95 % percentile-bootstrap CIs (10,000 resamples of folds) and Holm correction over the
+per-cohort tests (`scripts/primary_tests.py` -> `results/final/table_primary_tests.txt`,
+`table_secondary_metrics.txt` with Uno's C and the IBS); the post-hoc checkpoint-selection replay on the stored
+per-epoch histories (`scripts/posthoc_selection.py` -> `table_selection_rules.txt`, Tables A-D) replaces the
+earlier prose about the validation-loss campaign; reference corrections; new vector figures
+(`scripts/paper_figures.py`: audit deltas with bootstrap CIs, missing-rate curves over seeds, pooled and
+per-cohort epoch curves; `scripts/paper_figures_km.py`: KM grid, pathway-attention panels). Headline numbers
+as they now stand (all from `results/final/`): SurvPath RNA permuted +0.001, slide permuted -0.068, slide removed
+0.47-0.52; PathQ-Former RNA permuted -0.023 (t p 0.075 / W p 0.063, 25 folds), 0.54-0.62 with either input removed,
+at most 0.025 change at 50 % missingness; vs SurvPath +0.036 [-0.004, +0.071] (p 0.074 / 0.030) with aux heads and
++0.037 [+0.009, +0.065] (p 0.020 / 0.020) without; no cohort survives Holm; parity with the RNA MLP (+0.012 /
++0.014) and late fusion (+0.011 / +0.009). The 75-pair (fold, seed) tests remain in the tables but are no longer
+quoted as the primary result.
+
+**Laptop runs archived.** The 13 BLCA laptop-CPU runs (`outputs_v2/`: the validation-loss-era `baseline`,
+`wsi_only`, `genomic_only`, `hybrid`, `baseline_survpath`, `baseline_abmil`, `baseline_snn`, `baseline_mlp_omics`,
+and the final-configuration ablations `pathq_aux_e20_{bins2,bins8,hallmarks,patches4096,xena}`) are now in
+`pod_results/laptop_runs.tgz`, which `scripts/reproduce_tables.sh` extracts with the four GPU archives. With them
+Table D of `table_selection_rules.txt` has the BLCA seed-0 runs (seed 0 of every method on BLCA; the SurvPath and
+hybrid rows n = 15 over seeds 0-2, the ABMIL, SNN and MLP rows n = 5; 29 cohort runs, 145 folds, 14 of 25 method x
+cohort cells within 0.45-0.55), and the new
+`table_final_config_ablations.txt` (`scripts/missing_modality_table.py` on the five ablation runs) replaces the
+hand-copied ablation numbers.
+
+**`scripts/reproduce_tables.sh` bug.** Two line continuations in the fusion-vs-ensemble and grid commands had
+been written as a literal `\n` instead of a backslash-newline, so `n` was passed to `seed_table.py` as an extra
+method name and `table_fusion_vs_ensemble.txt` carried a stray `n` column (and the grid command's `tr` call was
+broken). Fixed; the regenerated table has the five intended columns.
+
+**SurvPath recipe implemented, not run.** `src/models/survpath_recipe.py` (`model_type: survpath_recipe`) keeps
+the official SurvPath submodules unchanged and adds learned null tokens (32 null patch tokens in the projected
+WSI space; one null token per pathway) inserted before the co-attention for an absent modality, PathQ-Former's
+per-sample modality dropout (never both modalities) and optional auxiliary unimodal heads on the mean-pooled
+pre-fusion tokens. Configs `configs/protocol_fixed/survpath_recipe_e20.yaml` (aux weight 0.5) and
+`survpath_recipe_noaux_e20.yaml` (0) mirror `survpath_e20.yaml`; `tests/test_survpath_recipe.py` (8 unit tests
+on CPU, skipped when `data/survpath_repo` or `einops` is absent) covers the model, and it was smoke-tested on
+CPU. `scripts/pod/batch10.sh` queues both configs for three seeds on the five cohorts and then the imputation and
+permutation evaluations.
+
+**Batch 10 launched and stopped.** Batch 10 was launched on a RunPod RTX PRO 4000 pod on 2026-10-05 and
+stopped the same day after fold 1 of BLCA. The partial output stays on the
+network volume and is not archived; no SurvPath-recipe number exists in `results/final/`, the report or the
+manuscript, and the experiment is listed as implemented but not run.
+
+**Repository made public; version 0.3.0.** The GitHub repository (SharoonSharif/PathQFormer) was made public on
+2026-10-05. README, REPORT, CITATION.cff, `.zenodo.json` and `pyproject.toml` were brought up to the revised
+analysis (audit framing, seed-averaged primary tests with CIs, 204 GPU cohort-level runs + 13 laptop runs, the
+five archives, the SurvPath-recipe status) as version 0.3.0, dated 2026-10-05; the Zenodo concept DOI
+10.5281/zenodo.22900123 remains the citation target (the v0.2.1 version DOI 10.5281/zenodo.22900124 is kept in
+the identifiers).
