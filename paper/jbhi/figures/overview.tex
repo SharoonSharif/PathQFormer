@@ -1,0 +1,78 @@
+% PathQ-Former overview: (a) training, (b) inference.
+% Standalone tikzpicture; \input it inside a figure environment.
+% Needs tikz with libraries positioning, arrows.meta, calc.
+% Colours: histology = blue, transcriptomics = orange, shared parts = neutral gray.
+\begin{tikzpicture}[x=1mm, y=1mm, font=\footnotesize, line width=0.5pt,
+  >={Latex[length=1.6mm, width=1.3mm]},
+  box/.style={draw, rounded corners=1.2pt, align=center, inner xsep=2pt, inner ysep=1.5pt, minimum height=7mm},
+  hbox/.style={box, draw=hist, fill=hist!12},
+  gbox/.style={box, draw=gen, fill=gen!12},
+  nbox/.style={box, draw=neut, fill=neut!8},
+  hnull/.style={box, draw=hist, dashed, fill=white},
+  gnull/.style={box, draw=gen, dashed, fill=white},
+  haux/.style={box, draw=hist, fill=white},
+  gaux/.style={box, draw=gen, fill=white},
+  chip/.style={box, minimum width=6.5mm, minimum height=5.5mm, inner sep=1pt},
+  harr/.style={->, hist},
+  garr/.style={->, gen},
+  narr/.style={->, neut},
+  hdash/.style={->, hist, dashed},
+  gdash/.style={->, gen, dashed},
+  plab/.style={font=\footnotesize\bfseries, anchor=west, inner sep=0pt},
+]
+\definecolor{hist}{HTML}{2A78D6}
+\definecolor{gen}{HTML}{EB6834}
+\definecolor{neut}{HTML}{52514E}
+
+% ---------------- (a) Training ----------------
+\node[plab] at (0,32.5) {(a) Training};
+\node[hbox, text width=16mm, anchor=west] (wsi) at (0,13.5) {WSI patch\\embeddings};
+\node[gbox, text width=16mm, anchor=west] (rna) at (0,0)    {pathway\\tokens};
+\node[hbox, text width=17mm, right=3mm of wsi] (qh) {histology\\query block\\(32 queries)};
+\node[gbox, text width=17mm, right=3mm of rna] (qg) {genomic\\query block\\(32 queries)};
+\node[hbox, text width=11mm, right=3mm of qh] (zh) {code $Z^h$\\$32 \times 256$};
+\node[gbox, text width=11mm, right=3mm of qg] (zg) {code $Z^g$\\$32 \times 256$};
+\coordinate (zmid) at ($(zh.east)!0.5!(zg.east)$);
+\node[nbox, text width=16.5mm, minimum height=24mm, right=3mm of zmid] (fus) {fusion\\Transformer\\(2 layers)};
+\node[nbox, text width=14mm, right=3mm of fus] (haz) {hazards\\$h_1,\dots,h_4$};
+\node[nbox, text width=7mm,  right=3mm of haz] (loss) {loss\\$\mathcal{L}$};
+% null codes (modality dropout) and auxiliary heads, above/below the code row
+\node[hnull, text width=24mm] (nh) at ($(zh.north)+(-9mm,8.5mm)$) {null code $N^h$\\dropout $p = 0.15$};
+\node[gnull, text width=24mm] (ng) at ($(zg.south)+(-9mm,-8.5mm)$) {null code $N^g$\\dropout $p = 0.15$};
+\node[haux, text width=40mm, anchor=west] (ah) at ($(zh.north)+(8mm,8.5mm)$)  {attention pool $\to$ aux.\ loss $\mathcal{L}_h$\\(training only)};
+\node[gaux, text width=40mm, anchor=west] (ag) at ($(zg.south)+(8mm,-8.5mm)$) {attention pool $\to$ aux.\ loss $\mathcal{L}_g$\\(training only)};
+% main flow
+\draw[harr] (wsi) -- (qh);
+\draw[harr] (qh) -- (zh);
+\draw[harr] (zh.east) -- (zh.east -| fus.west);
+\draw[garr] (rna) -- (qg);
+\draw[garr] (qg) -- (zg);
+\draw[garr] (zg.east) -- (zg.east -| fus.west);
+\draw[narr] (fus) -- (haz);
+\draw[narr] (haz) -- (loss);
+% modality dropout: the null code replaces the code
+\draw[hdash] (nh.south) -- ([xshift=-3mm]zh.north);
+\draw[gdash] (ng.north) -- ([xshift=-3mm]zg.south);
+% auxiliary unimodal heads (training only)
+\draw[hdash] ([xshift=3mm]zh.north) -- (ah.west);
+\draw[gdash] ([xshift=3mm]zg.south) -- (ag.west);
+
+% ---------------- (b) Inference ----------------
+\coordinate (b0) at (loss.east |- 0,0);
+\draw[neut!40] ($(b0)+(4,32.5)$) -- ($(b0)+(4,-16.5)$);
+\node[plab] at ($(b0)+(6,32.5)$) {(b) Inference};
+\node[anchor=east, align=right, inner sep=0pt] at ($(b0)+(20,16)$) {both\\modalities};
+\node[anchor=east, align=right, inner sep=0pt] at ($(b0)+(20,6)$)  {slide\\only};
+\node[anchor=east, align=right, inner sep=0pt] at ($(b0)+(20,-4)$) {RNA\\only};
+\node[chip, hbox]  (c1h) at ($(b0)+(24.5,16)$) {$Z^h$};
+\node[chip, gbox]  (c1g) at ($(b0)+(32,16)$)   {$Z^g$};
+\node[chip, hbox]  (c2h) at ($(b0)+(24.5,6)$)  {$Z^h$};
+\node[chip, gnull] (c2g) at ($(b0)+(32,6)$)    {$N^g$};
+\node[chip, hnull] (c3h) at ($(b0)+(24.5,-4)$) {$N^h$};
+\node[chip, gbox]  (c3g) at ($(b0)+(32,-4)$)   {$Z^g$};
+\node[nbox, text width=15mm, minimum height=26mm, anchor=west] (ckpt) at ($(b0)+(38.5,6)$) {same\\checkpoint\\fusion $\to$\\hazards};
+\draw[narr] (c1g.east) -- (c1g.east -| ckpt.west);
+\draw[narr] (c2g.east) -- (c2g.east -| ckpt.west);
+\draw[narr] (c3g.east) -- (c3g.east -| ckpt.west);
+\node[anchor=north west, inner sep=0pt, align=left] at ($(b0)+(6,-9.5)$) {dashed: learned null code\\replaces the absent modality};
+\end{tikzpicture}
