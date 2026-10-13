@@ -282,7 +282,7 @@ skipped otherwise. CI runs the fast suite on every push and the slow suite on re
 
 ## 8. Citation and licence
 
-Code is released under the [MIT licence](LICENSE); see [CITATION.cff](CITATION.cff). Please cite the Zenodo concept DOI 10.5281/zenodo.22900123 (all versions; a version DOI for v0.3.0 is minted when the release is archived) or 10.5281/zenodo.22900124 (v0.2.1). The SurvPath baseline
+Code is released under the [MIT licence](LICENSE); see [CITATION.cff](CITATION.cff). Please cite the Zenodo concept DOI 10.5281/zenodo.22900123 (all versions), 10.5281/zenodo.23245611 (v0.3.0) or 10.5281/zenodo.22900124 (v0.2.1). The SurvPath baseline
 imports the authors' code from `data/survpath_repo` at run time, which is GPLv3 and for non-commercial
 academic use under the Mahmood Lab's terms; UNI2-h features and TCGA data carry their own access terms.
 Nothing from those sources is redistributed here.

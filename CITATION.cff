@@ -12,6 +12,9 @@ identifiers:
   - type: doi
     value: 10.5281/zenodo.22900124
     description: v0.2.1
+  - type: doi
+    value: 10.5281/zenodo.23245611
+    description: v0.3.0
 license: MIT
 repository-code: "https://github.com/SharoonSharif/PathQFormer"
 authors:
