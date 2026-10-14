@@ -21,8 +21,10 @@
 \newcommand{\cindex}{C-index}
 \newcommand{\pmv}[2]{#1\,$\pm$\,#2}
 \newcolumntype{R}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\weblink}[2]{\href{#1}{\nolinkurl{#2}}}
+\newcommand{\tabnote}[2]{\multicolumn{#1}{@{}l@{}}{\scriptsize #2}}
 
-\renewcommand{\thesection}{S-\Roman{section}}
+\renewcommand{\thesection}{S\protect\nobreakdash-\Roman{section}}
 \renewcommand{\thetable}{S\arabic{table}}
 \renewcommand{\thefigure}{S\arabic{figure}}
 \renewcommand{\theequation}{S\arabic{equation}}
@@ -36,10 +38,10 @@
 \renewcommand{\textfraction}{0.05}
 \renewcommand{\floatpagefraction}{0.85}
 \renewcommand{\dblfloatpagefraction}{0.85}
-\setlength{\floatsep}{6pt plus 1pt minus 1pt}
-\setlength{\dblfloatsep}{6pt plus 1pt minus 1pt}
-\setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
-\setlength{\dbltextfloatsep}{8pt plus 2pt minus 2pt}
+\setlength{\floatsep}{4pt plus 1pt minus 1pt}
+\setlength{\dblfloatsep}{4pt plus 1pt minus 1pt}
+\setlength{\textfloatsep}{5pt plus 2pt minus 2pt}
+\setlength{\dbltextfloatsep}{5pt plus 2pt minus 2pt}
 
 \begin{document}
 
@@ -56,7 +58,7 @@
 
 \section{Protocol and Methods}
 \label{sec:protocol}
-``S''-prefixed sections, tables, figures and equations are in this document; unprefixed ones are in the main paper. In the tables, \pqf{} denotes \pq{} and \pqm{} its variant without auxiliary heads. Table~\ref{tab:protocol} states the evaluation protocol, identical for every method, and Table~\ref{tab:methods} the methods and seeds. SurvPath (official implementation, published hyper-parameters, 4,096 patches per slide, 21.2\,M parameters), ABMIL, SNN and the two-layer RNA MLP use the hyper-parameters of the SurvPath repository; none was tuned under this protocol. \pq{} reads all patches of a patient (6,214 for the median of the 40 profiled BLCA fold-0 patients, Table~\ref{tab:efficiency}) and has 16.9\,M parameters including the pathway MLPs. Every results table (Section~\ref{sec:tables} here, Section~IV of the main paper) is regenerated from the archived per-run files by \texttt{scripts/reproduce\_tables.sh} in the code repository (\url{https://github.com/SharoonSharif/PathQFormer}; Zenodo DOI 10.5281/zenodo.22900123). Bracketed reference numbers refer to the reference list of the main paper.
+``S''-prefixed sections, tables, figures and equations are in this document; unprefixed ones are in the main paper. In the tables, \pqf{} denotes \pq{} and \pqm{} its variant without auxiliary heads. Every sd is a sample standard deviation ($n-1$), over seeds of the fivefold mean unless a caption says over folds. Table~\ref{tab:protocol} states the evaluation protocol, identical for every method, and Table~\ref{tab:methods} the methods and seeds. SurvPath (official model code trained in our loop with its published hyperparameters, 4,096 training patches per patient, 21.2\,M parameters), ABMIL, SNN and the two-layer RNA MLP use the SurvPath repository's hyperparameters, untuned under this protocol; \pq{} reads all patches of a patient (median 6,214 over the 40 profiled BLCA fold-0 patients, Table~\ref{tab:efficiency}) and has 16.9\,M parameters including the pathway MLPs. Every results table (Section~\ref{sec:tables} here, Section~IV of the main paper) is regenerated from the archived per-run files by \texttt{scripts/reproduce\_tables.sh} in the code repository (main paper, Data and Code Availability). Bracketed reference numbers refer to the reference list of the main paper. The UNI2-h features [44] are 256$\times$256 patches at 20$\times$ magnification, distributed as HDF5 coordinates and features under license CC-BY-NC-ND 4.0.
 
 \begin{table}[!t]
 \caption{Evaluation protocol, identical for all methods.}
@@ -69,12 +71,12 @@
 Aspect & Choice \\
 \midrule
 Unit & patient; all slides of a patient concatenated \\
-Splits & SurvPath's five-fold patient-level splits; the validation fold is the reported fold \\
+Splits & SurvPath's fivefold patient-level splits; the validation fold is the reported fold \\
 Endpoints & disease-specific survival (primary); overall survival (secondary) \\
 Time bins & quartiles of uncensored training patients, outer edges $\pm\infty$, reused for validation \\
-Metrics & Harrell's \cindex{} on continuous time [43], [44] (primary); Uno's IPCW \cindex{} [45] truncated at the 75th percentile of training event times, integrated Brier score [46] on the interior quartile grid, log-rank test at the median risk split (secondary) \\
+Metrics & Harrell's \cindex{} on continuous time [46], [47] (primary); Uno's IPCW \cindex{} [48] truncated at the 75th percentile of training event times, integrated Brier score [49] on the interior quartile grid, log-rank test at the median risk split (secondary) \\
 Budget, seeds & 20 epochs, final checkpoint; seeds 0, 1, 2 with the fold index added \\
-Statistics & one value per (cohort, fold) = mean over seeds; paired $t$ and exact Wilcoxon tests over the 25 pooled folds, 95\% percentile-bootstrap CI (10,000 resamples); per-cohort tests ($n = 5$) Holm-adjusted, exploratory \\
+Statistics & one value per (cohort, fold) = mean over seeds; paired $t$ and Wilcoxon signed-rank tests (exact unless paired differences are tied or zero) over the 25 pooled folds, 95\% percentile-bootstrap CI (10,000 resamples); per-cohort tests ($n = 5$) Holm-adjusted, exploratory \\
 Audit & each input removed or permuted across patients; 10--50\% of patients missing one modality at random (five draws); Spearman correlation of fused and single-input risks \\
 \bottomrule
 \end{tabular}
@@ -110,10 +112,10 @@ Late fusion & WSI+RNA & 2 & -- \\
 Q &\leftarrow Q + \mathrm{CA}\big(\mathrm{LN}(Q),\, U^m\big), \\
 Q &\leftarrow Q + \mathrm{SA}\big(\mathrm{LN}(Q)\big),\qquad Q \leftarrow Q + \mathrm{FFN}\big(\mathrm{LN}(Q)\big),
 \end{align}
-where $U^m$ are the modality's input tokens (the LayerNormed patch embeddings, or the 275 pathway tokens produced by per-pathway two-layer MLPs of hidden width 128), $\mathrm{CA}$ is 8-head cross-attention with queries from $Q$ and keys and values from $U^m$, $\mathrm{SA}$ is self-attention among the queries and $\mathrm{FFN}$ a two-layer feed-forward network. Cross-attention over $N$ input tokens costs $O(KNd)$ and attention among the queries $O(K^2 d)$; the block returns 32 vectors, so the fusion stage does not depend on $N$. The fused codes pass through two Transformer encoder layers ($d = 256$, 8 heads) and a learned-query attention pooling; a linear layer with a sigmoid produces the $T = 4$ hazards (Table~\ref{tab:training}).
+where $U^m$ are the modality's input tokens (the layer-normalized patch embeddings, or the 275 pathway tokens produced by per-pathway two-layer MLPs of hidden width 128; the 331 SurvPath pathways minus the 56 with fewer than three member genes; SurvPath receives the same tokens), $\mathrm{CA}$ is 8-head cross-attention with queries from $Q$ and keys and values from $U^m$, $\mathrm{SA}$ is self-attention among the queries and $\mathrm{FFN}$ a two-layer feed-forward network. Cross-attention over $N$ input tokens costs $O(KNd)$ and attention among the queries $O(K^2 d)$; the block returns 32 vectors, so the fusion stage does not depend on $N$. The fused codes pass through two Transformer encoder layers ($d = 256$, 8 heads) and a learned-query attention pooling; a linear layer with a sigmoid produces the $T = 4$ hazards (Table~\ref{tab:training}).
 
 \begin{table}[!t]
-\caption{Training configuration of \pq{} and of the official SurvPath baseline. Eq.~(1) is the discrete-time negative log-likelihood of the main paper.}
+\caption{Training configuration of \pq{} and of the official SurvPath baseline. Equation (1) is the discrete-time negative log-likelihood of the main paper; lr: learning rate; wd: weight decay.}
 \label{tab:training}
 \centering
 \tabsize
@@ -123,42 +125,42 @@ where $U^m$ are the modality's input tokens (the LayerNormed patch embeddings, o
 Setting & \pq{} & SurvPath (official) \\
 \midrule
 Epochs & 20, final checkpoint & 20, final checkpoint \\
-Optimizer & AdamW [49], lr $10^{-4}$, wd $10^{-4}$, 1 warm-up epoch, cosine decay & RAdam [50], lr $5 \times 10^{-4}$ (published), wd $10^{-4}$ \\
+Optimizer & AdamW [52], lr $10^{-4}$, wd $10^{-4}$, 1 warm-up epoch, cosine decay & RAdam [53], lr $5 \times 10^{-4}$ (published), wd $10^{-4}$ \\
 Batch & 1 patient, gradient accumulation 2, gradient clip 1.0 & 1 patient \\
 Dropout & 0.25; modality dropout 0.15 & 0.1 \\
-Patches & all patches of all slides & 4,096-patch subsample (published) \\
-Loss & Eq.~(1), censored term unweighted; auxiliary heads $\lambda = 0.5$ (full model) or 0 & Eq.~(1), censored term weighted 0.5 (published) \\
+Patches & all patches of all slides & 4,096 per patient in training (published); all at evaluation \\
+Loss & (1), censored term unweighted; auxiliary heads $\lambda = 0.5$ (full model) or 0 & (1), censored term weighted 0.5 ($\alpha_{\text{surv}}$ of the published run scripts) \\
 Sampling & uniform over training patients & weighted by (bin, censorship) (published) \\
-Genes & min--max to $[-1, 1]$, fit on the training split & same \\
+Genes & min--max to $[-1, 1]$, fit on the training split & same; same 275 pathway tokens \\
 Parameters & 16.9\,M & 21.2\,M \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\textit{Selection history.} The base hyper-parameters of \pq{} (learning-rate schedule, dropout, modality-dropout rate, number of queries, fusion depth) were chosen on BLCA under the 10-epoch budget from the single-seed ablation runs in Table~\ref{tab:ablate}; none is distinguishable at one seed, and the chosen values are defaults rather than optima. The budget was raised from 10 to 20 epochs after inspecting the pooled validation curves of \pq{} and SurvPath under the 10-epoch budget; the 20-epoch curves (Fig.~\ref{fig:epochs}; the per-cohort curves, \path{epoch_curves_by_cohort.pdf}, are in the repository) show SurvPath flat from about epoch 7 and both \pq{} variants rising until about epoch 13--18. The learning rate and gradient-accumulation setting of \pq{} were changed at the same time as the budget, so the 10- and 20-epoch results are not a pure budget comparison; a single-seed check at lr $2 \times 10^{-4}$ on BLCA under the 20-epoch budget did not improve on the default (0.615 vs 0.630; its seed-averaged margin over SurvPath on the five BLCA folds was $+0.020$, 3 of 5 folds, against $+0.036$ for the default). The auxiliary-head variant and $\lambda = 0.5$ were adopted after the 20-epoch results of the variant without auxiliary heads on all five cohorts had been seen; the two variants are therefore reported as co-primary throughout, and no per-cohort result on BLCA is treated as confirmatory. Best-epoch validation scores were logged but used only in the selection replay (Table~\ref{tab:selection}).
+\textit{Selection history.} The base hyperparameters of \pq{} (learning-rate schedule, dropout, modality-dropout rate, number of queries, fusion depth) were chosen on BLCA under the 10-epoch budget from the single-seed ablation runs in Table~\ref{tab:ablate}; none is distinguishable at one seed, and the chosen values are defaults rather than optima. The budget was raised from 10 to 20 epochs after inspecting the pooled validation curves of \pq{} and SurvPath under the 10-epoch budget; the 20-epoch curves (Fig.~\ref{fig:epochs}; the per-cohort curves, \path{epoch_curves_by_cohort.pdf}, are in the repository) show SurvPath flat from about epoch 7 and both \pq{} variants rising until about epoch 13--18. The learning rate and gradient-accumulation setting of \pq{} were changed at the same time as the budget, so the 10- and 20-epoch results are not a pure budget comparison; a single-seed check at lr $2 \times 10^{-4}$ on BLCA under the 20-epoch budget did not improve on the default (0.615 vs.\ 0.630; its seed-averaged margin over SurvPath on the five BLCA folds was $+0.020$, 3 of 5 folds, against $+0.036$ for the default). The auxiliary-head variant and $\lambda = 0.5$ were adopted after the 20-epoch results of the variant without auxiliary heads on all five cohorts had been seen; the two variants are therefore reported as co-primary throughout, and no per-cohort result on BLCA is treated as confirmatory. Best-epoch validation scores were logged but used only in the selection replay (Table~\ref{tab:selection}).
 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=\columnwidth]{figures/epoch_curves_pooled}
-\caption{Validation \cindex{} per training epoch under the 20-epoch budget, pooled over all cohorts and folds, for \pq{}, its variant without auxiliary heads (`w/o aux heads') and SurvPath: mean over three seeds, $\pm$1 sd band over seeds. All results use the final epoch; the curves only set the budget.}
+\includegraphics[width=0.9\columnwidth]{figures/epoch_curves_pooled}
+\caption{Validation \cindex{} per epoch under the 20-epoch budget, pooled over cohorts and folds: mean over three seeds, $\pm$1 sd band over seeds. All results use the final epoch; the curves only set the budget.}
 \label{fig:epochs}
 \end{figure}
 
 \section{Full Tables}
 \label{sec:tables}
-Table~\ref{tab:tests} completes the seed-averaged paired comparisons of Table~IV of the main paper with the unimodal baselines against SurvPath: none differs from SurvPath pooled (every CI spans zero). Table~\ref{tab:percohort} gives the per-cohort tests: on DSS, BRCA is the only cohort with a raw $p < 0.05$ and it does not survive Holm correction; on OS (one seed) BLCA, the development cohort, survives under the $t$-test only (Holm $p = 0.039$; Wilcoxon 0.312).
+Table~\ref{tab:tests} completes the seed-averaged paired comparisons of Table~IV of the main paper with the unimodal baselines against SurvPath: none differs from SurvPath pooled (every CI spans zero). Table~\ref{tab:percohort} gives the per-cohort tests: on DSS, BRCA is the only cohort with a raw $p < 0.05$ and it does not survive Holm correction; on OS (one seed) BLCA, the development cohort, survives under the $t$-test only (Holm-adjusted $p = 0.039$ under the $t$-test and 0.312 under Wilcoxon).
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[angle=90,width=0.6\textwidth]{figures/pathway_importance_v2}
-\caption{Pathway tokens with the highest mean genomic-query attention per cohort (\pq{}, 20 epochs, seed 0), as a multiple of uniform attention over the 275 tokens (dashed line), averaged over validation patients and the five folds (rotated). Blue: Reactome; orange, (H): MSigDB Hallmark. Error bars: mean $\pm$ sd over the five folds, clipped at zero; names over 45 characters are shortened.}
+\includegraphics[angle=90,width=0.57\textwidth]{figures/pathway_importance_v2}
+\caption{Pathway tokens with the highest mean genomic-query attention per cohort (\pq{}, 20 epochs, seed 0) as a multiple of uniform attention over the 275 tokens (dashed line), averaged over validation patients and the five folds (rotated). Blue: Reactome; orange (H): MSigDB Hallmark. Bars: mean $\pm$ sd over folds, clipped at zero; long names shortened.}
 \label{fig:pathways}
 \end{figure*}
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.68\textwidth]{figures/km_grid}
-\caption{Kaplan--Meier curves of disease-specific survival for the high- and low-risk halves of the pooled out-of-fold validation predictions (20 epochs, seed 0); top: \pq{}, bottom: SurvPath. Patients are split at the median predicted risk of their own validation fold and the folds pooled, so every patient appears once. Bands: 95\% CI; $p$: log-rank test between the halves.}
+\includegraphics[width=0.60\textwidth]{figures/km_grid}
+\caption{Kaplan--Meier curves of disease-specific survival for the high- and low-risk halves of the pooled out-of-fold predictions (20 epochs, seed 0; top: \pq{}, bottom: SurvPath), split at the median risk of each patient's own validation fold so that every patient appears once. Bands: 95\% CI; $p$: log-rank test.}
 \label{fig:km}
 \end{figure*}
 
@@ -172,15 +174,15 @@ Table~\ref{tab:tests} completes the seed-averaged paired comparisons of Table~IV
 \toprule
 Comparison & $\Delta$ & 95\% CI & $t$ $p$ & W $p$ & Wins \\
 \midrule
-ABMIL vs SurvPath & $+0.001$ & $[-0.024, +0.026]$ & 0.95 & 0.85 & 14/25 \\
-SNN vs SurvPath & $-0.007$ & $[-0.060, +0.045]$ & 0.80 & 0.73 & 10/25 \\
-RNA MLP vs SurvPath & $+0.024$ & $[-0.027, +0.077]$ & 0.38 & 0.41 & 15/25 \\
+ABMIL vs.\ SurvPath & $+0.001$ & $[-0.024, +0.026]$ & 0.95 & 0.85 & 14/25 \\
+SNN vs.\ SurvPath & $-0.007$ & $[-0.060, +0.045]$ & 0.80 & 0.73 & 10/25 \\
+RNA MLP vs.\ SurvPath & $+0.024$ & $[-0.027, +0.077]$ & 0.38 & 0.41 & 15/25 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{table}[!t]
-\caption{Per-cohort seed-averaged paired differences against SurvPath (five folds per cohort): raw and Holm-adjusted $p$-values ($t$ and Wilcoxon adjusted separately), from unrounded values. $^\dagger$Development cohort.}
+\caption{Per-cohort seed-averaged paired differences against SurvPath (five folds per cohort): raw and Holm-adjusted $p$-values ($t$ and Wilcoxon adjusted separately), from unrounded values.}
 \label{tab:percohort}
 \centering
 \tabsize
@@ -189,32 +191,33 @@ RNA MLP vs SurvPath & $+0.024$ & $[-0.027, +0.077]$ & 0.38 & 0.41 & 15/25 \\
 \toprule
 Cohort & $\Delta$ & $t$ $p$ (Holm) & W $p$ (Holm) & Wins \\
 \midrule
-\multicolumn{5}{@{}l}{\emph{\pqf{} vs SurvPath (DSS, three seeds)}} \\
+\multicolumn{5}{@{}l}{\emph{\pqf{} vs.\ SurvPath (DSS, three seeds)}} \\
 BLCA$^\dagger$ & $+0.036$ & 0.175 (0.700) & 0.312 (1.000) & 3/5 \\
 BRCA & $+0.086$ & 0.017 (0.084) & 0.062 (0.312) & 5/5 \\
 COADREAD & $+0.044$ & 0.583 (1.000) & 0.625 (1.000) & 4/5 \\
 HNSC & $+0.031$ & 0.544 (1.000) & 0.625 (1.000) & 4/5 \\
 STAD & $-0.015$ & 0.719 (1.000) & 0.625 (1.000) & 2/5 \\
-\multicolumn{5}{@{}l}{\emph{\pqm{} vs SurvPath (DSS, three seeds)}} \\
+\multicolumn{5}{@{}l}{\emph{\pqm{} vs.\ SurvPath (DSS, three seeds)}} \\
 BLCA$^\dagger$ & $+0.015$ & 0.518 (1.000) & 0.625 (1.000) & 3/5 \\
 BRCA & $+0.075$ & 0.073 (0.367) & 0.125 (0.625) & 4/5 \\
 COADREAD & $+0.068$ & 0.202 (0.807) & 0.188 (0.750) & 4/5 \\
 HNSC & $+0.023$ & 0.580 (1.000) & 0.625 (1.000) & 4/5 \\
 STAD & $+0.006$ & 0.847 (1.000) & 0.812 (1.000) & 2/5 \\
-\multicolumn{5}{@{}l}{\emph{\pqf{} vs SurvPath (OS, seed 0)}} \\
+\multicolumn{5}{@{}l}{\emph{\pqf{} vs.\ SurvPath (OS, seed 0)}} \\
 BLCA$^\dagger$ & $+0.043$ & 0.008 (0.039) & 0.062 (0.312) & 5/5 \\
 BRCA & $+0.073$ & 0.015 (0.058) & 0.062 (0.312) & 5/5 \\
 COADREAD & $-0.015$ & 0.578 (0.578) & 0.625 (0.625) & 2/5 \\
 HNSC & $+0.025$ & 0.046 (0.138) & 0.125 (0.375) & 4/5 \\
 STAD & $+0.044$ & 0.230 (0.460) & 0.312 (0.625) & 3/5 \\
 \bottomrule
+\tabnote{5}{$^\dagger$Development cohort.}
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:os} reports the overall-survival endpoint (one seed): \pq{} leads SurvPath by 0.034 pooled, and the same checkpoint keeps a \cindex{} of 0.531--0.586 with the RNA removed and 0.550--0.592 with the slide removed; with half of the validation patients missing one modality at random its OS \cindex{} changes by at most 0.021 (BRCA, 0.596 to 0.576; BLCA, COADREAD and HNSC by 0.005, STAD by 0.012). Table~\ref{tab:e10} reports the 10-epoch budget: the variant without auxiliary heads leads SurvPath by 0.028 pooled (18 of 25 folds), COADREAD being the only cohort with a raw $t$-test $p < 0.05$ (not a pure budget comparison; Section~\ref{sec:training}).
+Table~\ref{tab:os} reports the overall-survival endpoint (one seed): \pq{} leads SurvPath by 0.034 pooled (19 of 25 folds), and the same checkpoint keeps a \cindex{} of 0.531--0.586 with the RNA removed and 0.550--0.592 with the slide removed; with half of the validation patients missing one modality at random its OS \cindex{} changes by at most 0.021 (BRCA, 0.596 to 0.576; BLCA, COADREAD and HNSC by 0.005, STAD by 0.012). Table~\ref{tab:e10} reports the 10-epoch budget: the variant without auxiliary heads leads SurvPath by 0.028 pooled (18 of 25 folds), COADREAD being the only cohort with a raw $t$-test $p < 0.05$ (not a pure budget comparison; Section~\ref{sec:training}).
 
 \begin{table}[!t]
-\caption{Overall survival (20 epochs, seed 0): five-fold mean \cindex{} $\pm$ sd over folds, and the \pq{} checkpoint with one input removed (null codes). $^\dagger$Development cohort.}
+\caption{Overall survival (20 epochs, seed 0): fivefold mean \cindex{} $\pm$ sd over folds, and the \pq{} checkpoint with one input removed (null codes). Pooled $\Delta$ over the 25 folds: 95\% bootstrap CI $[+0.014, +0.054]$, $t$-test $p = 0.003$, Wilcoxon $p = 0.0025$, 19 of 25 folds won.}
 \label{tab:os}
 \centering
 \tabsize
@@ -231,11 +234,12 @@ STAD & \pmv{0.603}{0.070} & \pmv{0.559}{0.045} & $+0.044$ & 0.574 & 0.582 \\
 \midrule
 Pooled & 0.582 & 0.548 & $+0.034$ & & \\
 \bottomrule
+\tabnote{6}{$^\dagger$Development cohort.}
 \end{tabular}
 \end{table}
 
 \begin{table}[!t]
-\caption{10-epoch budget (DSS, three seeds): \cindex{} mean $\pm$ sd over seeds of the five-fold mean, and the seed-averaged paired difference (pooled: 25 folds, 18 won). $^\dagger$Development cohort.}
+\caption{10-epoch budget (DSS, three seeds): \cindex{} mean $\pm$ sd over seeds of the fivefold mean, and the seed-averaged paired difference (pooled over the 25 folds: 95\% bootstrap CI $[-0.001, +0.057]$, 18 folds won).}
 \label{tab:e10}
 \centering
 \tabsize
@@ -252,13 +256,14 @@ STAD & \pmv{0.574}{0.025} & \pmv{0.607}{0.012} & $-0.033$ & 0.471 & 0.625 \\
 \midrule
 Pooled & 0.599 & 0.570 & $+0.028$ & 0.079 & 0.063 \\
 \bottomrule
+\tabnote{6}{$^\dagger$Development cohort.}
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:secondary} reports the secondary metrics; the integrated Brier score (IBS, lower is better) is undefined on BRCA fold 4 for every method, so that fold is dropped from the paired units ($n = 24$). Uno's \cindex{} tracks Harrell's: \pq{} leads SurvPath by 0.039 and the variant without auxiliary heads by 0.046. Each of the four other methods beats SurvPath on the IBS by about 0.07 (Wilcoxon $p < 10^{-4}$): SurvPath's hazards are poorly calibrated under this protocol (its published loss weights the censored term by 0.5), so the IBS is not a fair accuracy comparison and is reported for completeness only.
+Table~\ref{tab:secondary} reports the secondary metrics; the integrated Brier score (IBS, lower is better) is undefined on BRCA fold 4 for every method, so that fold is dropped from the paired units ($n = 24$). Uno's \cindex{} tracks Harrell's: \pq{} leads SurvPath by 0.039 and the variant without auxiliary heads by 0.046. Each of the four other methods beats SurvPath on the IBS by about 0.07 (Wilcoxon $p < 10^{-4}$): SurvPath's hazards are poorly calibrated under this protocol (its published loss weights the censored term by 0.5; its IBS is the highest on every cohort, 0.11--0.34), so the IBS is not a fair accuracy comparison and is reported for completeness only.
 
 \begin{table*}[!t]
-\caption{Secondary metrics (20-epoch DSS protocol): mean $\pm$ sd over three seeds of the five-fold mean, and the seed-averaged paired difference from SurvPath over the pooled folds (95\% bootstrap CI; $t$-test / Wilcoxon $p$). *Four folds (undefined on BRCA fold 4).}
+\caption{Secondary metrics (20-epoch DSS protocol): mean $\pm$ sd over three seeds of the fivefold mean, and the seed-averaged paired difference from SurvPath over the pooled folds (95\% bootstrap CI; $t$-test / Wilcoxon $p$).}
 \label{tab:secondary}
 \centering
 \tabsize
@@ -273,7 +278,7 @@ BRCA & \pmv{0.636}{0.012} & \pmv{0.648}{0.038} & \pmv{0.599}{0.012} & \pmv{0.598
 COADREAD & \pmv{0.616}{0.032} & \pmv{0.644}{0.009} & \pmv{0.629}{0.015} & \pmv{0.646}{0.025} & \pmv{0.592}{0.020} \\
 HNSC & \pmv{0.589}{0.034} & \pmv{0.587}{0.012} & \pmv{0.563}{0.031} & \pmv{0.563}{0.013} & \pmv{0.556}{0.027} \\
 STAD & \pmv{0.586}{0.019} & \pmv{0.601}{0.014} & \pmv{0.562}{0.029} & \pmv{0.550}{0.010} & \pmv{0.591}{0.011} \\
-$\Delta$ vs SurvPath ($n = 25$), 95\% CI & $+0.039$ $[-0.016, +0.086]$ & $+0.046$ $[+0.004, +0.087]$ & $+0.010$ $[-0.019, +0.042]$ & $+0.020$ $[-0.031, +0.070]$ & \\
+$\Delta$ vs.\ SurvPath ($n = 25$), 95\% CI & $+0.039$ $[-0.016, +0.086]$ & $+0.046$ $[+0.004, +0.087]$ & $+0.010$ $[-0.019, +0.042]$ & $+0.020$ $[-0.031, +0.070]$ & \\
 \quad $t$ $p$ / W $p$ & 0.153 / 0.042 & 0.045 / 0.042 & 0.526 / 0.751 & 0.455 / 0.474 & \\
 \midrule
 \multicolumn{6}{@{}l}{\emph{Integrated Brier score}} \\
@@ -282,27 +287,28 @@ BRCA* & \pmv{0.073}{0.000} & \pmv{0.082}{0.004} & \pmv{0.077}{0.002} & \pmv{0.07
 COADREAD & \pmv{0.077}{0.006} & \pmv{0.081}{0.003} & \pmv{0.097}{0.001} & \pmv{0.082}{0.002} & \pmv{0.110}{0.009} \\
 HNSC & \pmv{0.221}{0.019} & \pmv{0.215}{0.011} & \pmv{0.205}{0.010} & \pmv{0.200}{0.005} & \pmv{0.341}{0.087} \\
 STAD & \pmv{0.201}{0.006} & \pmv{0.189}{0.009} & \pmv{0.208}{0.013} & \pmv{0.204}{0.001} & \pmv{0.276}{0.043} \\
-$\Delta$ vs SurvPath ($n = 24$), 95\% CI & $-0.070$ $[-0.100, -0.044]$ & $-0.071$ $[-0.101, -0.043]$ & $-0.068$ $[-0.100, -0.039]$ & $-0.075$ $[-0.108, -0.044]$ & \\
+$\Delta$ vs.\ SurvPath ($n = 24$), 95\% CI & $-0.070$ $[-0.100, -0.044]$ & $-0.071$ $[-0.101, -0.043]$ & $-0.068$ $[-0.100, -0.039]$ & $-0.075$ $[-0.108, -0.044]$ & \\
 \quad $t$ $p$ / W $p$ & $<$0.001 / $<$0.001 & $<$0.001 / $<$0.001 & $<$0.001 / $<$0.001 & $<$0.001 / $<$0.001 & \\
 \bottomrule
+\tabnote{6}{*Four folds (undefined on BRCA fold 4).}
 \end{tabular}
 \end{table*}
 
-Table~\ref{tab:corr} gives the risk-score correlations behind Section~IV-A of the main paper: the fused risk of \pq{} follows its own RNA-removed risk ($\rho = 0.83$ pooled) far more closely than its slide-removed risk (0.45), and the two single-input risks are nearly uncorrelated (0.15); the standard deviation over the 15 pairs of a cell is 0.06--0.24 and is in the archive. Table~\ref{tab:impute} gives the per-cohort values behind Section~IV-D: mean imputation of a removed slide costs the variant without auxiliary heads 0.069 against 0.030 with the null code, and \pq{} 0.035 against 0.025 (null-code rows: Table~II of the main paper).
+Table~\ref{tab:corr} gives the risk-score correlations behind Section~IV-A of the main paper (the standard deviation over the 15 pairs of a cell, 0.06--0.24, is in the archive). Table~\ref{tab:impute} gives the per-cohort values behind Section~IV-D: mean imputation of a removed slide costs the variant without auxiliary heads 0.069 against 0.030 with the null code, and \pq{} 0.035 against 0.025 (null-code rows: Table~II of the main paper).
 
 \begin{table}[!t]
-\caption{Risk-score correlations of \pq{} (20 epochs): Spearman $\rho$, mean over the 15 (fold, seed) pairs per cohort, with its own single-input risks (top) and the other methods' risks on the same fold and seed (bottom); Pooled: mean over the 75 pairs.}
+\caption{Risk-score correlations of \pq{} (20 epochs): Spearman $\rho$, mean over the 15 (fold, seed) pairs per cohort, with its own single-input risks (top) and the other methods' risks (bottom); Pooled: mean over the 75 pairs.}
 \label{tab:corr}
 \centering
 \tabsize
 \setlength{\tabcolsep}{3pt}
 \begin{tabular}{@{}lcccccc@{}}
 \toprule
-Fused risk of \pqf{} vs & BLCA & BRCA & COADREAD & HNSC & STAD & Pooled \\
+Fused risk of \pqf{} vs.\ & BLCA & BRCA & COADREAD & HNSC & STAD & Pooled \\
 \midrule
 own slide-removed risk & 0.42 & 0.36 & 0.53 & 0.47 & 0.45 & 0.45 \\
 own RNA-removed risk & 0.90 & 0.85 & 0.73 & 0.84 & 0.82 & 0.83 \\
-\quad (slide-rem.\ vs RNA-rem.) & 0.22 & 0.09 & 0.16 & 0.15 & 0.13 & 0.15 \\
+\quad (slide-rem.\ vs.\ RNA-rem.) & 0.22 & 0.09 & 0.16 & 0.15 & 0.13 & 0.15 \\
 \midrule
 \pqm{} & 0.79 & 0.62 & 0.66 & 0.71 & 0.69 & 0.69 \\
 SurvPath & 0.63 & 0.38 & 0.38 & 0.45 & 0.48 & 0.46 \\
@@ -314,7 +320,7 @@ SNN & 0.38 & 0.23 & 0.36 & 0.29 & 0.43 & 0.34 \\
 \end{table}
 
 \begin{table*}[!t]
-\caption{Mean imputation on the same \pq{} checkpoints (20 epochs): \cindex{} with one input replaced by the training-mean patch embedding or gene vector (mean $\pm$ sd over three seeds of the five-fold mean; one seed for \pqm{}), and the pooled difference from the complete-input score over the 25 seed-averaged folds.}
+\caption{Mean imputation on the same \pq{} checkpoints (20 epochs): \cindex{} with one input replaced by a single-patch bag equal to the mean training patch embedding (the slides of 60 training patients) or by the training-mean gene vector (mean $\pm$ sd over three seeds of the fivefold mean; one seed for \pqm{}), and the pooled difference from the complete-input score over the 25 seed-averaged folds.}
 \label{tab:impute}
 \centering
 \tabsize
@@ -334,7 +340,7 @@ Slide removed & 0.524 & 0.499 & 0.600 & 0.535 & 0.524 & $-0.069$ & $3\times10^{-
 \end{table*}
 
 \begin{table*}[!t]
-\caption{Checkpoint selection replayed on the stored validation histories. (A) Final: fixed-budget final checkpoint; Early: validation-loss early stopping, patience 5; Min.\ loss: lowest validation loss; Oracle: highest validation \cindex{} (pooled means over (fold, seed) runs); $\Delta$: Early minus Final over the 25 seed-averaged folds; Sel.\,/\,Best: mean selected epoch / mean epoch of highest validation \cindex{}. (B) The earlier validation-loss campaign: reported \cindex{}, \cindex{} at the best and the final epoch trained, mean selected epoch / epochs trained.}
+\caption{Checkpoint selection replayed on the stored validation histories. (A) Pooled \cindex{} over (fold, seed) runs under the fixed-budget final checkpoint (Final), validation-loss early stopping with patience 5 (Early), the lowest validation loss (Min.\ loss) and the highest validation \cindex{} (Oracle); $\Delta$: Early minus Final over the 25 seed-averaged folds; Sel.\,/\,Best: mean selected epoch / mean epoch of highest validation \cindex{}. (B) The earlier validation-loss campaign: reported \cindex{}, \cindex{} at the best and at the final epoch trained, mean selected / trained epochs.}
 \label{tab:selection}
 \centering
 \tabsize
@@ -367,10 +373,10 @@ Earlier fusion configuration & 20 & 35 & 0.577 & & & 0.641 & 0.569 & & & 4.7 / 9
 \end{tabular}
 \end{table*}
 
-Table~\ref{tab:ablate} gives the fusion-block ablations on BLCA under the 10-epoch budget (Section~\ref{sec:training}); the settings move the fused \cindex{} within 0.595--0.638, inside the fold standard deviation of 0.07--0.13, and are not distinguishable at one seed. Table~\ref{tab:finalconfig} ablates the final configuration under the 20-epoch budget on BLCA (one seed each, trained on a laptop CPU) against the seed-0 GPU run of the main campaign (0.625 with both inputs; 0.630 $\pm$ 0.010 over three seeds). Capping \pq{} at the 4,096 training patches per slide that SurvPath uses gives 0.626, so on this cohort the margin over SurvPath is not explained by \pq{} reading more patches; two time bins give 0.628 and eight 0.609; the 281 Xena pathway groups [56] give 0.628 and the 50 Hallmark gene sets alone 0.600, 0.025 below the 275-token Reactome and Hallmark set. With half of the validation patients missing one modality at random every variant stays within 0.015 of its complete-input score (10--30\%: in the archive); for the two-bin variant the RNA- and slide-permuted evaluations give 0.619 and 0.571. All differences are within one fold standard deviation (0.057--0.082) and single-seed.
+Table~\ref{tab:ablate} gives the fusion-block ablations on BLCA under the 10-epoch budget (Section~\ref{sec:training}); the settings move the fused \cindex{} within 0.595--0.638, inside the fold standard deviation of 0.07--0.13, and are not distinguishable at one seed. Table~\ref{tab:finalconfig} ablates the final configuration under the 20-epoch budget on BLCA (one seed each, trained on a laptop CPU) against the seed-0 GPU run of the main campaign (0.625 with both inputs; 0.630 $\pm$ 0.010 over three seeds). Capping \pq{} at SurvPath's 4,096 training patches per patient gives 0.626, so on this cohort the margin over SurvPath is not explained by \pq{} reading more patches; two time bins give 0.628 and eight 0.609; SurvPath's 281-pathway Xena set [59] (1,577 genes; 225 tokens after the same three-gene rule) gives 0.628 and the 50 Hallmark gene sets alone (4,241 genes) 0.600, 0.025 below the 275-token Reactome and Hallmark set. With half of the validation patients missing one modality at random every variant stays within 0.015 of its complete-input score (10--30\%: in the archive); for the two-bin variant the RNA- and slide-permuted evaluations give 0.619 and 0.571. All differences are within one fold standard deviation (0.057--0.082) and single-seed.
 
 \begin{table}[!t]
-\caption{Fusion-block ablations on BLCA, 10-epoch budget (\pqm{}, seed 0): five-fold mean \cindex{} $\pm$ sd over folds, and with one input removed (null codes).}
+\caption{Fusion-block ablations on BLCA, 10-epoch budget (\pqm{}, seed 0): fivefold mean \cindex{} $\pm$ sd over folds, and with one input removed (null codes).}
 \label{tab:ablate}
 \centering
 \tabsize
@@ -379,11 +385,11 @@ Table~\ref{tab:ablate} gives the fusion-block ablations on BLCA under the 10-epo
 \toprule
 Variant & Both inputs & RNA rem. & Slide rem. \\
 \midrule
-Base ($K{=}32$, depth 2, mod.\ dropout 0.15) & \pmv{0.609}{0.069} & 0.602 & 0.630 \\
+Base ($K{=}32$, depth 2, mod.\ dropout 0.15) & \pmv{0.608}{0.069} & 0.602 & 0.630 \\
 Modality dropout 0 & \pmv{0.634}{0.075} & 0.609 & 0.598 \\
 Modality dropout 0.3 & \pmv{0.616}{0.068} & 0.624 & 0.648 \\
 Modality dropout 0.5 & \pmv{0.635}{0.108} & 0.587 & 0.626 \\
-$K = 16$ queries & \pmv{0.638}{0.070} & 0.615 & 0.615 \\
+$K = 16$ queries & \pmv{0.638}{0.070} & 0.614 & 0.615 \\
 $K = 64$ queries & \pmv{0.634}{0.127} & 0.619 & 0.624 \\
 Fusion depth 1 & \pmv{0.598}{0.124} & 0.584 & 0.611 \\
 Fusion depth 3 & \pmv{0.595}{0.088} & 0.585 & 0.610 \\
@@ -392,7 +398,7 @@ Fusion depth 3 & \pmv{0.595}{0.088} & 0.585 & 0.610 \\
 \end{table}
 
 \begin{table}[!t]
-\caption{Final-configuration ablations on BLCA, 20-epoch budget (\pqf{}, seed 0, laptop CPU): five-fold mean \cindex{} $\pm$ sd, with one input removed (null codes) and with 50\% of validation patients missing one modality at random (five draws per fold). Base: seed-0 GPU run (4 bins, 275 tokens, all patches).}
+\caption{Final-configuration ablations on BLCA, 20-epoch budget (\pqf{}, seed 0, laptop CPU): fivefold mean \cindex{} $\pm$ sd, with one input removed (null codes) and with 50\% of validation patients missing one modality (five draws per fold). Base: seed-0 GPU run (4 bins, 275 tokens, all patches).}
 \label{tab:finalconfig}
 \centering
 \tabsize
@@ -405,17 +411,17 @@ Base (seed 0, GPU) & \pmv{0.625}{0.081} & 0.598 & 0.588 & 0.618 \\
 Time bins $T = 2$ & \pmv{0.628}{0.057} & 0.634 & 0.575 & 0.616 \\
 Time bins $T = 8$ & \pmv{0.609}{0.082} & 0.578 & 0.605 & 0.604 \\
 Hallmark only (50 tokens) & \pmv{0.600}{0.075} & 0.608 & 0.554 & 0.597 \\
-Xena groups (281 tokens) & \pmv{0.628}{0.063} & 0.604 & 0.634 & 0.615 \\
-4,096 patches per slide & \pmv{0.626}{0.059} & 0.591 & 0.622 & 0.611 \\
+Xena set (225/281 tokens) & \pmv{0.628}{0.062} & 0.604 & 0.634 & 0.615 \\
+4,096 patches/patient (training) & \pmv{0.626}{0.059} & 0.591 & 0.622 & 0.611 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:selection} is the checkpoint-selection replay summarised in Section~IV-E of the main paper. Block (A) replays three post-hoc rules on the stored 20-epoch histories (three seeds; the single-modality \pq{}s have 70 instead of 75 fold histories): validation-loss early stopping (patience 5) costs the six \pq{}, SNN and MLP runs 0.027--0.090 pooled and ABMIL and SurvPath nothing, because the latter reach their best validation \cindex{} at epoch 6.2 and 6.9 against 7.2--10.0 for the others; the oracle rule, an unattainable bound biased in favour of every method, puts every method at 0.67--0.69. The two 10-epoch methods behave the same way (early stopping costs \pqm{} 0.075 and SurvPath 0.010). Block (B) is the earlier campaign that actually trained with validation-loss selection (patience 5, minimum 6 epochs, 20-epoch budget; 29 cohort-level runs, 145 folds; Section~\ref{sec:runs}): its reported \cindex{} is 0.063--0.128 below the best epoch of the same runs for every method. Selection and scoring use the same fold throughout, so every replayed rule is biased in its own favour and the oracle is an upper bound. (For the single-modality \pq{}s the run-weighted Final differs by 0.001--0.002 from the Pooled column of Table~III of the main paper, which averages the cohort means.)
+Table~\ref{tab:selection} is the checkpoint-selection replay summarized in Section~IV-E of the main paper. Block (A) replays three post hoc rules on the stored 20-epoch histories (three seeds; the single-modality \pq{}s have 70 instead of 75 fold histories): validation-loss early stopping (patience 5) costs the six \pq{}, SNN and MLP runs 0.027--0.090 pooled and ABMIL and SurvPath nothing (Best column: epoch 6.2 and 6.9 against 7.2--10.0); the oracle rule, an unattainable bound biased in favor of every method, puts every method at 0.67--0.69. The two 10-epoch methods behave the same way (Table~\ref{tab:selection}(A)). Block (B) is the earlier campaign that actually trained with validation-loss selection (patience 5, minimum 6 epochs, 20-epoch budget; 29 cohort-level runs, 145 folds; Section~\ref{sec:runs}): its reported \cindex{} is 0.063--0.128 below the best epoch of the same runs for every method. Selection and scoring use the same fold throughout, so every replayed rule is biased in its own favor and the oracle is an upper bound. (For the single-modality \pq{}s the run-weighted Final differs by 0.001--0.002 from the Pooled column of Table~III of the main paper, which averages the cohort means.)
 
 \section{Efficiency}
 \label{sec:efficiency}
-Table~\ref{tab:efficiency} reports parameters, latency and peak GPU memory per patient (first 40 patients of the BLCA fold-0 validation set; medians on one RTX PRO 4000). At 4,096--6,214 patches the two models have equal forward latency; \pq{}'s training step takes 104\,ms against 176\,ms for SurvPath, and its peak memory on full slides is 1.17\,GiB against 1.74\,GiB. The claim is limited to these slide sizes on this GPU; neither implementation was profiled, and training throughput in practice was bound by reading features from storage.
+Table~\ref{tab:efficiency} reports parameters, latency and peak GPU memory per patient. At 4,096--6,214 patches the two models have equal forward latency; \pq{}'s training step takes 104\,ms against 176\,ms for SurvPath, and its peak memory on full slides is 1.17\,GiB against 1.74\,GiB. The claim is limited to these slide sizes on this GPU; neither implementation was profiled, and training throughput in practice was bound by reading features from storage.
 
 \begin{table}[!t]
 \caption{Compute per patient (BLCA fold-0 validation, first 40 patients, medians, one RTX PRO 4000): parameters (M), patches (6,214 = median patient), forward and forward+backward time (ms), peak GPU memory (GiB).}
@@ -437,7 +443,7 @@ SurvPath (all patches) & 21.2 & 6,214 & 36.0 & 176.0 & 1.74 \\
 
 \section{Pathway Attention}
 \label{sec:pathways}
-The genomic query block exposes cross-attention from each query over the 275 pathway tokens. Fig.~\ref{fig:pathways} shows, per cohort, the eight tokens with the highest mean attention relative to uniform ($1/275$), averaged over validation patients and the five folds (seed 0). The top entries are 3.9 to 18.3 times the uniform weight, but the standard deviation over folds exceeds the mean for most of them (BLCA: apical junction, $6.7 \pm 7.9$; BRCA: glycolysis, $18.3 \pm 14.1$), so the ranking is descriptive only; attention weights are not a measure of feature importance [51].
+The genomic query block exposes cross-attention from each query over the 275 pathway tokens. Fig.~\ref{fig:pathways} shows, per cohort, the eight tokens with the highest mean attention relative to uniform ($1/275$), averaged over validation patients and the five folds (seed 0). The top entries are 3.9 to 18.3 times the uniform weight, but the standard deviation over folds exceeds the mean for most of them (BLCA: apical junction, $6.7 \pm 7.9$; BRCA: glycolysis, $18.3 \pm 14.1$), so the ranking is descriptive only; attention weights are not a measure of feature importance [54].
 
 \section{Kaplan--Meier Curves}
 \label{sec:km}
@@ -445,12 +451,12 @@ Fig.~\ref{fig:km} shows disease-specific survival of the high- and low-risk halv
 
 \section{Evaluation Pitfalls in Survival MIL Pipelines}
 \label{sec:pitfalls}
-Each of the following choices produces plausible-looking \cindex{} values in a survival MIL pipeline; ours avoids them as stated. (1)~\emph{Concordance on discrete bins} ties many pairs; Harrell's \cindex{} is computed on continuous time. (2)~\emph{Bin edges fit on the validation fold} put its labels on a different scale and leak its label distribution; edges are fit on uncensored training patients and reused. (3)~\emph{Slide-level samples} weight multi-slide patients several times; one sample per patient, all slides concatenated. (4)~\emph{Unscaled gene inputs} feed log-expression on an arbitrary scale to the pathway MLPs; genes are min--max scaled with training-split statistics. (5)~\emph{Selection on the reported fold} biases every rule upward (Table~\ref{tab:selection}); a fixed budget, the final checkpoint and several seeds avoid it. (6)~\emph{Non-standard risk and dropout semantics}, $1 - S(T)$ as the risk or modality dropout per batch; risk is $-\sum_t S(t)$ and dropout is per sample. (7)~\emph{Extreme times in the Brier grid} evaluate where a single patient is at risk; the interior quartile edges are used. (8)~\emph{Untruncated IPCW weights} diverge as the censoring survival function approaches zero; Uno's \cindex{} is truncated at the 75th percentile of training event times.
+Each of the following choices produces plausible-looking \cindex{} values; our pipeline avoids them as stated. (1)~\emph{Concordance on discrete bins} ties many pairs; Harrell's \cindex{} is computed on continuous time. (2)~\emph{Bin edges fit on the validation fold} put its labels on a different scale and leak its label distribution; edges are fit on uncensored training patients and reused. (3)~\emph{Slide-level samples} weight multi-slide patients several times; one sample per patient, all slides concatenated. (4)~\emph{Unscaled gene inputs} feed log-expression on an arbitrary scale to the pathway MLPs; genes are min--max scaled with training-split statistics. (5)~\emph{Selection on the reported fold} biases every rule upward (Table~\ref{tab:selection}); a fixed budget, the final checkpoint and several seeds avoid it. (6)~\emph{Non-standard risk and dropout semantics}, $1 - S(T)$ as the risk or modality dropout per batch; risk is $-\sum_t S(t)$ and dropout is per sample. (7)~\emph{Extreme times in the Brier grid} evaluate where a single patient is at risk; the interior quartile edges are used. (8)~\emph{Untruncated IPCW weights} diverge as the censoring survival function approaches zero; Uno's \cindex{} is truncated at the 75th percentile of training event times.
 
 \section{Run Inventory and Compute}
 \label{sec:runs}
-The archive holds 204 cohort-level GPU runs, each of five folds, and 13 cohort-level runs trained on a laptop CPU. The GPU runs are: 34 in the first multi-cohort campaign, namely 24 under the earlier validation-loss protocol and the single-seed 10-epoch runs of \pq{} and SurvPath on five cohorts; 31 BLCA fusion-block ablations, late fusion and 10-epoch seeds 1--2 of \pq{} and SurvPath; 128 under the 20-epoch DSS protocol (the nine methods of Table~\ref{tab:methods} on five cohorts with the seeds listed there); 10 under the OS endpoint (\pq{} and SurvPath on five cohorts); and one 20-epoch learning-rate check on BLCA (Section~\ref{sec:training}). The laptop runs are the eight BLCA seed-0 runs of the validation-loss campaign and the five final-configuration ablations of Table~\ref{tab:finalconfig}. The validation-loss campaign (patience 5, minimum 6 epochs, 20-epoch budget) comprises 29 cohort-level runs with 145 folds: SurvPath, ABMIL, SNN, the RNA MLP and the earlier fusion configuration on five cohorts, with three seeds on BLCA for SurvPath and the fusion configuration (Table~\ref{tab:selection}B; three further BLCA \pq{} runs, one without warm-up and the slide-only and RNA-only variants of the earlier fusion configuration, are archived but not tabulated). It selected epoch 1 on median (mean 2.2; 82\% of folds epoch 1--3), trained 7.2 epochs on average, and reported a mean \cindex{} of 0.543 against 0.644 at the best epoch of the same runs, with 14 of 25 method $\times$ cohort cells within 0.45--0.55; at or below 0.55 the counts are STAD 4 of 5, HNSC 5 of 5 and BRCA 4 of 5, the exceptions being SurvPath on STAD (0.610) and SNN on BRCA (0.572). Replaying each run's own rule on its stored history reproduces the stored selected epoch and reported \cindex{} in 145 of 145 folds.
+The archive holds 204 cohort-level GPU runs, each of five folds, and 13 cohort-level runs trained on a laptop CPU. The GPU runs are: 34 in the first multi-cohort campaign, namely 24 under the earlier validation-loss protocol and the single-seed 10-epoch runs of \pq{} and SurvPath on five cohorts; 31 BLCA fusion-block ablations, late fusion and 10-epoch seeds 1--2 of \pq{} and SurvPath; 128 under the 20-epoch DSS protocol (the nine methods of Table~\ref{tab:methods} on five cohorts with the seeds listed there); 10 under the OS endpoint (\pq{} and SurvPath on five cohorts); and one 20-epoch learning-rate check on BLCA (Section~\ref{sec:training}). The laptop runs are the eight BLCA seed-0 runs of the validation-loss campaign and the five final-configuration ablations of Table~\ref{tab:finalconfig}. The 275 trained fold models on the Hugging Face Hub (18 GB) are \pqf{} and \pqm{} at three seeds, SurvPath and the slide-only and RNA-only \pq{}s at seed 0, on the five cohorts, plus the two OS runs: 11 run configurations $\times$ five cohorts $\times$ five folds. The validation-loss campaign (patience 5, minimum 6 epochs, 20-epoch budget) comprises 29 cohort-level runs with 145 folds: SurvPath, ABMIL, SNN, the RNA MLP and the earlier fusion configuration on five cohorts, with three seeds on BLCA for SurvPath and the fusion configuration (Table~\ref{tab:selection}(B); three further BLCA \pq{} runs, one without warm-up and the slide-only and RNA-only variants of the earlier fusion configuration, are archived but not tabulated). It selected epoch 1 on median (mean 2.2; 82\% of folds epoch 1--3), trained 7.2 epochs on average, and reported a mean \cindex{} of 0.543 against 0.644 at the best epoch of the same runs, with 14 of 25 method $\times$ cohort cells within 0.45--0.55; at or below 0.55 the counts are STAD 4 of 5, HNSC 5 of 5 and BRCA 4 of 5, the exceptions being SurvPath on STAD (0.610) and SNN on BRCA (0.572). Replaying each run's own rule on its stored history reproduces the stored selected epoch and reported \cindex{} in 145 of 145 folds.
 
-Across the 128 runs of the 20-epoch DSS protocol, the standard deviation of the \cindex{} over the five folds of a run ranges from 0.03 (SNN on BRCA at seed 1; both \pq{} variants on HNSC at seed 0) to 0.25 (COADREAD, \pq{} at seed 1); on COADREAD it is 0.12--0.25 for the fusion models and 0.05--0.25 over all methods, which is why per-cohort tests with five folds are exploratory. Every run stores its results, configuration, per-fold predictions and per-epoch histories (late-fusion runs: results and predictions only); GPU runs used rented RTX PRO 4000/4500 and RTX 2000 Ada GPUs sharing a network volume.
+Across the 128 runs of the 20-epoch DSS protocol, the standard deviation of the \cindex{} over the five folds of a run ranges from 0.03 (lowest: SNN on BRCA at seed 1) to 0.25 (COADREAD, \pq{} at seed 1); on COADREAD it is 0.12--0.25 for the fusion models and 0.05--0.25 over all methods, so per-cohort tests with five folds are exploratory. Every run stores results, configuration, per-fold predictions and per-epoch histories (late fusion: results and predictions only); GPU runs used rented RTX PRO 4000/4500 and RTX 2000 Ada GPUs.
 
 \end{document}

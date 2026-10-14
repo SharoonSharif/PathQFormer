@@ -1,7 +1,7 @@
 % PathQ-Former overview: (a) training, (b) inference.
 % Standalone tikzpicture; \input it inside a figure environment.
 % Needs tikz with libraries positioning, arrows.meta, calc.
-% Colours: histology = blue, transcriptomics = orange, shared parts = neutral gray.
+% Colors: histology = blue, transcriptomics = orange, shared parts = neutral gray.
 \begin{tikzpicture}[x=1mm, y=1mm, font=\footnotesize, line width=0.5pt,
   >={Latex[length=1.6mm, width=1.3mm]},
   box/.style={draw, rounded corners=1.2pt, align=center, inner xsep=2pt, inner ysep=1.5pt, minimum height=7mm},
@@ -25,8 +25,8 @@
 \definecolor{neut}{HTML}{52514E}
 
 % ---------------- (a) Training ----------------
-\node[plab] at (0,32.5) {(a) Training};
-\node[hbox, text width=16mm, anchor=west] (wsi) at (0,13.5) {WSI patch\\embeddings};
+\node[plab] at (0,30.5) {(a) Training};
+\node[hbox, text width=16mm, anchor=west] (wsi) at (0,12.5) {WSI patch\\embeddings};
 \node[gbox, text width=16mm, anchor=west] (rna) at (0,0)    {pathway\\tokens};
 \node[hbox, text width=17mm, right=3mm of wsi] (qh) {histology\\query block\\(32 queries)};
 \node[gbox, text width=17mm, right=3mm of rna] (qg) {genomic\\query block\\(32 queries)};
@@ -37,10 +37,10 @@
 \node[nbox, text width=14mm, right=3mm of fus] (haz) {hazards\\$h_1,\dots,h_4$};
 \node[nbox, text width=7mm,  right=3mm of haz] (loss) {loss\\$\mathcal{L}$};
 % null codes (modality dropout) and auxiliary heads, above/below the code row
-\node[hnull, text width=24mm] (nh) at ($(zh.north)+(-9mm,8.5mm)$) {null code $N^h$\\dropout $p = 0.15$};
-\node[gnull, text width=24mm] (ng) at ($(zg.south)+(-9mm,-8.5mm)$) {null code $N^g$\\dropout $p = 0.15$};
-\node[haux, text width=40mm, anchor=west] (ah) at ($(zh.north)+(8mm,8.5mm)$)  {attention pool $\to$ aux.\ loss $\mathcal{L}_h$\\(training only)};
-\node[gaux, text width=40mm, anchor=west] (ag) at ($(zg.south)+(8mm,-8.5mm)$) {attention pool $\to$ aux.\ loss $\mathcal{L}_g$\\(training only)};
+\node[hnull, text width=24mm] (nh) at ($(zh.north)+(-9mm,7.5mm)$) {null code $N^h$\\dropout $p = 0.15$};
+\node[gnull, text width=24mm] (ng) at ($(zg.south)+(-9mm,-7.5mm)$) {null code $N^g$\\dropout $p = 0.15$};
+\node[haux, text width=40mm, anchor=west] (ah) at ($(zh.north)+(8mm,7.5mm)$)  {attention pool $\to$ aux.\ loss $\mathcal{L}_h$\\(training only)};
+\node[gaux, text width=40mm, anchor=west] (ag) at ($(zg.south)+(8mm,-7.5mm)$) {attention pool $\to$ aux.\ loss $\mathcal{L}_g$\\(training only)};
 % main flow
 \draw[harr] (wsi) -- (qh);
 \draw[harr] (qh) -- (zh);
@@ -59,8 +59,8 @@
 
 % ---------------- (b) Inference ----------------
 \coordinate (b0) at (loss.east |- 0,0);
-\draw[neut!40] ($(b0)+(4,32.5)$) -- ($(b0)+(4,-16.5)$);
-\node[plab] at ($(b0)+(6,32.5)$) {(b) Inference};
+\draw[neut!40] ($(b0)+(4,30.5)$) -- ($(b0)+(4,-15.5)$);
+\node[plab] at ($(b0)+(6,30.5)$) {(b) Inference};
 \node[anchor=east, align=right, inner sep=0pt] at ($(b0)+(20,16)$) {both\\modalities};
 \node[anchor=east, align=right, inner sep=0pt] at ($(b0)+(20,6)$)  {slide\\only};
 \node[anchor=east, align=right, inner sep=0pt] at ($(b0)+(20,-4)$) {RNA\\only};
