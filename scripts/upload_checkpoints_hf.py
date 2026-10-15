@@ -28,7 +28,7 @@ tags:
 library_name: pytorch
 ---
 
-# PathQ-Former checkpoints
+# NullQ-Former checkpoints
 
 Trained checkpoints behind the tables in <https://github.com/SharoonSharif/PathQFormer> (REPORT.md).
 Protocol: SurvPath 5-fold patient-level splits, disease-specific survival, fixed 20-epoch budget, final checkpoint.
@@ -79,11 +79,11 @@ def main() -> None:
         patterns += [f"{run}/*/fold_*/best_checkpoint.pt", f"{run}/*/results.json", f"{run}/*/summary.md", f"{run}/*/config.yaml"]
         cohorts = sorted(p.name for p in rd.iterdir() if p.is_dir())
         n_ckpt = len(list(rd.glob("*/fold_*/best_checkpoint.pt")))
-        model = "SurvPath (official code)" if run.startswith("survpath") else "PathQ-Former + aux heads" if "aux" in run else "PathQ-Former"
+        model = "SurvPath (official code)" if run.startswith("survpath") else "NullQ-Former + aux heads" if "aux" in run else "NullQ-Former"
         if "wsi_only" in run:
-            model = "PathQ-Former, WSI only"
+            model = "NullQ-Former, WSI only"
         if "genomic_only" in run:
-            model = "PathQ-Former, RNA only"
+            model = "NullQ-Former, RNA only"
         seed = run.rsplit("_seed", 1)[1] if "_seed" in run else "0"
         rows.append(f"| `{root.name}/{run}` | {model} | {seed} | {', '.join(c.upper() for c in cohorts)} ({n_ckpt} checkpoints) |")
 

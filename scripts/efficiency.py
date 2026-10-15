@@ -1,11 +1,11 @@
-"""Compute cost of PathQ-Former vs the official SurvPath on real validation patients.
+"""Compute cost of NullQ-Former vs the official SurvPath on real validation patients.
 
     python scripts/efficiency.py --config configs/protocol_fixed/pathq_fast_e20_aux.yaml \
         --baseline configs/protocol_fixed/survpath_e20.yaml --n 40 --out results/efficiency.md
 
 Reports trainable parameters, median forward latency per patient, median forward+backward latency, and
-peak GPU memory, each model on the input it was trained with (PathQ-Former: every patch; SurvPath: its
-4096-patch subsample) and PathQ-Former additionally on a 4096-patch subsample for a like-for-like point.
+peak GPU memory, each model on the input it was trained with (NullQ-Former: every patch; SurvPath: its
+4096-patch subsample) and NullQ-Former additionally on a 4096-patch subsample for a like-for-like point.
 """
 
 from __future__ import annotations
@@ -91,8 +91,8 @@ def main() -> None:
     args = ap.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     rows = [
-        profile(args.config, "PathQ-Former (all patches)", device, args.n, None, args.embeddings_dir),
-        profile(args.config, "PathQ-Former (4096 patches)", device, args.n, 4096, args.embeddings_dir),
+        profile(args.config, "NullQ-Former (all patches)", device, args.n, None, args.embeddings_dir),
+        profile(args.config, "NullQ-Former (4096 patches)", device, args.n, 4096, args.embeddings_dir),
         profile(args.baseline, "SurvPath (4096 patches, as trained)", device, args.n, 4096, args.embeddings_dir),
         profile(args.baseline, "SurvPath (all patches)", device, args.n, None, args.embeddings_dir),
     ]

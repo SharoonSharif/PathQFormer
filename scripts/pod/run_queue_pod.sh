@@ -11,7 +11,7 @@
 #
 # Environment knobs (defaults in brackets):
 #   COHORTS  [STAD HNSC COADREAD BRCA]   SEEDS [0]   WORKERS [6]   OUT [/workspace/outputs_v2]
-#   CONFIGS  [PathQ-Former hybrid + SurvPath + ABMIL + SNN + MLP baselines]
+#   CONFIGS  [NullQ-Former hybrid + SurvPath + ABMIL + SNN + MLP baselines]
 #   CACHE_COHORTS [BLCA STAD HNSC COADREAD]  cohorts whose features are cached in RAM as float16
 #            (epochs after the first become compute-bound; BRCA's 66 GB is left on disk)
 #   EXTRA    []  extra "key=value,key=value" overrides appended to every run

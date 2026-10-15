@@ -1,4 +1,4 @@
-# PathQ-Former default configuration
+# NullQ-Former default configuration
 # Usage: python -m src.training.train --config configs/default.yaml --cancer_type blca
 
 # === Data paths ===

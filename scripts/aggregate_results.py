@@ -125,7 +125,7 @@ def main():
     runs = load_runs(args.roots)
     if not runs:
         raise SystemExit("no results.json found")
-    lines = ["# PathQ-Former results", "", f"{len(runs)} run(s) under {', '.join(args.roots)}", "", *main_table(runs)]
+    lines = ["# NullQ-Former results", "", f"{len(runs)} run(s) under {', '.join(args.roots)}", "", *main_table(runs)]
     lines += missing_table(runs) + per_fold_table(runs)
     if args.compare:
         lines += comparisons(runs, args.compare)

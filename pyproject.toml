@@ -1,7 +1,7 @@
 [project]
 name = "pathqformer"
 version = "0.3.0"
-description = "PathQ-Former: query-based multimodal fusion of WSI and pathway tokens for cancer survival prediction"
+description = "NullQ-Former: query-based multimodal fusion of WSI and pathway tokens for cancer survival prediction"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 readme = "README.md"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Pod batch 4 (2026-09-11) - fourth pod on the shared volume; writes to /workspace/outputs_e20.
-#   20-epoch fixed budget for PathQ-Former (fast schedule), PathQ-Former + auxiliary unimodal heads, and the
+#   20-epoch fixed budget for NullQ-Former (fast schedule), NullQ-Former + auxiliary unimodal heads, and the
 #   official SurvPath, seed 0 on all five cohorts, then seeds 1-2. The per-epoch histories also give the
 #   10-epoch numbers post hoc (scripts/epoch_curves.py).
 # Removes its pod at the end. Launch detached:

@@ -1,4 +1,4 @@
-# PathQ-Former — Master Plan
+# NullQ-Former — Master Plan
 
 > **Status 2026-09-21:** this plan is the historical working document (last revised 2026-09-10). All planned
 > experiments are complete; the results and the current state of the project are in `REPORT.md`, the
@@ -60,7 +60,7 @@ WSI Patches (frozen UNI2-h)         Genomic Pathways (learnable)
                 → NLL-Survival Loss
 ```
 
-**Trainable parameters**: ~16.7M (10.4M pathway tokenizer + 6.3M PathQ-Former)
+**Trainable parameters**: ~16.7M (10.4M pathway tokenizer + 6.3M NullQ-Former)
 **WSI encoder**: UNI2-h (ViT-H/14, 1536-d, frozen pre-extracted embeddings from MahmoodLab/UNI2-h-features)
 **Missing-modality**: Learned null token embeddings + modality dropout (p=0.15) during training
 
@@ -159,7 +159,7 @@ Fix the fold-3 problem without losing the gains on other folds:
 - [ ] Compile cross-cancer results table
 
 ### Expected output
-| Cancer | PathQ-Former | MCAT | SurvPath | MMP |
+| Cancer | NullQ-Former | MCAT | SurvPath | MMP |
 |--------|-------------|------|----------|-----|
 | BLCA | ? | ~0.58-0.61 | ~0.60-0.63 | ~0.61-0.64 |
 | BRCA | ? | ~0.60-0.63 | ~0.62-0.65 | ~0.63-0.66 |
@@ -237,7 +237,7 @@ Train ONE model with modality_dropout=0.15 (already done in tuned config). At te
 3. **Genomics only** — pass wsi_features=None (model uses learned null token)
 
 ### Expected results table (Table 3 in paper)
-| Test Condition | PathQ-Former | MCAT* | SurvPath* |
+| Test Condition | NullQ-Former | MCAT* | SurvPath* |
 |---------------|-------------|-------|----------|
 | Both | 0.XX | 0.XX | 0.XX |
 | WSI only | 0.XX | N/A** | N/A** |
@@ -265,7 +265,7 @@ Train ONE model with modality_dropout=0.15 (already done in tuned config). At te
 - [ ] **Kaplan-Meier stratification**: Split patients into risk groups (high/medium/low by predicted risk), plot KM curves, report log-rank p-value. Visual proof the model separates survivors from non-survivors.
 
 ### Statistical significance
-- [ ] **Paired t-test or Wilcoxon signed-rank** across 5 folds: Is PathQ-Former vs SurvPath improvement statistically significant (p < 0.05)?
+- [ ] **Paired t-test or Wilcoxon signed-rank** across 5 folds: Is NullQ-Former vs SurvPath improvement statistically significant (p < 0.05)?
 - [ ] **95% confidence intervals** on mean C-Index (not just mean +/- std)
 - [ ] **Bootstrap resampling** (1000 iterations) within each fold for per-fold CIs
 - [ ] Report p-values in all comparison tables
@@ -319,13 +319,13 @@ The metadata supports multiple survival endpoints. We should report on at least 
 ### Paper structure
 1. **Introduction**: Clinical motivation (missing modalities in practice), Q-Former for pathology
 2. **Related Work**: MCAT, MOTCat, SurvPath, MMP, BLIP-2/Q-Former lineage
-3. **Method**: PathQ-Former architecture, pathway tokenization, modality dropout, NLL loss
+3. **Method**: NullQ-Former architecture, pathway tokenization, modality dropout, NLL loss
 4. **Experiments**:
    - Table 1: 5-cancer comparison vs baselines (Phase 3+6)
    - Table 2: Ablation studies (Phase 4)
    - Table 3: Missing-modality robustness (Phase 5)
    - Figure: Architecture diagram, training curves, attention visualization
-5. **Discussion**: When PathQ-Former helps, limitations, clinical applicability
+5. **Discussion**: When NullQ-Former helps, limitations, clinical applicability
 
 ### Figures needed
 - [ ] Architecture diagram (main figure, TikZ or draw.io)
@@ -393,7 +393,7 @@ Test sensitivity to the frozen encoder:
 - [ ] CONCH (512-d) — pathology-specific CLIP
 - [ ] CTransPath (768-d) — older but widely used
 - [ ] ResNet-50 ImageNet (1024-d) — weakest, used by original SurvPath
-- **Goal**: Show PathQ-Former architecture helps regardless of encoder quality
+- **Goal**: Show NullQ-Former architecture helps regardless of encoder quality
 
 ---
 
@@ -431,7 +431,7 @@ Test sensitivity to the frozen encoder:
 | MOTCat | AAAI 2023 | WSI + genomics | Optimal transport + cross-attention |
 | SurvPath | CVPR 2024 | WSI + pathways | Pathway-level tokenization + cross-attention |
 | MMP | ICML 2024 | WSI + genomics | Masked multimodal pretraining |
-| **PathQ-Former** | **Ours** | **WSI + pathways** | **Q-Former queries + missing-modality robustness** |
+| **NullQ-Former** | **Ours** | **WSI + pathways** | **Q-Former queries + missing-modality robustness** |
 
 ### BLCA C-Index ranges (DSS, from literature)
 | Method | C-Index (approx) |
@@ -441,7 +441,7 @@ Test sensitivity to the frozen encoder:
 | MOTCat | ~0.59-0.62 |
 | SurvPath | ~0.60-0.63 |
 | MMP | ~0.61-0.64 |
-| **PathQ-Former (tuned, partial)** | **~0.68** (folds 0-1 mean) |
+| **NullQ-Former (tuned, partial)** | **~0.68** (folds 0-1 mean) |
 
 ---
 
@@ -470,7 +470,7 @@ PathQFormer/
 │   ├── blca.yaml
 │   └── blca_tuned.yaml
 ├── src/
-│   ├── models/           # PathQ-Former architecture
+│   ├── models/           # NullQ-Former architecture
 │   │   ├── pathqformer.py
 │   │   ├── query_block.py
 │   │   ├── fusion_block.py
@@ -515,4 +515,4 @@ After Phase 2 finishes, this is the recommended sequence based on impact-per-hou
 | 2026-05-19 | Created plan. Phase 1 complete, Phase 2 in progress. |
 | 2026-05-19 | Expanded plan: added Phase 5B (statistical rigor), Phase 8 (extensions), ablations 4F-4G, priority order, additional tables/figures, risk mitigations. |
 | 2026-09-10 | Protocol audit (6 defects), v2 pipeline with patient-level data, train-fit bins/scaler, continuous-time C-index, val-loss selection, seeds; Phase 5 + 5B metrics and Phase 4E ablations automated; pytest suite; first git commit; BLCA v2 queue launched on local CPU. |
-| 2026-09-10 | Phase 6 started: official SurvPath + ABMIL + SNN + MLP baselines run through the same trainer (`model_type`), SurvPath-repo hyper-parameters, chained after the PathQ-Former queue. Analysis script (KM, curves, missing-modality plot, pathway attention) and generic v2 Colab notebook added. MCAT deferred (6-family gene groups not in the cloned data). |
+| 2026-09-10 | Phase 6 started: official SurvPath + ABMIL + SNN + MLP baselines run through the same trainer (`model_type`), SurvPath-repo hyper-parameters, chained after the NullQ-Former queue. Analysis script (KM, curves, missing-modality plot, pathway attention) and generic v2 Colab notebook added. MCAT deferred (6-family gene groups not in the cloned data). |

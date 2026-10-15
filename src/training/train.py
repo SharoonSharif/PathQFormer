@@ -1,4 +1,4 @@
-"""PathQ-Former training with 5-fold cross-validation on SurvPath's splits.
+"""NullQ-Former training with 5-fold cross-validation on SurvPath's splits.
 
 Rigor built in:
   * every fold is seeded (``seed + fold``); config, seed and git commit are stored with results
@@ -707,7 +707,7 @@ def parse_overrides(items: list[str] | None) -> dict:
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Train PathQ-Former with k-fold CV")
+    parser = argparse.ArgumentParser(description="Train NullQ-Former with k-fold CV")
     parser.add_argument("--config", required=True)
     parser.add_argument("--cancer_type", default=None)
     parser.add_argument("--device", default=None, help="cpu | cuda | cuda:N")

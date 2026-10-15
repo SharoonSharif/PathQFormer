@@ -2,9 +2,9 @@
 # Pod batch 6 (2026-09-14): the experiments that complete the paper, cheapest and most valuable first.
 #   1. efficiency benchmark (minutes)
 #   2. single-modality baselines under the fixed 20-epoch budget, five cohorts (ABMIL, SNN, MLP; ~2 h)
-#   3. mean-imputation missing-modality evaluation of the finished SurvPath and PathQ-Former 20-epoch runs (eval only)
-#   4. single-modality PathQ-Former at 20 epochs on five cohorts + late-fusion baseline per cohort (~8 h)
-#   5. second endpoint: overall survival (OS) for PathQ-Former+aux and SurvPath, five cohorts, seed 0 (~10 h)
+#   3. mean-imputation missing-modality evaluation of the finished SurvPath and NullQ-Former 20-epoch runs (eval only)
+#   4. single-modality NullQ-Former at 20 epochs on five cohorts + late-fusion baseline per cohort (~8 h)
+#   5. second endpoint: overall survival (OS) for NullQ-Former+aux and SurvPath, five cohorts, seed 0 (~10 h)
 # Everything resumes. Removes its pod at the end. Launch detached:
 #   setsid bash scripts/pod/batch6.sh > /workspace/logs/pod_batch6.out 2>&1 < /dev/null &
 set -uo pipefail
@@ -26,7 +26,7 @@ for c in blca stad hnsc coadread brca; do
   python3 scripts/eval_missing_impute.py "$E20/survpath_e20/$c" "$E20/pathq_fast_e20_aux/$c" "$E20/pathq_fast_e20/$c" 2>&1 | grep -E "^==|fold" || true
 done
 
-echo "[batch6] $(date '+%F %T') 4. single-modality PathQ-Former 20 ep + late fusion"
+echo "[batch6] $(date '+%F %T') 4. single-modality NullQ-Former 20 ep + late fusion"
 KEEP_POD=1 OUT=$E20 COHORTS="$COH" SEEDS="0" \
   CONFIGS="configs/protocol_fixed/pathq_e20_wsi_only.yaml configs/protocol_fixed/pathq_e20_genomic_only.yaml" bash scripts/pod/run_queue_pod.sh
 for c in blca stad hnsc coadread brca; do

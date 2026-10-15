@@ -1,4 +1,4 @@
-# wsi-only PathQ-Former, 20-epoch budget: ingredient of the late-fusion baseline (scripts/late_fusion.py).
+# wsi-only NullQ-Former, 20-epoch budget: ingredient of the late-fusion baseline (scripts/late_fusion.py).
 survpath_dir: data/survpath_repo
 embeddings_dir: data/embeddings/uni2h
 output_dir: outputs_e20/pathq_e20_wsi_only

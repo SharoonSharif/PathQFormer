@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run a queue of PathQ-Former configs sequentially on this machine, logging each to logs/.
+# Run a queue of NullQ-Former configs sequentially on this machine, logging each to logs/.
 # Every run resumes automatically (finished folds are skipped), so re-running the queue is safe.
 #
 #   bash scripts/run_experiments.sh configs/blca_hybrid_v2.yaml configs/ablation/blca_wsi_only.yaml ...

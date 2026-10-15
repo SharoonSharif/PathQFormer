@@ -1,4 +1,4 @@
-# Official SurvPath submodules + PathQ-Former recipe (learned null tokens, modality dropout 0.15, aux heads 0.5),
+# Official SurvPath submodules + NullQ-Former recipe (learned null tokens, modality dropout 0.15, aux heads 0.5),
 # fixed budget 20 epochs (symmetric with survpath_e20 / pathq_fast_e20_aux). Tests whether the robustness gap is
 # the architecture or the training recipe.
 survpath_dir: data/survpath_repo

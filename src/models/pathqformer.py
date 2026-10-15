@@ -1,4 +1,4 @@
-"""PathQ-Former: Q-Former-based multimodal fusion for computational pathology survival prediction."""
+"""NullQ-Former: Q-Former-based multimodal fusion for computational pathology survival prediction."""
 
 from __future__ import annotations
 

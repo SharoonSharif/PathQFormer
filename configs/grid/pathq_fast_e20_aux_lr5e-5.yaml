@@ -1,4 +1,4 @@
-# PathQ-Former + aux grid point under the fixed 20-epoch protocol: lr 5e-5 (final config: 1e-4). Symmetric tuning budget with the SurvPath grid.
+# NullQ-Former + aux grid point under the fixed 20-epoch protocol: lr 5e-5 (final config: 1e-4). Symmetric tuning budget with the SurvPath grid.
 survpath_dir: data/survpath_repo
 embeddings_dir: data/embeddings/uni2h
 output_dir: outputs_grid/pathq_fast_e20_aux_lr5e-5

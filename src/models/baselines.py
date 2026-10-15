@@ -7,14 +7,14 @@
                  Linear -> ELU -> AlphaDropout blocks [G, 256, 256].
 * ``MLPOmics``   genomics-only MLP as in the SurvPath repository (projection 512 -> two 256 layers).
 * ``SurvPathBaseline``  the **official** SurvPath model (Jaume et al., CVPR 2024) imported from the cloned
-                 repository, fed the same 275 pathway groupings that PathQ-Former's tokenizer uses.
+                 repository, fed the same 275 pathway groupings that NullQ-Former's tokenizer uses.
 
-Every baseline exposes PathQ-Former's forward signature
+Every baseline exposes NullQ-Former's forward signature
 ``forward(wsi_features, genomic_features, wsi_mask, drop_wsi, drop_genomic, return_attention)`` and
 receives the scaled (B, G) gene vector as ``genomic_features`` (the "tokenizer" is ``GenePassthrough``).
 None of them can run with a missing modality, so ``supports_missing = False``. ``SurvPathRecipe``
 (``src/models/survpath_recipe.py``, registered as ``"survpath_recipe"``) is the exception: the official
-SurvPath submodules plus PathQ-Former's null tokens / modality dropout / auxiliary heads.
+SurvPath submodules plus NullQ-Former's null tokens / modality dropout / auxiliary heads.
 """
 
 from __future__ import annotations
@@ -118,7 +118,7 @@ class MLPOmics(nn.Module):
 class SurvPathBaseline(nn.Module):
     """Official SurvPath (Jaume et al., CVPR 2024) from the cloned repository, batch size 1.
 
-    The pathway groups are the same filtered composition used by PathQ-Former's tokenizer
+    The pathway groups are the same filtered composition used by NullQ-Former's tokenizer
     (``min_genes`` / ``max_genes``), so both models see identical genomic inputs.
     """
 

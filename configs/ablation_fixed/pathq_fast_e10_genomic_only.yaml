@@ -1,4 +1,4 @@
-# Ablation (fixed-budget protocol, 10 epochs, final checkpoint): genomics-only PathQ-Former (for the late-fusion baseline)
+# Ablation (fixed-budget protocol, 10 epochs, final checkpoint): genomics-only NullQ-Former (for the late-fusion baseline)
 # Base: configs/protocol_fixed/pathq_fast_e10.yaml
 survpath_dir: data/survpath_repo
 embeddings_dir: data/embeddings/uni2h

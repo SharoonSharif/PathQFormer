@@ -4,7 +4,7 @@
 #   powershell -ExecutionPolicy Bypass -File scripts\resume_local_queue.ps1
 #
 # Starts three detached processes (they survive closing the terminal):
-#   1. the main queue (PathQ-Former hybrid, WSI-only, genomics-only, old hyper-parameters)
+#   1. the main queue (NullQ-Former hybrid, WSI-only, genomics-only, old hyper-parameters)
 #   2. the baseline queue, which waits for the main queue to finish
 #   3. the finalizer, which waits for the baselines and then recomputes metrics, builds
 #      results/summary_all.md and renders figures

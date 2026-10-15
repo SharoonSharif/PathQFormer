@@ -1,4 +1,4 @@
-"""Baselines expose PathQ-Former's forward contract and run on CPU."""
+"""Baselines expose NullQ-Former's forward contract and run on CPU."""
 
 from pathlib import Path
 

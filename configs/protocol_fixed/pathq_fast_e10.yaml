@@ -2,7 +2,7 @@
 # checkpoint (selection_metric: last) - the MCAT/SurvPath convention. Motivation: with 7-16 events per
 # validation fold, val-loss selection picked epoch 1-3 checkpoints for every method on STAD/HNSC/BRCA and
 # all of them landed near chance. Best-epoch numbers are still logged as an optimistic upper bound.
-# PathQ-Former: lr 1e-4, 2-step accumulation, 1 warmup epoch, 10 epochs.
+# NullQ-Former: lr 1e-4, 2-step accumulation, 1 warmup epoch, 10 epochs.
 survpath_dir: data/survpath_repo
 embeddings_dir: data/embeddings/uni2h
 output_dir: outputs_v2/pathq_fast_e10

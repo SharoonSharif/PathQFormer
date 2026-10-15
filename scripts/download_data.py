@@ -1,5 +1,5 @@
 """
-Download and prepare TCGA data for PathQ-Former.
+Download and prepare TCGA data for NullQ-Former.
 
 Downloads:
   1. Clinical + survival data from UCSC Xena
@@ -135,7 +135,7 @@ def create_pathway_json(output_dir: Path) -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Download TCGA data for PathQ-Former")
+    parser = argparse.ArgumentParser(description="Download TCGA data for NullQ-Former")
     parser.add_argument("--cancer_type", type=str, default="BLCA", choices=list(CANCER_TYPES.keys()))
     parser.add_argument("--output_dir", type=str, default="data")
     parser.add_argument("--num_bins", type=int, default=4)

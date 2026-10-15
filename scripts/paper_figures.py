@@ -7,21 +7,21 @@ Produces, in --out (existing files are never overwritten unless --overwrite is g
   audit_deltas.pdf          change in C-index of the SAME checkpoint relative to its complete-input
                             evaluation under four test-time conditions (RNA removed, RNA permuted
                             across patients, slide removed, slide permuted), for SurvPath (mean
-                            imputation), PathQ-Former w/o aux heads and PathQ-Former (null codes);
+                            imputation), NullQ-Former w/o aux heads and NullQ-Former (null codes);
                             (a) pooled over cohorts with 95 % bootstrap CIs, (b) per cohort.
   missing_rate_seeds.pdf    per cohort, C-index when 0/10/20/30/50 % of validation patients lack one
-                            modality at random, PathQ-Former and PathQ-Former w/o aux heads, mean over
+                            modality at random, NullQ-Former and NullQ-Former w/o aux heads, mean over
                             three seeds with a +-sd band; SurvPath's complete-input score as reference.
   epoch_curves_pooled.pdf   validation C-index per epoch pooled over cohorts and folds, mean +-sd
-                            over seeds, for PathQ-Former, PathQ-Former w/o aux heads and SurvPath.
+                            over seeds, for NullQ-Former, NullQ-Former w/o aux heads and SurvPath.
   epoch_curves_by_cohort.pdf  the same per cohort (2 x 3 panels).
 
 Condition mapping (test-time, same checkpoint):
-  RNA removed     -> `wsi_only`       (PathQ-Former, null code)  / `wsi_only_impute`     (SurvPath, training mean)
+  RNA removed     -> `wsi_only`       (NullQ-Former, null code)  / `wsi_only_impute`     (SurvPath, training mean)
   RNA permuted    -> `rna_permuted`   (gene vectors permuted across validation patients)
-  Slide removed   -> `genomic_only`   (PathQ-Former, null code)  / `genomic_only_impute` (SurvPath, training mean)
+  Slide removed   -> `genomic_only`   (NullQ-Former, null code)  / `genomic_only_impute` (SurvPath, training mean)
   Slide permuted  -> `wsi_permuted`   (patch embeddings permuted across validation patients)
-PathQ-Former w/o aux heads (pathq_fast_e20) has no permuted conditions; those cells are marked n/a.
+NullQ-Former w/o aux heads (pathq_fast_e20) has no permuted conditions; those cells are marked n/a.
 
 Seed convention: runs are <root>/<run>[_seed<N>]; fold k is the same validation split in every run.
 Audit deltas: per (cohort, fold) the delta is averaged over the available seeds, then summarised over the
@@ -54,8 +54,8 @@ EPOCHS = 20
 
 # ordered: the order of bars/legend entries in every figure
 MODELS = {
-    "pathq": dict(run="pathq_fast_e20_aux", label="PathQ-Former"),
-    "pathq_noaux": dict(run="pathq_fast_e20", label="PathQ-Former w/o aux heads"),
+    "pathq": dict(run="pathq_fast_e20_aux", label="NullQ-Former"),
+    "pathq_noaux": dict(run="pathq_fast_e20", label="NullQ-Former w/o aux heads"),
     "survpath": dict(run="survpath_e20", label="SurvPath"),
 }
 

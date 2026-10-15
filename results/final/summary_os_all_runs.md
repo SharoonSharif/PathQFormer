@@ -1,4 +1,4 @@
-# PathQ-Former results
+# NullQ-Former results
 
 10 run(s) under pod_results/outputs_os
 

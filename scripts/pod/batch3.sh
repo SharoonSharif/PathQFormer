@@ -3,7 +3,7 @@
 #   Phase A: BLCA fusion ablations under the fixed-budget protocol (modality dropout, K, fusion depth,
 #            single-modality models for the late-fusion baseline), then the late-fusion baseline itself.
 #   Phase B: SurvPath seeds 1-2 on all five cohorts (fixed budget).
-#   Phase C: PathQ-Former (fast schedule) seeds 1-2 on all five cohorts (fixed budget) - last, so it can be
+#   Phase C: NullQ-Former (fast schedule) seeds 1-2 on all five cohorts (fixed budget) - last, so it can be
 #            re-pointed at a better configuration if phase A finds one.
 # The pod removes itself after phase C. Launch detached:
 #   setsid bash scripts/pod/batch3.sh > /workspace/logs/pod_batch3.out 2>&1 < /dev/null &
@@ -24,6 +24,6 @@ python3 scripts/late_fusion.py "$OUT/pathq_fast_e10_wsi_only/blca" "$OUT/pathq_f
 echo "[batch3] $(date '+%F %T') phase B: SurvPath seeds 1-2, five cohorts (fixed budget)"
 KEEP_POD=1 COHORTS="BLCA STAD HNSC COADREAD BRCA" SEEDS="1 2" CONFIGS="configs/protocol_fixed/survpath_e10.yaml" bash scripts/pod/run_queue_pod.sh
 
-echo "[batch3] $(date '+%F %T') phase C: PathQ-Former seeds 1-2, five cohorts (fixed budget)"
+echo "[batch3] $(date '+%F %T') phase C: NullQ-Former seeds 1-2, five cohorts (fixed budget)"
 COHORTS="BLCA STAD HNSC COADREAD BRCA" SEEDS="1 2" CONFIGS="configs/protocol_fixed/pathq_fast_e10.yaml" bash scripts/pod/run_queue_pod.sh
 echo "[batch3] $(date '+%F %T') done"

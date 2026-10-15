@@ -1,4 +1,4 @@
-# Component ablation: wsi-only PathQ-Former (other modality = learned null code at train AND test).
+# Component ablation: wsi-only NullQ-Former (other modality = learned null code at train AND test).
 # Everything else identical to configs/blca_hybrid_v2.yaml.
 survpath_dir: data/survpath_repo
 embeddings_dir: data/embeddings/uni2h

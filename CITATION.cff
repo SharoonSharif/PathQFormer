@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this code or the archived results, please cite it as below."
-title: "PathQ-Former: a missing-modality audit of histology-transcriptomics survival models and a one-checkpoint training recipe"
+title: "NullQ-Former: a missing-modality audit of histology-transcriptomics survival models and a one-checkpoint training recipe"
 type: software
 version: 0.3.0
 date-released: 2026-10-05
@@ -36,7 +36,7 @@ abstract: >-
   five folds): every checkpoint is re-evaluated with one input removed or permuted across patients and
   with a random fraction of patients lacking a modality. The official SurvPath implementation ranks
   patients the same way when its RNA input is permuted (+0.001 C-index) but loses 0.068 when the slide
-  is permuted and falls to 0.47-0.52 without it. PathQ-Former, a query-bottleneck fusion model of
+  is permuted and falls to 0.47-0.52 without it. NullQ-Former, a query-bottleneck fusion model of
   whole-slide-image patch embeddings and RNA-seq pathway tokens trained with learned null codes,
   modality dropout and auxiliary unimodal heads, responds to RNA (-0.023 under permutation), keeps a
   C-index of 0.54-0.62 with either input removed and moves by at most 0.025 when half of the patients

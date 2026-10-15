@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Pod batch 7 (2026-09-16): sharpen the single-modality baselines and get clean efficiency numbers.
 #   1. seeds 1-2 for ABMIL / SNN / MLP under the fixed 20-epoch budget, five cohorts (fast; the seed-0 MLP on
-#      RNA was within noise of PathQ-Former on BRCA/COADREAD, so its uncertainty matters for the paper)
+#      RNA was within noise of NullQ-Former on BRCA/COADREAD, so its uncertainty matters for the paper)
 #   2. efficiency benchmark on real BLCA patients with the GPU otherwise idle
 # Removes its pod at the end. Launch detached (or chain after batch 6 with scripts/pod/chain_on_pod.sh):
 #   setsid bash scripts/pod/batch7.sh > /workspace/logs/pod_batch7.out 2>&1 < /dev/null &

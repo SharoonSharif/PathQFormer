@@ -4,12 +4,12 @@
 
 Writes vector PDFs (serif, 9 pt, sized for the 5.5 in TMLR text width) into --outdir:
 
-  km_grid.pdf                2 x 5 Kaplan-Meier grid. Rows: PathQ-Former (pathq_fast_e20_aux) and
+  km_grid.pdf                2 x 5 Kaplan-Meier grid. Rows: NullQ-Former (pathq_fast_e20_aux) and
                              SurvPath (survpath_e20); columns: BLCA, BRCA, COADREAD, HNSC, STAD.
                              High- vs low-risk halves of the pooled out-of-fold validation
                              predictions of seed 0, 95% confidence bands, log-rank p per panel.
   pathway_importance_v2.pdf  Top-k pathway tokens by mean genomic cross-attention per cohort for
-                             PathQ-Former, one panel per cohort, asymmetric error bars.
+                             NullQ-Former, one panel per cohort, asymmetric error bars.
 
 Optional support files (not paper figures) go to --preview_dir: a PNG preview of each figure and a
 JSON file with every number behind the panels.
@@ -64,7 +64,7 @@ REPO = Path(__file__).resolve().parents[1]
 RESULTS = REPO / "pod_results" / "outputs_e20"
 COHORTS = ["blca", "brca", "coadread", "hnsc", "stad"]
 COHORT_LABEL = {c: c.upper() for c in COHORTS}
-KM_METHODS = [("PathQ-Former", "pathq_fast_e20_aux"), ("SurvPath", "survpath_e20")]
+KM_METHODS = [("NullQ-Former", "pathq_fast_e20_aux"), ("SurvPath", "survpath_e20")]
 PATHWAY_RUN = "pathq_fast_e20_aux"
 SEED_SUFFIX = {0: "", 1: "_seed1", 2: "_seed2"}
 

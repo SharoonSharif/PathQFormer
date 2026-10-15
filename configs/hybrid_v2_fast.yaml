@@ -1,4 +1,4 @@
-# PathQ-Former v2 'fast' optimisation schedule for small cohorts (STAD/HNSC/COADREAD/BRCA).
+# NullQ-Former v2 'fast' optimisation schedule for small cohorts (STAD/HNSC/COADREAD/BRCA).
 # Motivation (2026-09-10 STAD diagnosis): lr 5e-5 with 8-step accumulation gives ~35 updates/epoch, so
 # val-loss patience fired while the val C-index was still rising in 3/5 folds. This config gives 8x more
 # learning per epoch (lr 1e-4, accumulation 2), trains at least 8 epochs and waits 6 for improvement.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pod batch 10 (2026-10-05, reviewer confound check): the official SurvPath trained with PathQ-Former's recipe.
+# Pod batch 10 (2026-10-05, reviewer confound check): the official SurvPath trained with NullQ-Former's recipe.
 #   1. survpath_recipe_e20       (null tokens + modality dropout 0.15 + aux heads 0.5)   seeds 0-2, five cohorts, DSS, 20 ep
 #      survpath_recipe_noaux_e20 (null tokens + modality dropout 0.15, no aux heads)     seeds 0-2, five cohorts, DSS, 20 ep
 #      -> /workspace/outputs_e20/<run>[_seed<N>]/<cohort>, same protocol as survpath_e20 / pathq_fast_e20_aux   [30 training runs]

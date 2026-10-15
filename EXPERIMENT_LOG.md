@@ -1,11 +1,11 @@
-# PathQ-Former Experiment Log
+# NullQ-Former Experiment Log
 
 ## Project Summary
-**PathQ-Former**: Q-Former-based multimodal fusion for WSI + genomics cancer survival prediction.
+**NullQ-Former**: Q-Former-based multimodal fusion for WSI + genomics cancer survival prediction.
 - **Architecture**: Modality-specific query blocks (K=32 learnable queries) → cross-modal fusion Transformer → NLL-Survival head
 - **WSI Encoder**: UNI2-h (ViT-H/14, 1536-d, frozen pre-extracted embeddings)
 - **Genomic Input**: 4,999 genes → 275 pathways (Reactome + MSigDB Hallmarks via SurvPath compositions)
-- **Total trainable params**: ~16.7M (10.4M pathway tokenizer + 6.3M PathQ-Former)
+- **Total trainable params**: ~16.7M (10.4M pathway tokenizer + 6.3M NullQ-Former)
 - **Evaluation**: 5-fold stratified CV using SurvPath's exact splits, C-Index metric
 
 ---
@@ -171,11 +171,11 @@ t / Wilcoxon tests via `scripts/aggregate_results.py`.
 **Queue** (`scripts/run_experiments.sh`): hybrid -> WSI-only -> genomics-only -> baseline hyper-parameters,
 then (chained by `scripts/chain_after.sh`) the Phase-6 baselines under the identical protocol:
 official SurvPath, ABMIL (WSI only), SNN and MLP (genomics only) with the SurvPath-repo hyper-parameters.
-Epoch time on this CPU: ~140 s for PathQ-Former (compute-bound, 11.4/12 cores busy).
+Epoch time on this CPU: ~140 s for NullQ-Former (compute-bound, 11.4/12 cores busy).
 
 **GPU queue (Runpod, launched 2026-09-10 ~15:00 local):** pod `pathq-gpu` (RTX PRO 4000 Blackwell, EU-RO-1, $0.57/h)
 with network volume `pathq-embeddings` (250 GB). `scripts/pod/run_queue_pod.sh` streams each cohort's UNI2-h archive
-into the volume and runs, under the identical protocol, PathQ-Former hybrid + SurvPath + ABMIL + SNN + MLP for
+into the volume and runs, under the identical protocol, NullQ-Former hybrid + SurvPath + ABMIL + SNN + MLP for
 STAD, HNSC, COADREAD (COAD+READ archives) and BRCA (IDC+OTHERS archives), then BLCA seeds 1 and 2 for the two
 multimodal methods. Results: `/workspace/outputs_v2/<run>/<cancer>/summary.md` and `/workspace/outputs_v2/summary_all.md`;
 the pod removes itself when finished. Local hybrid v2 folds (BLCA seed 0): 0.600, 0.635, 0.701, 0.534, 0.754 -> 0.645 +- 0.086; 10/20/30/50 % randomly missing one modality: 0.647 / 0.639 / 0.621 / 0.623; optimistic best-epoch 0.669. Fold 3 selected epoch 2 (val loss) and is the weak fold again; fold 4 selected at 0.754 with only 16 events.
@@ -210,10 +210,10 @@ Fill in here once the queue finishes:
 ---
 
 ## Experiment 5: multi-cohort on the GPU pod (val-loss protocol, seed 0) - finished 2026-09-11 05:26 local
-Pod queue ran STAD, HNSC, BRCA (COADREAD crashed - see below) x {PathQ-Former hybrid v2, SurvPath, ABMIL, SNN, MLP}
-plus BLCA seeds 1-2 for PathQ-Former and SurvPath. Full table: `pod_results/summary_all.md`.
+Pod queue ran STAD, HNSC, BRCA (COADREAD crashed - see below) x {NullQ-Former hybrid v2, SurvPath, ABMIL, SNN, MLP}
+plus BLCA seeds 1-2 for NullQ-Former and SurvPath. Full table: `pod_results/summary_all.md`.
 
-| Cohort | PathQ-Former | SurvPath | ABMIL (WSI) | SNN (RNA) | MLP (RNA) |
+| Cohort | NullQ-Former | SurvPath | ABMIL (WSI) | SNN (RNA) | MLP (RNA) |
 |--------|-------------|----------|-------------|-----------|-----------|
 | STAD | 0.486 +- 0.069 | **0.610 +- 0.074** | 0.498 | 0.454 | 0.516 |
 | HNSC | 0.484 +- 0.084 | 0.515 +- 0.057 | **0.547** | 0.472 | 0.543 |
@@ -222,18 +222,18 @@ plus BLCA seeds 1-2 for PathQ-Former and SurvPath. Full table: `pod_results/summ
 | BLCA seed 2 | 0.622 +- 0.105 | 0.597 +- 0.047 | | | |
 | BLCA seed 0 (laptop) | 0.645 +- 0.086 | pending | | | |
 
-**Reading.** Only BLCA carries signal (PathQ-Former 0.622 mean over 3 seeds vs SurvPath 0.575 over 2). On STAD, HNSC and
+**Reading.** Only BLCA carries signal (NullQ-Former 0.622 mean over 3 seeds vs SurvPath 0.575 over 2). On STAD, HNSC and
 BRCA *every* method, including the official SurvPath and the plain RNA baselines, sits near chance, far below the
 published 0.6-0.75 range. Training histories show the cause: with 7-16 events per validation fold the NLL is noise and
-val-loss selection picked epoch 1-3 checkpoints while the validation C-index was still rising (e.g. STAD PathQ-Former
-best-epoch mean 0.587 vs selected 0.486). PathQ-Former is hit hardest because lr 5e-5 with 8-step accumulation gives
+val-loss selection picked epoch 1-3 checkpoints while the validation C-index was still rising (e.g. STAD NullQ-Former
+best-epoch mean 0.587 vs selected 0.486). NullQ-Former is hit hardest because lr 5e-5 with 8-step accumulation gives
 ~35 updates per epoch. This is a protocol failure, not an architecture result.
 
 **Bugs found:** (1) COADREAD (37 events) crashed in the bootstrap CI - a resample with no comparable pairs makes sksurv
 raise; `concordance()` now returns NaN there. (2) The pod could not remove itself (old runpodctl syntax); idle ~3 h.
 
 **Decision (Experiment 6, queued 2026-09-11):** fixed-budget protocol `selection_metric: last` - train exactly 10 epochs and
-report the final checkpoint, the MCAT/SurvPath convention - for PathQ-Former (lr 1e-4, accumulation 2:
+report the final checkpoint, the MCAT/SurvPath convention - for NullQ-Former (lr 1e-4, accumulation 2:
 `configs/protocol_fixed/pathq_fast_e10.yaml`) and SurvPath (`survpath_e10.yaml`) on all 5 cohorts, plus COADREAD under the
 val-loss protocol for all 5 methods to complete Table 1 v1. Best-epoch numbers stay logged as an optimistic bound.
 
@@ -245,12 +245,12 @@ loader keeps fp16 through collate, skips the copy for single-patient batches and
 - **Pod 1, batch 2** -> `/workspace/outputs_v2`: COADREAD (val-loss, 5 methods), then fixed-budget
   `pathq_fast_e10` + `survpath_e10`, seed 0, five cohorts.
 - **Pod 2, batch 3a** -> `/workspace/outputs_ablate`: BLCA fusion ablations under the fixed budget
-  (modality dropout 0 / 0.3 / 0.5, K = 16 / 64, fusion depth 1 / 3, WSI-only and genomics-only PathQ-Former),
+  (modality dropout 0 / 0.3 / 0.5, K = 16 / 64, fusion depth 1 / 3, WSI-only and genomics-only NullQ-Former),
   the late-fusion baseline (`scripts/late_fusion.py`: z-scored risk average of the two single-modality models),
   then `pathq_fast_e10` seeds 1-2 on five cohorts.
 - **Pod 3, batch 3b** -> `/workspace/outputs_ablate`: `survpath_e10` seeds 1-2 on five cohorts.
 Decision rule for the paper protocol: the one under which the published baselines land near their published
-numbers. Decision rule for the final PathQ-Former config: fusion must beat both single-modality models AND the
+numbers. Decision rule for the final NullQ-Former config: fusion must beat both single-modality models AND the
 late-fusion baseline on BLCA; otherwise the fusion block, not the idea, is what needs work.
 
 ## Interim results 2026-09-11 15:45 local (seed 0 unless noted; fixed budget = 10 epochs, final checkpoint)
@@ -259,7 +259,7 @@ late-fusion baseline on BLCA; otherwise the fusion block, not the idea, is what 
 seed-stable (BLCA 0.588 / 0.585 / 0.593; STAD 0.609 / 0.593 / 0.617; HNSC 0.600), whereas under val-loss selection
 its BLCA seeds scattered 0.552-0.597.
 
-| Cohort | PathQ-Former fast e10 | SurvPath e10 (mean over seeds) | val-loss PathQ hybrid | val-loss SurvPath |
+| Cohort | NullQ-Former fast e10 | SurvPath e10 (mean over seeds) | val-loss PathQ hybrid | val-loss SurvPath |
 |--------|----------------------|-------------------------------|-----------------------|-------------------|
 | BLCA | 0.609 +- 0.068 | 0.589 (3 seeds) | 0.645 (s0) / 0.599 / 0.622 | 0.559 / 0.552 / 0.597 |
 | STAD | 0.559 +- 0.086 | 0.607 (3 seeds) | 0.486 | 0.610 |
@@ -277,7 +277,7 @@ scores of the same checkpoints are as high as the fused score (e.g. md30: fused 
 genomics-only 0.648): **fusion is not adding signal over the stronger branch.** Modality dropout 0.3 gives the
 best missing-modality robustness at no cost to the fused score.
 
-**Per-epoch curves (pooled over folds and cohorts):** PathQ-Former fast schedule still rising at epoch 10
+**Per-epoch curves (pooled over folds and cohorts):** NullQ-Former fast schedule still rising at epoch 10
 (0.544 -> 0.573 over epochs 7-10); SurvPath flat from epoch 8 (0.585-0.590). The 10-epoch budget therefore
 favours SurvPath.
 
@@ -294,7 +294,7 @@ exit 137; fixed in 8298d0f: cache capped at 45 % of the cgroup limit, caches/mod
 
 ### Table 1 (draft): fixed budget, final checkpoint, seed 0 (mean +- std over 5 folds)
 
-| Cohort | PathQ-Former 20 ep | PathQ-Former + aux heads 20 ep | SurvPath 20 ep | PathQ-Former 10 ep | SurvPath 10 ep |
+| Cohort | NullQ-Former 20 ep | NullQ-Former + aux heads 20 ep | SurvPath 20 ep | NullQ-Former 10 ep | SurvPath 10 ep |
 |--------|--------------------|--------------------------------|----------------|--------------------|----------------|
 | BLCA | 0.628 +- 0.073 | 0.625 +- 0.081 | 0.606 +- 0.099 | 0.609 +- 0.068 | 0.588 +- 0.088 |
 | STAD | 0.591 +- 0.066 | 0.559 +- 0.063 | 0.589 +- 0.123 | 0.559 +- 0.086 | 0.609 +- 0.119 |
@@ -306,18 +306,18 @@ Multi-seed means (20 ep): BLCA PathQ 0.609 (3 seeds: 0.628/0.602/0.599), PathQ+a
 SurvPath 0.594 (0.606/0.582/0.596); STAD PathQ 0.586 (2 seeds), PathQ+aux 0.578 (2), SurvPath 0.589 (1).
 10-ep seeds: BLCA PathQ 0.618 (0.609/0.634/0.612) vs SurvPath 0.589 (0.588/0.585/0.593).
 
-Per-epoch curves pooled over folds and seeds (35 PathQ / 30 SurvPath fold-histories): PathQ-Former 0.605 at
-epoch 20 (peak 0.612 at 13), SurvPath 0.573 at 20 (peak 0.585 at 14). PathQ-Former is ahead at every epoch >= 11,
+Per-epoch curves pooled over folds and seeds (35 PathQ / 30 SurvPath fold-histories): NullQ-Former 0.605 at
+epoch 20 (peak 0.612 at 13), SurvPath 0.573 at 20 (peak 0.585 at 14). NullQ-Former is ahead at every epoch >= 11,
 so the 20-epoch budget is the right pre-registered choice and is symmetric.
 
 ### BLCA fusion ablations (10 ep, seed 0) and the fusion verdict
 
 | Model | C-index | Test-time WSI-only | Test-time RNA-only |
 |-------|---------|--------------------|--------------------|
-| joint PathQ-Former (3 seeds) | 0.618 | 0.61 | 0.61 |
-| late fusion of the two single-modality PathQ-Formers | 0.631 | - | - |
-| PathQ-Former WSI-only (trained) | 0.596 | | |
-| PathQ-Former genomics-only (trained) | 0.603 | | |
+| joint NullQ-Former (3 seeds) | 0.618 | 0.61 | 0.61 |
+| late fusion of the two single-modality NullQ-Formers | 0.631 | - | - |
+| NullQ-Former WSI-only (trained) | 0.596 | | |
+| NullQ-Former genomics-only (trained) | 0.603 | | |
 | K=16 / K=64 | 0.638 / 0.634 | | |
 | modality dropout 0 / 0.3 / 0.5 | 0.634 / 0.616 / 0.635 | | |
 | fusion depth 1 / 3 | 0.598 / 0.595 | | |
@@ -329,7 +329,7 @@ missing modalities (BLCA test-time RNA-only 0.588 with aux vs 0.535 without; HNS
 None of K, fusion depth or modality dropout matters for the fused score; modality dropout matters for robustness.
 
 ### Reading for the paper
-1. Under the credible protocol (fixed 20-epoch budget, identical for all methods), PathQ-Former >= SurvPath on
+1. Under the credible protocol (fixed 20-epoch budget, identical for all methods), NullQ-Former >= SurvPath on
    BLCA (+0.015 over 3 seeds), HNSC (+0.05), COADREAD (+0.12, noisy) and ties on STAD; BRCA pending.
 2. The unique capability holds: the same checkpoint scores 0.58-0.64 with either modality removed; SurvPath cannot run.
 3. Fusion adds ~0.02 over the best single modality and matches late fusion -> claim "unified model", not "better fusion".
@@ -338,7 +338,7 @@ None of K, fusion depth or modality dropout matters for the fused score; modalit
 
 **10-epoch fixed budget, 3 seeds x 5 folds per cell, all five cohorts complete:**
 
-| Cohort | PathQ-Former (fast) | SurvPath (official) | delta | paired t p | Wilcoxon p |
+| Cohort | NullQ-Former (fast) | SurvPath (official) | delta | paired t p | Wilcoxon p |
 |--------|--------------------|---------------------|-------|-----------|------------|
 | BLCA | 0.618 +- 0.014 | 0.589 +- 0.004 | +0.029 | 0.115 | 0.164 |
 | BRCA | 0.600 +- 0.031 | 0.536 +- 0.015 | +0.064 | 0.036 | 0.048 |
@@ -347,7 +347,7 @@ None of K, fusion depth or modality dropout matters for the fused score; modalit
 | STAD | 0.574 +- 0.025 | 0.607 +- 0.012 | -0.033 | 0.285 | 0.609 |
 | **All (75 paired folds)** | | | **+0.028** | **0.034** | **0.017** |
 
-(+- is the spread over seeds of the 5-fold means.) PathQ-Former wins 3 cohorts, two of them significantly, and
+(+- is the spread over seeds of the 5-fold means.) NullQ-Former wins 3 cohorts, two of them significantly, and
 ties two; pooled over all 75 (fold, seed) pairs the advantage is significant under both tests.
 
 **20-epoch fixed budget (seeds still filling in; BRCA running):** BLCA PathQ 0.609 (3 seeds), PathQ + aux heads
@@ -364,7 +364,7 @@ COADREAD 20-ep seeds) continue.
 Seeds per cell: 3 for BLCA/COADREAD/HNSC, 2 for STAD, 1 for BRCA (STAD seed 2 and BRCA seeds 1-2 re-running on
 the recovery pod; they were pod A's share, removed on 09-12 to protect the account balance).
 
-| Cohort | PathQ-Former 20 ep | PathQ-Former + aux heads 20 ep | SurvPath 20 ep |
+| Cohort | NullQ-Former 20 ep | NullQ-Former + aux heads 20 ep | SurvPath 20 ep |
 |--------|--------------------|--------------------------------|----------------|
 | BLCA | 0.609 +- 0.016 | **0.630 +- 0.010** (p = 0.024 vs SurvPath) | 0.594 +- 0.012 |
 | BRCA | 0.568 | **0.647** (p = 0.038, 1 seed) | 0.552 |
@@ -396,23 +396,23 @@ graceful NaNs, multi-patient collate. First bug caught: `--set lr=1e-4` was pars
 (YAML 1.1); overrides now coerce numeric strings.
 
 **Experiments queued (recovery pod, `scripts/pod/batch6.sh`, chained after the last 20-epoch seeds):**
-9. Efficiency: params, forward / forward+backward latency, peak memory, PathQ-Former (all patches and 4096)
+9. Efficiency: params, forward / forward+backward latency, peak memory, NullQ-Former (all patches and 4096)
    vs SurvPath (4096 and all) on real BLCA validation patients (`scripts/efficiency.py`).
 10. Single-modality baselines under the fixed 20-epoch budget (ABMIL, SNN, MLP), five cohorts.
-11. Mean-imputation missing-modality evaluation of the finished 20-epoch SurvPath and PathQ-Former checkpoints
+11. Mean-imputation missing-modality evaluation of the finished 20-epoch SurvPath and NullQ-Former checkpoints
     (`scripts/eval_missing_impute.py`): the baseline receives the training-mean gene vector / mean patch
     instead of crashing, so Table 3 compares degradation, not availability.
-12. Single-modality PathQ-Former at 20 epochs on five cohorts + late-fusion baseline per cohort (does joint
+12. Single-modality NullQ-Former at 20 epochs on five cohorts + late-fusion baseline per cohort (does joint
     fusion beat an ensemble anywhere?).
-13. Overall survival (OS) endpoint for PathQ-Former+aux and SurvPath, five cohorts, seed 0 (`outputs_os`).
+13. Overall survival (OS) endpoint for NullQ-Former+aux and SurvPath, five cohorts, seed 0 (`outputs_os`).
 **Laptop (CPU):** ablations of the final configuration on BLCA - Hallmark (50) and Xena (281) pathway sets,
 2 and 8 survival bins, 4096-patch training subsample (`configs/ablation_fixed/pathq_aux_e20_*.yaml`).
-Laptop CPU efficiency (real BLCA slide, 36k patches): PathQ-Former fwd 190 ms / fwd+bwd 1013 ms; SurvPath on the
+Laptop CPU efficiency (real BLCA slide, 36k patches): NullQ-Former fwd 190 ms / fwd+bwd 1013 ms; SurvPath on the
 same bag 188 / 724 ms; both ~45 / ~215 ms at 4096 patches.
 
 ## 20-epoch seeded table, update 2026-09-15 09:50 local (BRCA now 2 seeds, STAD 3 seeds; 70 paired folds)
 
-| Cohort | PathQ-Former 20 ep | PathQ-Former + aux | SurvPath 20 ep | aux vs SurvPath |
+| Cohort | NullQ-Former 20 ep | NullQ-Former + aux | SurvPath 20 ep | aux vs SurvPath |
 |--------|--------------------|--------------------|----------------|-----------------|
 | BLCA | 0.609 +- 0.016 (3) | **0.630 +- 0.010** (3) | 0.594 +- 0.012 (3) | +0.036, p 0.024 |
 | BRCA | 0.607 +- 0.055 (2) | **0.641 +- 0.009** (2) | 0.552 +- 0.000 (2) | +0.089, p 0.019 |
@@ -426,7 +426,7 @@ ablation on its last fold (folds 1-4: 0.717 / ... / 0.523), then Xena, 2 bins, 8
 
 ## Final 20-epoch Table 1 and Table 3 - 2026-09-16 09:00 local (3 seeds x 5 folds x 5 cohorts; 127 finished runs)
 
-| Cohort | PathQ-Former | PathQ-Former + aux | SurvPath | ABMIL (WSI) | SNN (RNA) | MLP (RNA) |
+| Cohort | NullQ-Former | NullQ-Former + aux | SurvPath | ABMIL (WSI) | SNN (RNA) | MLP (RNA) |
 |--------|-------------|--------------------|----------|-------------|-----------|-----------|
 | BLCA | 0.609 +- 0.016 | **0.630 +- 0.010** | 0.594 +- 0.012 | 0.578 | 0.599 | 0.619 |
 | BRCA | 0.611 +- 0.039 | 0.622 +- 0.033 | 0.536 +- 0.026 | 0.574 | 0.552 | **0.629** |
@@ -435,14 +435,14 @@ ablation on its last fold (folds 1-4: 0.717 / ... / 0.523), then Xena, 2 bins, 8
 | STAD | **0.593 +- 0.015** | 0.572 +- 0.022 | 0.587 +- 0.008 | 0.543 | 0.556 | 0.524 |
 
 (baselines: seed 0 only so far; seeds 1-2 queued as batch 7.) Paired over 75 (fold, seed) pairs vs SurvPath:
-PathQ-Former +0.037 (t p 0.002, Wilcoxon p 0.005), PathQ-Former+aux +0.036 (t p 0.007, W p 0.002).
+NullQ-Former +0.037 (t p 0.002, Wilcoxon p 0.005), NullQ-Former+aux +0.036 (t p 0.007, W p 0.002).
 vs MLP on RNA (25 pairs, seed 0): +0.016 / +0.017, not significant. vs ABMIL: aux +0.034 (W p 0.037).
 **Honest reading:** the multimodal model clearly beats the strongest published multimodal baseline, but a plain MLP
 on 4,999 genes is within noise of it on BRCA and COADREAD. The defensible accuracy claim is "matches or beats every
 baseline"; the differentiator is robustness.
 
 ### Table 3: missing modalities at test time (20 ep, seed 0, same checkpoint)
-Baselines receive the training-mean gene vector / mean patch (`scripts/eval_missing_impute.py`); PathQ-Former uses its
+Baselines receive the training-mean gene vector / mean patch (`scripts/eval_missing_impute.py`); NullQ-Former uses its
 learned null codes (imputation results for it are similar).
 
 | Cohort | SurvPath full | SurvPath, RNA missing | SurvPath, WSI missing | PathQ+aux full | PathQ+aux, RNA missing | PathQ+aux, WSI missing |
@@ -454,10 +454,10 @@ learned null codes (imputation results for it are similar).
 | STAD | 0.589 | 0.590 | 0.462 | 0.559 | 0.579 | 0.541 |
 
 SurvPath's score is unchanged when RNA is removed and falls to chance when WSI is removed: it effectively ignores the
-genomic branch. PathQ-Former+aux keeps 0.54-0.67 with either modality removed. Without the auxiliary heads PathQ-Former
+genomic branch. NullQ-Former+aux keeps 0.54-0.67 with either modality removed. Without the auxiliary heads NullQ-Former
 behaves like SurvPath (RNA-only ~0.52-0.55), so the heads are what buys the robustness.
 
-**Compute/ops:** batch 6 running on the recovery pod (single-modality PathQ-Former 20 ep + late fusion, then OS
+**Compute/ops:** batch 6 running on the recovery pod (single-modality NullQ-Former 20 ep + late fusion, then OS
 endpoint); efficiency step failed there (laptop embeddings path) - fixed (`--embeddings_dir`) and queued in batch 7
 with baseline seeds 1-2. Laptop rebooted 09-15 and killed the ablation queue; relaunched 09-16 08:54 (resumes).
 
@@ -512,8 +512,8 @@ mean +- std over 3 seeds of the 5-fold mean C-index).
 
 | Method | Inputs | BLCA | BRCA | COADREAD | HNSC | STAD | pooled delta vs SurvPath (75 paired folds) |
 |--------|--------|------|------|----------|------|------|--------------------------------------------|
-| PathQ-Former | WSI + RNA | 0.609 +- 0.016 | 0.611 +- 0.039 | **0.638 +- 0.031** | 0.575 +- 0.012 | **0.593 +- 0.015** | **+0.037** (t p 0.002, Wilcoxon p 0.005) |
-| PathQ-Former + aux heads | WSI + RNA | **0.630 +- 0.010** | 0.622 +- 0.033 | 0.613 +- 0.023 | **0.582 +- 0.025** | 0.572 +- 0.022 | **+0.036** (t p 0.007, Wilcoxon p 0.002) |
+| NullQ-Former | WSI + RNA | 0.609 +- 0.016 | 0.611 +- 0.039 | **0.638 +- 0.031** | 0.575 +- 0.012 | **0.593 +- 0.015** | **+0.037** (t p 0.002, Wilcoxon p 0.005) |
+| NullQ-Former + aux heads | WSI + RNA | **0.630 +- 0.010** | 0.622 +- 0.033 | 0.613 +- 0.023 | **0.582 +- 0.025** | 0.572 +- 0.022 | **+0.036** (t p 0.007, Wilcoxon p 0.002) |
 | SurvPath (official) | WSI + RNA | 0.594 +- 0.012 | 0.536 +- 0.026 | 0.570 +- 0.038 | 0.552 +- 0.019 | 0.587 +- 0.008 | reference |
 | ABMIL | WSI | 0.566 +- 0.011 | 0.575 +- 0.004 | 0.587 +- 0.023 | 0.562 +- 0.028 | 0.553 +- 0.020 | +0.001 (p 0.94) |
 | SNN | RNA | 0.590 +- 0.009 | 0.558 +- 0.013 | 0.572 +- 0.028 | 0.535 +- 0.006 | 0.549 +- 0.009 | -0.007 (p 0.67) |
@@ -528,11 +528,11 @@ SurvPath pooled; the RNA MLP comes closest (+0.024, ns) and wins BRCA/COADREAD o
 
 | Method | BLCA | BRCA | COADREAD | HNSC | STAD | pooled (75 pairs) |
 |--------|------|------|----------|------|------|-------------------|
-| PathQ-Former | -0.002 | -0.016 | +0.004 | +0.020 | +0.062 (p 0.066) | +0.014 (t p 0.25, W p 0.21) |
-| PathQ-Former + aux | +0.019 | -0.005 | -0.020 | +0.028 | +0.041 | +0.012 (t p 0.28, W p 0.12) |
+| NullQ-Former | -0.002 | -0.016 | +0.004 | +0.020 | +0.062 (p 0.066) | +0.014 (t p 0.25, W p 0.21) |
+| NullQ-Former + aux | +0.019 | -0.005 | -0.020 | +0.028 | +0.041 | +0.012 (t p 0.28, W p 0.12) |
 | SurvPath | -0.017 | -0.091 | -0.064 | -0.003 | +0.056 | -0.024 (t p 0.15) |
 
-Honest reading: PathQ-Former is significantly better than the published multimodal baseline (SurvPath), but only
+Honest reading: NullQ-Former is significantly better than the published multimodal baseline (SurvPath), but only
 within noise of a well-tuned MLP on the same RNA pathways; the multimodal model's advantage is that it is >= the
 best unimodal model on every cohort with one network (the MLP loses STAD, -0.06 vs PathQ; ABMIL loses BLCA/BRCA),
 and it keeps working when either modality is missing (Table 3), which neither the MLP nor SurvPath does.
@@ -541,12 +541,12 @@ and it keeps working when either modality is missing (Table 3), which neither th
 
 | Model | Params (M) | Patches | Forward (ms) | Forward+backward (ms) | Peak GPU mem (GiB) |
 |---|---|---|---|---|---|
-| PathQ-Former (all patches) | 16.9 | 6214 | 35.0 | 104.2 | 1.17 |
-| PathQ-Former (4096 patches) | 16.9 | 4096 | 34.7 | 104.1 | 0.17 |
+| NullQ-Former (all patches) | 16.9 | 6214 | 35.0 | 104.2 | 1.17 |
+| NullQ-Former (4096 patches) | 16.9 | 4096 | 34.7 | 104.1 | 0.17 |
 | SurvPath (4096 patches, as trained) | 21.2 | 4096 | 35.7 | 175.6 | 0.20 |
 | SurvPath (all patches) | 21.2 | 6214 | 36.0 | 176.0 | 1.74 |
 
-PathQ-Former has 20 % fewer parameters, the same forward latency, a 1.7x faster training step and a third less
+NullQ-Former has 20 % fewer parameters, the same forward latency, a 1.7x faster training step and a third less
 peak memory than SurvPath on full slides; its cost is flat in the number of patches because K = 32 queries do the
 cross-attention (SurvPath's cost grows with patches x pathways).
 
@@ -563,7 +563,7 @@ cross-attention (SurvPath's cost grows with patches x pathways).
 
 Bin count barely matters (2 ~ 4 > 8, all within one std); the richer pathway sets beat Hallmark-only by ~0.03; training
 on a 4096-patch subsample instead of every patch changes nothing (0.626 vs 0.625), so the gain over SurvPath is not
-explained by PathQ-Former seeing more patches. All BLCA ablations of the final config finished 2026-09-19 13:38 (laptop).
+explained by NullQ-Former seeing more patches. All BLCA ablations of the final config finished 2026-09-19 13:38 (laptop).
 
 ### Compute log
 
@@ -576,7 +576,7 @@ and 855 checkpoints remain on network volume fjb5dlrrfp; local copy in `pod_resu
 
 **1. Seed-averaged paired tests (25 folds).** Seeds of the same fold share validation patients, so the 75 (fold, seed)
 pairs in Table 1 are not independent. Averaging the three seeds per fold first and pairing over the 25 (cohort, fold)
-units gives, vs SurvPath: PathQ-Former +0.037, t p = 0.020, Wilcoxon p = 0.020, wins 17/25; PathQ-Former + aux +0.036,
+units gives, vs SurvPath: NullQ-Former +0.037, t p = 0.020, Wilcoxon p = 0.020, wins 17/25; NullQ-Former + aux +0.036,
 t p = 0.074, Wilcoxon p = 0.030, wins 18/25. Per cohort (5 folds) only BRCA stays significant (aux +0.086, t p 0.017;
 plain +0.075, p 0.073). Baselines vs SurvPath: ABMIL +0.001 (p 0.95), SNN -0.007 (p 0.80), MLP +0.024 (p 0.38). vs the
 RNA MLP: PathQ +0.014 (p 0.47), aux +0.012 (p 0.47). OS (one seed, unchanged): +0.034, p 0.003. **Paper wording:** report
@@ -608,7 +608,7 @@ The multimodal model ranks patients differently from every baseline of equal acc
 headroom that Section 6 measured at +0.02.
 
 **Still open (need a pod, `scripts/pod/batch9.sh`):** SurvPath learning-rate x alpha grid under the protocol (the
-manuscript currently compares against the published hyper-parameters only); single-modality PathQ-Former seeds 1-2
+manuscript currently compares against the published hyper-parameters only); single-modality NullQ-Former seeds 1-2
 for a three-seed fusion-vs-ensemble table; mean-imputation columns for seeds 1-2; RNA / WSI permutation test.
 
 ## 2026-09-23 - Batch 9 part 1: permutation test, three-seed imputation, two-seed fusion-vs-ensemble (pod h; grid paused)
@@ -619,7 +619,7 @@ Pod h finished the evaluation passes and 18/20 single-modality runs before the a
 **Permutation test and imputation, three seeds (mean over seeds of the 5-fold mean C-index; pooled deltas vs `both`
 over 75 (fold, seed) pairs, seed-averaged 25-fold p in brackets):**
 
-| PathQ-Former + aux | both | RNA-only (null code) | RNA-only (mean patch) | WSI-only (null code) | WSI-only (mean genes) | RNA permuted | WSI permuted |
+| NullQ-Former + aux | both | RNA-only (null code) | RNA-only (mean patch) | WSI-only (null code) | WSI-only (mean genes) | RNA permuted | WSI permuted |
 |---|---|---|---|---|---|---|---|
 | BLCA | 0.630 | 0.613 | 0.595 | 0.600 | 0.597 | 0.597 | 0.570 |
 | BRCA | 0.622 | 0.617 | 0.591 | 0.592 | 0.607 | 0.572 | 0.539 |
@@ -638,7 +638,7 @@ over 75 (fold, seed) pairs, seed-averaged 25-fold p in brackets):**
 | pooled delta | | -0.073 (p 6e-5 [.003]) | +0.001 (n.s.) | **+0.001 (p .43 [.36])** | **-0.068 (p 3e-4 [.016])** |
 
 Reading. (1) SurvPath's prediction does not use RNA: replacing it by the training mean or by another patient's RNA
-changes nothing (+0.001, three seeds), and removing WSI drops it to chance. (2) PathQ-Former + aux does use RNA:
+changes nothing (+0.001, three seeds), and removing WSI drops it to chance. (2) NullQ-Former + aux does use RNA:
 permuting it costs 0.023 (significant over 75 pairs, p = 0.075 seed-averaged), about a third of what permuting WSI
 costs (0.067); the fused prediction is histology-led but not histology-only, consistent with the 0.83 / 0.45 risk
 correlations. (3) Null codes vs mean imputation for the same PathQ checkpoints: RNA-only 0.579 vs 0.569 (+0.010,
@@ -649,7 +649,7 @@ removed on every cohort; SurvPath keeps its score only when RNA is removed.
 **Fusion vs late-fusion ensemble, two seeds (0-1), 50 (fold, seed) pairs:** late fusion 0.629 / 0.606 / 0.620 /
 0.571 / 0.544 (BLCA / BRCA / COADREAD / HNSC / STAD). Joint PathQ+aux vs ensemble +0.011 (t p .39, W p .22;
 seed-averaged +0.010, p .32, wins 14/25); plain PathQ +0.009 (p .51). The ensemble itself is +0.027 over SurvPath
-(t p .16, W p .071). Single-modality PathQ-Former vs SurvPath: WSI-only +0.015 (n.s.), RNA-only -0.006. So: joint
+(t p .16, W p .071). Single-modality NullQ-Former vs SurvPath: WSI-only +0.015 (n.s.), RNA-only -0.006. So: joint
 fusion ~ ensemble (+0.01), and most of the gain over SurvPath is already present in an ensemble of the two branches.
 
 **Grid (1/35 cells):** PathQ+aux with lr 2e-4 on BLCA 0.615 (seed 0) vs 0.630 at lr 1e-4; inconclusive alone.
@@ -685,7 +685,7 @@ earlier prose about the validation-loss campaign; reference corrections; new vec
 (`scripts/paper_figures.py`: audit deltas with bootstrap CIs, missing-rate curves over seeds, pooled and
 per-cohort epoch curves; `scripts/paper_figures_km.py`: KM grid, pathway-attention panels). Headline numbers
 as they now stand (all from `results/final/`): SurvPath RNA permuted +0.001, slide permuted -0.068, slide removed
-0.47-0.52; PathQ-Former RNA permuted -0.023 (t p 0.075 / W p 0.063, 25 folds), 0.54-0.62 with either input removed,
+0.47-0.52; NullQ-Former RNA permuted -0.023 (t p 0.075 / W p 0.063, 25 folds), 0.54-0.62 with either input removed,
 at most 0.025 change at 50 % missingness; vs SurvPath +0.036 [-0.004, +0.071] (p 0.074 / 0.030) with aux heads and
 +0.037 [+0.009, +0.065] (p 0.020 / 0.020) without; no cohort survives Holm; parity with the RNA MLP (+0.012 /
 +0.014) and late fusion (+0.011 / +0.009). The 75-pair (fold, seed) tests remain in the tables but are no longer
@@ -708,7 +708,7 @@ broken). Fixed; the regenerated table has the five intended columns.
 
 **SurvPath recipe implemented, not run.** `src/models/survpath_recipe.py` (`model_type: survpath_recipe`) keeps
 the official SurvPath submodules unchanged and adds learned null tokens (32 null patch tokens in the projected
-WSI space; one null token per pathway) inserted before the co-attention for an absent modality, PathQ-Former's
+WSI space; one null token per pathway) inserted before the co-attention for an absent modality, NullQ-Former's
 per-sample modality dropout (never both modalities) and optional auxiliary unimodal heads on the mean-pooled
 pre-fusion tokens. Configs `configs/protocol_fixed/survpath_recipe_e20.yaml` (aux weight 0.5) and
 `survpath_recipe_noaux_e20.yaml` (0) mirror `survpath_e20.yaml`; `tests/test_survpath_recipe.py` (8 unit tests

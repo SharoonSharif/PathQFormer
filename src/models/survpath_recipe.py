@@ -1,6 +1,6 @@
-"""SurvPath + PathQ-Former's missing-modality "recipe" (null tokens, modality dropout, auxiliary heads).
+"""SurvPath + NullQ-Former's missing-modality "recipe" (null tokens, modality dropout, auxiliary heads).
 
-The robustness comparison in the paper contrasts PathQ-Former (trained with modality dropout and learned
+The robustness comparison in the paper contrasts NullQ-Former (trained with modality dropout and learned
 null codes) against the official SurvPath, which has neither and therefore has to be evaluated with mean
 imputation. That confounds the architecture with the training recipe. ``SurvPathRecipe`` isolates the
 recipe: it reuses the official SurvPath submodules untouched (per-pathway SNNs, WSI projection,
@@ -10,12 +10,12 @@ co-attention, feed-forward, logits) and only changes *what the co-attention sees
 * transcriptomics -> one learned null pathway token per pathway, in the pathway-token space
 
 Both are inserted after the respective encoders and before co-attention, so the official fusion code runs
-unchanged. Training uses PathQ-Former's per-sample modality-dropout sampler (never both modalities), and
+unchanged. Training uses NullQ-Former's per-sample modality-dropout sampler (never both modalities), and
 optional auxiliary unimodal heads score the mean-pooled pre-fusion tokens of each branch, returned in the
 ``return_aux`` format ``src/training/train.py`` expects (``aux_unimodal_weight`` works unchanged).
 
 Usage (config): ``model_type: survpath_recipe`` plus ``modality_dropout`` / ``aux_unimodal_weight`` /
-``eval_missing`` as for PathQ-Former; see ``configs/protocol_fixed/survpath_recipe_e20.yaml``.
+``eval_missing`` as for NullQ-Former; see ``configs/protocol_fixed/survpath_recipe_e20.yaml``.
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ from .pathqformer import PathQFormer
 class SurvPathRecipe(nn.Module):
     """Official SurvPath submodules + learned null tokens + modality dropout + optional aux heads (batch 1).
 
-    The pathway groups are the same filtered composition that ``SurvPathBaseline`` and PathQ-Former's
+    The pathway groups are the same filtered composition that ``SurvPathBaseline`` and NullQ-Former's
     tokenizer use (``min_genes`` / ``max_genes``), so all models see identical genomic inputs.
     """
 
@@ -89,7 +89,7 @@ class SurvPathRecipe(nn.Module):
             raise ValueError(f"pathway token dim {token_dim} != wsi_projection_dim {wsi_projection_dim}")
         self.token_dim = token_dim
 
-        # learned null tokens, initialised near zero like PathQ-Former's NullTokenModule
+        # learned null tokens, initialised near zero like NullQ-Former's NullTokenModule
         self.null_wsi = nn.Parameter(torch.randn(1, self.num_null_patches, token_dim) * 0.01)
         self.null_pathways = nn.Parameter(torch.randn(1, self.num_pathways, token_dim) * 0.01)
 
@@ -186,7 +186,7 @@ class SurvPathRecipe(nn.Module):
             return (logits, attn, aux) if return_attention else (logits, aux)
         return (logits, attn) if return_attention else logits
 
-    # same sampling rule and probability semantics as PathQ-Former (per-sample Bernoulli, never both)
+    # same sampling rule and probability semantics as NullQ-Former (per-sample Bernoulli, never both)
     _sample_modality_dropout = PathQFormer._sample_modality_dropout
 
     def num_parameters(self, trainable_only: bool = True) -> int:

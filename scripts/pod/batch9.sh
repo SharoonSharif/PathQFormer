@@ -2,7 +2,7 @@
 # Pod batch 9 (2026-09-22, reviewer requests). Everything is resumable; finished runs are skipped.
 #   1. mean-imputation missing-modality eval for SurvPath and PathQ+aux seeds 1-2 (evaluation only, ~1 h)
 #   2. RNA / WSI permutation test for SurvPath and PathQ+aux, seeds 0-2, five cohorts (evaluation only, ~1 h)
-#   3. single-modality PathQ-Former seeds 1-2 -> three-seed fusion-vs-ensemble table          [20 training runs]
+#   3. single-modality NullQ-Former seeds 1-2 -> three-seed fusion-vs-ensemble table          [20 training runs]
 #   4. SurvPath lr x alpha grid (5 new points) + PathQ+aux lr grid (2 points), seed 0, 5 cohorts [35 training runs]
 #   5. late fusion per seed from the single-modality runs
 # Removes its pod at the end (three-way chain). Launch detached from the code dir:
@@ -34,7 +34,7 @@ echo "[batch9] $(date '+%F %T') EVALS_DONE"
 fi
 
 if has single; then
-echo "[batch9] $(date '+%F %T') 3. single-modality PathQ-Former, seeds 1-2"
+echo "[batch9] $(date '+%F %T') 3. single-modality NullQ-Former, seeds 1-2"
 KEEP_POD=1 OUT=$E COHORTS="BLCA STAD HNSC COADREAD BRCA" SEEDS="1 2" \
   CONFIGS="configs/protocol_fixed/pathq_e20_wsi_only.yaml configs/protocol_fixed/pathq_e20_genomic_only.yaml" bash scripts/pod/run_queue_pod.sh
 fi
