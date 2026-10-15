@@ -176,8 +176,9 @@ supplementary.zip` builds a double-blind supplement from the tracked files (code
 for identifying strings.
 
 The one-row layouts of the JBHI package (`paper/jbhi/figures/`) come from
-`scripts/paper_figures_jbhi.py --root pod_results/outputs_e20 --out paper/jbhi/figures --overwrite` (same numbers as
-`paper_figures.py`; `main.tex` uses `audit_pooled.pdf` and `missing_rate_row.pdf`, the supplement `epoch_curves_pooled.pdf`)
+`scripts/paper_figures_jbhi.py --root pod_results/outputs_e20 --out <scratch> --overwrite` (same numbers as
+`paper_figures.py`; copy `audit_pooled.pdf`, `missing_rate_row.pdf` and `epoch_curves_pooled.pdf` into `paper/jbhi/figures/`; the
+script also writes `audit_deltas.pdf` and `epoch_curves_by_cohort.pdf`, which the JBHI package does not use)
 and `scripts/paper_figures_km.py --outdir paper/jbhi/figures --force` (`km_grid.pdf`, `pathway_importance_v2.pdf`).
 
 ### 4.2 Retrain everything
