@@ -9,9 +9,10 @@ Produces, in --out (existing files are never overwritten unless --overwrite is g
                             across patients, slide removed, slide permuted), for SurvPath (mean
                             imputation), NullQ-Former w/o aux heads and NullQ-Former (null codes);
                             (a) pooled over cohorts with 95 % bootstrap CIs, (b) per cohort.
-  missing_rate_seeds.pdf    per cohort, C-index when 0/10/20/30/50 % of validation patients lack one
+  audit_pooled.pdf          panel (a) of audit_deltas alone, at single-column width (JBHI Fig. 2).
+  missing_rate_row.pdf      per cohort, C-index when 0/10/20/30/50 % of validation patients lack one
                             modality at random, NullQ-Former and NullQ-Former w/o aux heads, mean over
-                            three seeds with a +-sd band; SurvPath's complete-input score as reference.
+                            three seeds with a +-sd band; SurvPath's complete-input score as reference (JBHI Fig. 3).
   epoch_curves_pooled.pdf   validation C-index per epoch pooled over cohorts and folds, mean +-sd
                             over seeds, for NullQ-Former, NullQ-Former w/o aux heads and SurvPath.
   epoch_curves_by_cohort.pdf  the same per cohort (2 x 3 panels).
@@ -395,16 +396,16 @@ def fig_missing_rate(data: dict, save: Saver, numbers: dict) -> None:
     ]
     fig.legend(handles=handles, ncol=3, loc="lower center", bbox_to_anchor=(0.5, 1.0), borderaxespad=0, frameon=False)
     axes[0].set_ylim(*_padded_limits([stats[(c, k)]["mean"] + s * stats[(c, k)]["sd"] for c in COHORTS for k in keys for s in (-1, 1)] + [stats[(c, "survpath")]["mean"] for c in COHORTS], step=0.05))
-    save(fig, "missing_rate_seeds")
+    save(fig, "missing_rate_row")
 
-    numbers["missing_rate_seeds"] = {
+    numbers["missing_rate_row"] = {
         COHORT_LABEL[c]: {
             **{MODELS[k]["label"]: {f"{int(r * 100)}%": f"{stats[(c, k)]['mean'][i]:.3f} +- {stats[(c, k)]['sd'][i]:.3f}" for i, r in enumerate(RATES)} for k in keys},
             "SurvPath complete input": f"{stats[(c, 'survpath')]['mean']:.3f} +- {stats[(c, 'survpath')]['sd']:.3f}",
         }
         for c in COHORTS
     }
-    print("\n== missing_rate_seeds: C-index, mean +- sd over seeds of the 5-fold mean (rate 0 = complete input)")
+    print("\n== missing_rate_row: C-index, mean +- sd over seeds of the 5-fold mean (rate 0 = complete input)")
     print("  cohort     model                        " + "  ".join(f"{int(r*100):>3d}%          " for r in RATES))
     for c in COHORTS:
         for k in keys:
@@ -489,7 +490,7 @@ def main() -> None:
 
     root, out = Path(args.root), Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    names = ["audit_deltas.pdf", "audit_pooled.pdf", "missing_rate_seeds.pdf", "epoch_curves_pooled.pdf", "epoch_curves_by_cohort.pdf"]
+    names = ["audit_deltas.pdf", "audit_pooled.pdf", "missing_rate_row.pdf", "epoch_curves_pooled.pdf", "epoch_curves_by_cohort.pdf"]
     clashes = [n for n in names if (out / n).exists()]
     if clashes and not args.overwrite:
         sys.exit(f"refusing to overwrite existing files in {out}: {clashes} (pass --overwrite)")

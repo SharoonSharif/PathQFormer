@@ -1,8 +1,8 @@
-"""Paper figures for the TMLR revision: Kaplan-Meier grid and pathway importance (v2).
+"""Kaplan-Meier grid and pathway importance for the manuscripts (TMLR v2; JBHI supplement Figs. S2-S3).
 
-    .venv/Scripts/python.exe scripts/paper_figures_km.py --outdir <paper>/figures [--preview_dir <dir>]
+    .venv/Scripts/python.exe scripts/paper_figures_km.py --outdir <paper>/figures [--preview_dir <dir>] [--only km|pathways] [--force]
 
-Writes vector PDFs (serif, 9 pt, sized for the 5.5 in TMLR text width) into --outdir:
+Writes vector PDFs (serif, 9 pt, 5.5 in wide) into --outdir; --force overwrites this script's earlier outputs:
 
   km_grid.pdf                2 x 5 Kaplan-Meier grid. Rows: NullQ-Former (pathq_fast_e20_aux) and
                              SurvPath (survpath_e20); columns: BLCA, BRCA, COADREAD, HNSC, STAD.
@@ -375,7 +375,7 @@ def main() -> None:
     ap.add_argument("--outdir", required=True, help="directory for the PDF figures")
     ap.add_argument("--preview_dir", default=None, help="directory for PNG previews and the numbers JSON")
     ap.add_argument("--top_k", type=int, default=8, help="pathways per cohort panel")
-    ap.add_argument("--only", choices=["km", "pathways"], default=None)
+    ap.add_argument("--only", choices=["km", "pathways"], default=None, help="draw only the KM grid or only the pathway panels")
     ap.add_argument("--force", action="store_true", help="overwrite this script's own earlier outputs")
     args = ap.parse_args()
 

@@ -410,7 +410,7 @@ NullQ-Former's compute is dominated by the 32-query cross-attention, so latency 
 **Contributions**: (1) the input-use audit (removal, permutation across patients, risk-score correlation; 3 seeds x 5 folds x 5 cohorts) applied to a published co-attention model under an equal-budget protocol (Section 5); (2) evidence on where missing-modality robustness comes from, from matched variants of one fusion model (Sections 5-6); (3) protocol evidence: seed-aware statistics with bootstrap CIs and Holm correction (Section 4.4) and the post-hoc replay of checkpoint selection on event-poor folds (Section 3.3).
 
 **Tables**: audit = Section 5.1; accuracy = Sections 4.1 and 4.4; missing-rate sweep = Section 5.2 as a figure; selection replay = Section 3.3; appendix: per-cohort Holm tests, OS, 10-epoch budget, secondary metrics (4.3), risk correlations (5.3), null code vs mean imputation, fusion ablations (6.2), efficiency (9).
-**Figures** (`scripts/paper_figures.py`, `scripts/paper_figures_km.py`): audit deltas with bootstrap CIs, missing-rate curves over seeds, pooled epoch curves, KM grid, pathway attention.
+**Figures** (`scripts/paper_figures.py`; `scripts/paper_figures_jbhi.py` for the one-row layouts of the JBHI package; `scripts/paper_figures_km.py`): audit deltas with bootstrap CIs, missing-rate curves over seeds, pooled epoch curves, KM grid, pathway attention.
 
 **Limitations to state**: baseline not re-tuned and variant selected after the results were seen; recipe not applied to SurvPath; three seeds, five folds per cohort, the RNA-permuted loss at p 0.075 / 0.063; TCGA only, frozen UNI2-h features, random missingness, no clinical covariates, no external cohort.
 

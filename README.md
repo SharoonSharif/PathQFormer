@@ -175,6 +175,11 @@ supplementary.zip` builds a double-blind supplement from the tracked files (code
 `results/final/`, the five archives, REPORT and LOG), applies the de-identifying replacements and re-scans the zip
 for identifying strings.
 
+The one-row layouts of the JBHI package (`paper/jbhi/figures/`) come from
+`scripts/paper_figures_jbhi.py --root pod_results/outputs_e20 --out paper/jbhi/figures --overwrite` (same numbers as
+`paper_figures.py`; `main.tex` uses `audit_pooled.pdf` and `missing_rate_row.pdf`, the supplement `epoch_curves_pooled.pdf`)
+and `scripts/paper_figures_km.py --outdir paper/jbhi/figures --force` (`km_grid.pdf`, `pathway_importance_v2.pdf`).
+
 ### 4.2 Retrain everything
 
 Each cell of the table above is one command; the campaign is `configs/protocol_fixed/{pathq_fast_e20, pathq_fast_e20_aux,
@@ -239,11 +244,12 @@ configs/          protocol_fixed/ (the paper, incl. survpath_recipe_*), ablation
 scripts/          run_experiments.sh, reproduce_tables.sh, seed_table.py, aggregate_results.py, missing_modality_table.py,
                   risk_correlation.py, posthoc_selection.py, primary_tests.py, epoch_curves.py, late_fusion.py,
                   eval_missing_impute.py, efficiency.py, recompute_metrics.py, analyze_run.py, paper_figures.py,
-                  paper_figures_km.py, make_anonymous_supplement.py, make_dummy_embeddings.py, download_embeddings.py,
+                  paper_figures_jbhi.py, paper_figures_km.py, make_anonymous_supplement.py, make_dummy_embeddings.py, download_embeddings.py,
                   pod/ (Runpod queues, batch2-batch10)
 tests/            46 tests (35 fast; 11 `-m slow` = end-to-end trainer tests on the dummy data, ~10 min CPU)
 pod_results/      archived per-run results of the campaign (five tarballs); results/final/ = the regenerated tables
 paper/tmlr_v2/    revised manuscript source (main.tex, figures/); paper/draft.md, paper/figures/: the earlier draft
+paper/jbhi/       IEEE JBHI submission package (main.tex, supplement.tex, figures/, cover_letter.md, CHECKLIST.md)
 REPORT.md         experimental report; EXPERIMENT_LOG.md: chronological record incl. the protocol audit
 ```
 
