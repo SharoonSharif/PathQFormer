@@ -20,6 +20,8 @@ repository-code: "https://github.com/SharoonSharif/PathQFormer"
 authors:
   - family-names: Sharif
     given-names: Sharoon
+  - family-names: Can
+    given-names: Ha
 keywords:
   - computational pathology
   - multimodal learning

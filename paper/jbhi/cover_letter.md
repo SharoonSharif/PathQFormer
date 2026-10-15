@@ -6,7 +6,7 @@ Title: One Checkpoint for Complete, Slide-Only and RNA-Only Patients: Auditing a
 
 Article type: Regular paper (8 main-text pages in the IEEEtran journal format, plus one 5-page supplementary PDF uploaded as a supporting document; 13 pages in total, within the 14-page limit)
 
-Author: Sharoon Sharif (Alabama A&M University, Normal, AL; Faith Comes By Hearing, Albuquerque, NM), sole and corresponding author
+Authors: Sharoon Sharif (Alabama A&M University, Normal, AL; Faith Comes By Hearing, Albuquerque, NM), corresponding author; Ha Can (independent researcher, biomedical sciences), second author
 
 Summary. Survival models that fuse whole-slide images with transcriptomics are evaluated on patients who have both inputs, whereas a hospital cohort also holds slide-only and RNA-only patients, so the paper asks whether a fused model actually uses both inputs and what happens when one is missing at test time. On five TCGA cohorts under one equal-budget, three-seed protocol, an input-use audit (removal, permutation across patients, risk-score correlation) finds that the official SurvPath implementation, as trained under this protocol, ranks patients the same way when its RNA input is permuted (C-index change +0.001) but falls to a C-index of 0.47–0.52 without the slide, whereas a query-bottleneck fusion model trained with learned null codes, modality dropout and auxiliary unimodal heads responds to RNA, keeps a C-index of 0.54–0.62 with either input removed and moves at most 0.025 when half the patients lack a modality, so one trained checkpoint serves complete, slide-only and RNA-only patients. With both inputs present it does not detectably beat an RNA-only MLP or a late-fusion ensemble, which the paper states plainly: the recipe buys coverage of incomplete patients, not accuracy.
 
@@ -20,9 +20,9 @@ Originality. The manuscript is entirely original; it has not been copyrighted, p
 
 Data and code availability. TCGA data are public and de-identified; the UNI2-h patch features and the SurvPath RNA-seq matrices, metadata and splits are available from their authors. The code (MIT license), configuration files, archived per-run results and the script that regenerates every table are public at https://github.com/SharoonSharif/PathQFormer (release v0.3.0) and archived at Zenodo, https://doi.org/10.5281/zenodo.23245611 (version DOI; concept DOI 10.5281/zenodo.22900123). The 275 trained fold models are on the Hugging Face Hub at https://huggingface.co/sharoonsharif1/PathQFormer-checkpoints.
 
-Use of AI tools. A large language model (Claude, Anthropic) assisted with drafting and editing the text and LaTeX source and with writing analysis and plotting code, under the author's direction; the author designed the study, ran the experiments, checked every reported number against the archived results, and is responsible for all content. This is also stated in the Acknowledgment.
+Use of AI tools. A large language model (Claude, Anthropic) assisted with drafting and editing the text and LaTeX source and with writing analysis and plotting code, under the authors' direction; the author designed the study, ran the experiments, checked every reported number against the archived results, and is responsible for all content. This is also stated in the Acknowledgment.
 
-Conflicts of interest and funding. The author declares no competing interests. The work received no dedicated funding; cloud compute was paid for by the author.
+Conflicts of interest and funding. The authors declare no competing interests. The work received no dedicated funding; cloud compute was paid for by S. Sharif. Author contributions: S. Sharif designed the study, ran the experiments and drafted the manuscript; H. Can contributed biomedical domain expertise to the study design and the interpretation of the results.
 
 Suggested reviewer expertise (areas, not names).
 1. Computational pathology and multiple-instance learning on whole-slide images.
