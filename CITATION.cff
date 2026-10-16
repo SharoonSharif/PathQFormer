@@ -20,6 +20,7 @@ repository-code: "https://github.com/SharoonSharif/PathQFormer"
 authors:
   - family-names: Sharif
     given-names: Sharoon
+    orcid: "https://orcid.org/0009-0003-2669-1209"
   - family-names: Can
     given-names: Ha
 keywords:

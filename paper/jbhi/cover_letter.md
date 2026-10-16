@@ -6,7 +6,7 @@ Title: One Checkpoint for Complete, Slide-Only and RNA-Only Patients: Auditing a
 
 Article type: Regular paper (8 main-text pages in the IEEEtran journal format, plus one 5-page supplementary PDF uploaded as a supporting document; 13 pages in total, within the 14-page limit)
 
-Authors: Sharoon Sharif (Alabama A&M University, Normal, AL; Faith Comes By Hearing, Albuquerque, NM), corresponding author; Ha Can (independent researcher, biomedical sciences), second author
+Authors: Sharoon Sharif (Faith Comes By Hearing, Albuquerque, NM; ORCID 0009-0003-2669-1209), corresponding author; Ha Can (independent researcher, biomedical sciences), second author
 
 Summary. Survival models that fuse whole-slide images with transcriptomics are evaluated on patients who have both inputs, whereas a hospital cohort also holds slide-only and RNA-only patients, so the paper asks whether a fused model actually uses both inputs and what happens when one is missing at test time. On five TCGA cohorts under one equal-budget, three-seed protocol, an input-use audit (removal, permutation across patients, risk-score correlation) finds that the official SurvPath implementation, as trained under this protocol, ranks patients the same way when its RNA input is permuted (C-index change +0.001) but falls to a C-index of 0.47–0.52 without the slide, whereas a query-bottleneck fusion model trained with learned null codes, modality dropout and auxiliary unimodal heads responds to RNA, keeps a C-index of 0.54–0.62 with either input removed and moves at most 0.025 when half the patients lack a modality, so one trained checkpoint serves complete, slide-only and RNA-only patients. With both inputs present it does not detectably beat an RNA-only MLP or a late-fusion ensemble, which the paper states plainly: the recipe buys coverage of incomplete patients, not accuracy.
 
@@ -34,5 +34,5 @@ Suggested reviewer expertise (areas, not names).
 Thank you for considering the manuscript.
 
 Sharoon Sharif
-Department of Electrical Engineering and Computer Science, Alabama A&M University, Normal, AL 35762 USA
+Faith Comes By Hearing, Albuquerque, NM USA
 sharoonsharif@gmail.com
