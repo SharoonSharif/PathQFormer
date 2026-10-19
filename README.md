@@ -15,7 +15,7 @@ model of whole-slide-image (WSI) patch embeddings and RNA-seq pathway tokens tra
 modality dropout and auxiliary unimodal heads so that **one checkpoint serves patients with WSI + RNA, WSI only, or
 RNA only**.
 
-**Results, protocol and every table:** [REPORT.md](REPORT.md). **Chronological record:** [EXPERIMENT_LOG.md](EXPERIMENT_LOG.md). **Revised manuscript source:** [paper/tmlr_v2/](paper/tmlr_v2/) (`main.tex`, figures; the earlier draft is [paper/draft.md](paper/draft.md)). **Checkpoints:** [sharoonsharif1/PathQFormer-checkpoints](https://huggingface.co/sharoonsharif1/PathQFormer-checkpoints) on the HuggingFace Hub (275 fold checkpoints, 18 GB: the final model and every baseline row of the accuracy table below for seed 0, three seeds for NullQ-Former, the single-modality models and the OS endpoint). **Release:** v0.3.0 (public repository since 2026-10-05; see [CITATION.cff](CITATION.cff)); archived versions resolve from the Zenodo concept DOI [10.5281/zenodo.22900123](https://doi.org/10.5281/zenodo.22900123) (latest archived version [v0.3.0](https://github.com/SharoonSharif/PathQFormer/releases/tag/v0.3.0), DOI [10.5281/zenodo.23245611](https://doi.org/10.5281/zenodo.23245611)).
+**Results, protocol and every table:** [REPORT.md](REPORT.md). **Chronological record:** [EXPERIMENT_LOG.md](EXPERIMENT_LOG.md). **Manuscript:** [paper/jbhi/](paper/jbhi/) (IEEE JBHI submission package: `main.tex`, `supplement.tex`, figures, cover letter, submission checklist and [venue notes](paper/jbhi/VENUES.md)); the earlier TMLR-format revision is in [paper/tmlr_v2/](paper/tmlr_v2/) and the first draft is [paper/draft.md](paper/draft.md). **Checkpoints:** [sharoonsharif1/PathQFormer-checkpoints](https://huggingface.co/sharoonsharif1/PathQFormer-checkpoints) on the HuggingFace Hub (275 fold checkpoints, 18 GB: the final model and every baseline row of the accuracy table below for seed 0, three seeds for NullQ-Former, the single-modality models and the OS endpoint). **Release:** v0.3.0 (public repository since 2026-10-05; see [CITATION.cff](CITATION.cff)); archived versions resolve from the Zenodo concept DOI [10.5281/zenodo.22900123](https://doi.org/10.5281/zenodo.22900123) (latest archived version [v0.3.0](https://github.com/SharoonSharif/PathQFormer/releases/tag/v0.3.0), DOI [10.5281/zenodo.23245611](https://doi.org/10.5281/zenodo.23245611)).
 
 ## What the audit found
 
@@ -249,8 +249,8 @@ scripts/          run_experiments.sh, reproduce_tables.sh, seed_table.py, aggreg
                   pod/ (Runpod queues, batch2-batch10)
 tests/            46 tests (35 fast; 11 `-m slow` = end-to-end trainer tests on the dummy data, ~10 min CPU)
 pod_results/      archived per-run results of the campaign (five tarballs); results/final/ = the regenerated tables
-paper/tmlr_v2/    revised manuscript source (main.tex, figures/); paper/draft.md, paper/figures/: the earlier draft
-paper/jbhi/       IEEE JBHI submission package (main.tex, supplement.tex, figures/, cover_letter.md, CHECKLIST.md)
+paper/tmlr_v2/    TMLR-format revision (main.tex, figures/), superseded by paper/jbhi/; paper/draft.md, paper/figures/: the earlier draft
+paper/jbhi/       IEEE JBHI submission package (main.tex, supplement.tex, figures/, cover_letter.md, CHECKLIST.md, VENUES.md)
 REPORT.md         experimental report; EXPERIMENT_LOG.md: chronological record incl. the protocol audit
 ```
 

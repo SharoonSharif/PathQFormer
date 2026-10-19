@@ -727,3 +727,38 @@ analysis (audit framing, seed-averaged primary tests with CIs, 204 GPU cohort-le
 five archives, the SurvPath-recipe status) as version 0.3.0, dated 2026-10-05; the Zenodo concept DOI
 10.5281/zenodo.22900123 remains the citation target (the v0.2.1 version DOI 10.5281/zenodo.22900124 is kept in
 the identifiers).
+
+## 2026-10-06 to 2026-10-19 - IEEE JBHI package, second author, rename to NullQ-Former (no new experiments)
+
+**JBHI submission package (`paper/jbhi/`).** The TMLR-format revision was converted to an IEEE JBHI regular paper
+(IEEEtran journal class): an 8-page main paper (JBHI's free length), a 5-page supplement (Sections S-I to S-VIII,
+Tables S1-S14, Figs. S1-S3), 59 references, a cover letter and a submission checklist. Every number comes from
+`results/final/` and the archived runs; nothing was retrained. The one-row figure layouts are written by the new
+`scripts/paper_figures_jbhi.py` (same numbers as `scripts/paper_figures.py`). Both PDFs build with
+`pdflatex && bibtex && pdflatex && pdflatex` without errors, overfull boxes or unresolved references.
+
+**Release and archive.** GitHub release v0.3.0 (2026-10-06) was archived by Zenodo on 2026-10-08 as version DOI
+10.5281/zenodo.23245611 under the unchanged concept DOI 10.5281/zenodo.22900123.
+
+**Second author (2026-10-15).** Ha Can (independent researcher, biomedical domain expertise) joined as second author
+in the manuscript, `CITATION.cff`, `.zenodo.json` and `pyproject.toml`.
+
+**Rename (2026-10-15).** The model's display name changed from PathQ-Former to NullQ-Former, after its learned
+null codes, in prose, figure legends, table labels (PQF became NQF) and metadata. Identifiers keep the old name so
+that archived results stay addressable: the GitHub and Hugging Face repository names, the Zenodo v0.3.0 record, the
+`pathq_*` run directories and configuration files, and the `PathQFormer` class. The README carries a name-change
+note; the Hugging Face model card and the GitHub description were updated on 2026-10-16
+(`scripts/upload_checkpoints_hf.py --card-only` rebuilds the card from the Hub listing). An independent multi-agent
+check of the rename found 14 issues (stale build logs, PDF author metadata, figure provenance notes and others),
+all fixed; the 46 unit tests pass and `scripts/reproduce_tables.sh` regenerates `results/final/` unchanged apart from
+the renamed headings.
+
+**Author details (2026-10-16).** Both authors are listed as independent researchers with no institutional
+affiliation. S. Sharif's ORCID (0009-0003-2669-1209) is linked in both PDFs and listed in `CITATION.cff` and
+`.zenodo.json`.
+
+**Venue (2026-10-16 to 2026-10-19).** Free-to-publish journals with a strong topic fit were compared on their own
+pages (fees, review speed, impact factor, author rules); the comparison and the plan are in `paper/jbhi/VENUES.md`.
+JBHI requires an institutional or IEEE e-mail address for every author, which the second author does not have, so
+the editorial office will be asked first; IEEE Transactions on Computational Biology and Bioinformatics, which has
+no such rule, is the fallback.
