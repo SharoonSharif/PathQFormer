@@ -41,3 +41,13 @@ logs/
 # Paper figure by-products (large): attention exports are regenerated with scripts/analyze_run.py --attention
 paper/figures/attention_npz/
 *.npz
+
+# LaTeX build files (paper/jbhi and paper/tmlr_v2 are built in place)
+paper/**/*.aux
+paper/**/*.bbl
+paper/**/*.blg
+paper/**/*.log
+paper/**/*.out
+paper/**/*.fls
+paper/**/*.fdb_latexmk
+paper/**/*.synctex.gz
